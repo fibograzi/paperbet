@@ -1,0 +1,126 @@
+import { Casino, Game } from "./types";
+
+export const CASINOS: Casino[] = [
+  {
+    id: "stake",
+    name: "Stake",
+    url: "https://stake.com",
+    logo: "/casinos/stake.svg",
+    color: "#1475E1",
+    offer: "200% deposit match up to $2,000",
+    offerShort: "200% up to $2K",
+    games: ["plinko", "crash", "mines", "dice", "limbo"],
+    features: ["Provably Fair", "Instant Crypto Payouts", "25M+ Users"],
+    termsUrl: "https://stake.com/policies/terms",
+    regionNote: "Not available in the UK",
+  },
+  {
+    id: "rollbit",
+    name: "Rollbit",
+    url: "https://rollbit.com",
+    logo: "/casinos/rollbit.svg",
+    color: "#FFD700",
+    offer: "15% rakeback on all bets",
+    offerShort: "15% Rakeback",
+    games: ["plinko", "crash", "mines", "roulette"],
+    features: ["Fast Payouts", "Crypto Trading", "NFT Integration"],
+    termsUrl: "https://rollbit.com/terms",
+  },
+  {
+    id: "bcgame",
+    name: "BC.Game",
+    url: "https://bc.game",
+    logo: "/casinos/bcgame.svg",
+    color: "#27AE60",
+    offer: "Spin Lucky Wheel for up to 5 BTC",
+    offerShort: "Win up to 5 BTC",
+    games: ["plinko", "crash", "mines", "dice", "limbo", "hilo"],
+    features: ["140+ Cryptos", "10K+ Games", "Community Events"],
+    termsUrl: "https://bc.game/terms",
+  },
+  {
+    id: "wildio",
+    name: "Wild.io",
+    url: "https://wild.io",
+    logo: "/casinos/wildio.svg",
+    color: "#8B5CF6",
+    offer: "350% up to $10,000 + 200 free spins",
+    offerShort: "350% + 200 Spins",
+    games: ["plinko", "crash", "mines"],
+    features: ["VIP Program", "4000+ Slots", "Weekly Reload"],
+    termsUrl: "https://wild.io/terms",
+  },
+  {
+    id: "jackbit",
+    name: "Jackbit",
+    url: "https://jackbit.com",
+    logo: "/casinos/jackbit.svg",
+    color: "#F97316",
+    offer: "100 wager-free spins",
+    offerShort: "100 Free Spins",
+    games: ["plinko", "crash", "mines", "dice"],
+    features: ["Wager-Free Bonuses", "Fast Payouts", "9000+ Games"],
+    termsUrl: "https://jackbit.com/terms",
+  },
+  {
+    id: "coincasino",
+    name: "CoinCasino",
+    url: "https://coincasino.com",
+    logo: "/casinos/coincasino.svg",
+    color: "#EC4899",
+    offer: "200% welcome bonus + WalletConnect",
+    offerShort: "200% Welcome Bonus",
+    games: ["plinko", "crash", "mines"],
+    features: ["Since 2017", "21+ Cryptos", "Provably Fair"],
+    termsUrl: "https://coincasino.com/terms",
+  },
+];
+
+export const GAMES: Game[] = [
+  {
+    id: "plinko",
+    name: "Plinko",
+    slug: "plinko",
+    description:
+      "Drop balls through pegs and hit multipliers up to 1,000x. Test risk levels and row configurations.",
+    shortDesc: "Drop. Bounce. Multiply.",
+    icon: "Triangle",
+    color: "#00E5A0",
+    available: true,
+    rtp: 99,
+  },
+  {
+    id: "crash",
+    name: "Crash",
+    slug: "crash",
+    description:
+      "Watch the multiplier rise and cash out before it crashes. Test auto-cashout strategies.",
+    shortDesc: "Rise. Cash out. Or crash.",
+    icon: "TrendingUp",
+    color: "#00B4D8",
+    available: true,
+    rtp: 99,
+  },
+  {
+    id: "mines",
+    name: "Mines",
+    slug: "mines",
+    description:
+      "Reveal tiles on a grid while avoiding hidden mines. The more you reveal, the higher your multiplier.",
+    shortDesc: "Reveal. Avoid. Multiply.",
+    icon: "Grid3x3",
+    color: "#F59E0B",
+    available: true,
+    rtp: 99,
+  },
+];
+
+export const SITE = {
+  name: "PaperBet.io",
+  tagline: "Test Your Edge",
+  url: "https://paperbet.io",
+  description:
+    "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free, then discover featured deals at top crypto casinos.",
+  disclaimer:
+    "18+ | Gambling involves risk. Most players lose money over time. Only bet what you can afford to lose. PaperBet.io is a free simulator for educational purposes. We are not a gambling site. Links to third-party casinos are affiliate links — we may earn a commission at no extra cost to you.",
+};

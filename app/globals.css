@@ -1,0 +1,272 @@
+@import "tailwindcss";
+
+@source not "../tasks";
+@source not "../content";
+
+@theme inline {
+  --color-pb-bg-primary: #0B0F1A;
+  --color-pb-bg-secondary: #111827;
+  --color-pb-bg-tertiary: #1F2937;
+  --color-pb-accent: #00E5A0;
+  --color-pb-accent-secondary: #00B4D8;
+  --color-pb-warning: #F59E0B;
+  --color-pb-danger: #EF4444;
+  --color-pb-text-primary: #F9FAFB;
+  --color-pb-text-secondary: #9CA3AF;
+  --color-pb-text-muted: #6B7280;
+  --color-pb-border: #374151;
+  --color-pb-glow: rgba(0, 229, 160, 0.15);
+
+  --animate-glow: glow 2s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-spin-slow: spin 8s linear infinite;
+
+  @keyframes glow {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+body {
+  background: var(--color-pb-bg-primary);
+  color: var(--color-pb-text-primary);
+}
+
+/* Font utility classes — reference Next.js font CSS variables directly */
+.font-heading {
+  font-family: var(--font-outfit), system-ui, sans-serif;
+}
+
+.font-mono-stats {
+  font-family: var(--font-jetbrains-mono), monospace;
+}
+
+/* Hero entrance animation (CSS-only — works before JS hydration) */
+@keyframes hero-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-animate { animation: hero-fade-in 0.5s ease-out both; }
+.hero-animate-delay-1 { animation: hero-fade-in 0.5s ease-out 0.1s both; }
+.hero-animate-delay-2 { animation: hero-fade-in 0.5s ease-out 0.2s both; }
+.hero-animate-delay-3 { animation: hero-fade-in 0.5s ease-out 0.3s both; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-pb-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-pb-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-pb-text-muted);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* =========================================================================
+   Focus-visible styles — visible keyboard focus rings, hidden on click
+   ========================================================================= */
+
+:focus-visible {
+  outline: 2px solid var(--color-pb-accent);
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* =========================================================================
+   Mines Game Animations
+   ========================================================================= */
+
+/* Tile flip (3D card-flip effect) */
+@keyframes mines-flip {
+  0% { transform: perspective(600px) rotateY(0deg); }
+  50% { transform: perspective(600px) rotateY(90deg); }
+  100% { transform: perspective(600px) rotateY(0deg); }
+}
+
+.mines-tile-flip {
+  animation: mines-flip 300ms ease-out forwards;
+  backface-visibility: hidden;
+}
+
+.mines-flip-content {
+  animation: mines-flip-content-fade 300ms ease-out forwards;
+}
+
+@keyframes mines-flip-content-fade {
+  0%, 45% { opacity: 0; }
+  55%, 100% { opacity: 1; }
+}
+
+/* Gem glow pulse on reveal */
+@keyframes mines-gem-glow-kf {
+  0% { box-shadow: 0 0 0 rgba(0, 229, 160, 0); }
+  30% { box-shadow: 0 0 12px rgba(0, 229, 160, 0.4); }
+  100% { box-shadow: 0 0 0 rgba(0, 229, 160, 0); }
+}
+
+.mines-gem-glow {
+  animation: mines-gem-glow-kf 600ms ease-out;
+}
+
+/* Mine explosion on hit */
+@keyframes mines-explode-kf {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.2); }
+  40% { transform: scale(1.05); box-shadow: 0 0 24px rgba(239, 68, 68, 0.5); }
+  100% { transform: scale(1); box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+}
+
+.mines-mine-explode {
+  animation: mines-explode-kf 500ms ease-out;
+}
+
+/* Board shake on mine hit */
+@keyframes mines-shake-kf {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, 1px); }
+  20% { transform: translate(2px, -2px); }
+  30% { transform: translate(-1px, 3px); }
+  40% { transform: translate(3px, -1px); }
+  50% { transform: translate(-2px, 2px); }
+  60% { transform: translate(1px, -3px); }
+  70% { transform: translate(-3px, 1px); }
+  80% { transform: translate(2px, 2px); }
+  90% { transform: translate(-1px, -1px); }
+}
+
+.mines-board-shake {
+  animation: mines-shake-kf 300ms linear;
+}
+
+/* Post-game tile reveal (flip in with delay) */
+@keyframes mines-post-reveal-kf {
+  0% { transform: perspective(600px) rotateY(90deg); opacity: 0; }
+  100% { transform: perspective(600px) rotateY(0deg); opacity: 1; }
+}
+
+.mines-post-reveal {
+  animation: mines-post-reveal-kf 200ms ease-out forwards;
+}
+
+/* Danger meter pulse for extreme danger */
+@keyframes mines-danger-pulse-kf {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.mines-danger-pulse {
+  animation: mines-danger-pulse-kf 800ms ease-in-out infinite;
+}
+
+/* Cash-out button pulse */
+@keyframes mines-cashout-pulse-kf {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.mines-cashout-pulse {
+  animation: mines-cashout-pulse-kf 1s ease-in-out infinite;
+}
+
+/* Gold pulse for "PERFECT CLEAR" text */
+@keyframes mines-gold-pulse-kf {
+  0%, 100% { text-shadow: 0 0 10px rgba(245, 158, 11, 0.3); }
+  50% { text-shadow: 0 0 24px rgba(245, 158, 11, 0.6); }
+}
+
+.mines-gold-pulse {
+  animation: mines-gold-pulse-kf 1.5s ease-in-out infinite;
+}
+
+/* Reduced motion overrides for mines */
+@media (prefers-reduced-motion: reduce) {
+  .mines-tile-flip,
+  .mines-gem-glow,
+  .mines-mine-explode,
+  .mines-board-shake,
+  .mines-post-reveal,
+  .mines-danger-pulse,
+  .mines-cashout-pulse,
+  .mines-gold-pulse {
+    animation: none !important;
+  }
+
+  .mines-post-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================================
+   Crash Game Animations
+   ========================================================================= */
+
+@keyframes crash-shake-kf {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, 1px); }
+  20% { transform: translate(2px, -2px); }
+  30% { transform: translate(-1px, 3px); }
+  40% { transform: translate(3px, -1px); }
+  50% { transform: translate(-2px, 2px); }
+  60% { transform: translate(1px, -3px); }
+  70% { transform: translate(-3px, 1px); }
+  80% { transform: translate(2px, 2px); }
+  90% { transform: translate(-1px, -1px); }
+}
+
+.crash-shake {
+  animation: crash-shake-kf 100ms linear;
+}
+
+@keyframes cashout-float-kf {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+.cashout-float {
+  animation: cashout-float-kf 1.5s ease-out forwards;
+}
+
+/* Reduced motion overrides for crash */
+@media (prefers-reduced-motion: reduce) {
+  .crash-shake {
+    animation: none !important;
+  }
+  .cashout-float {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
