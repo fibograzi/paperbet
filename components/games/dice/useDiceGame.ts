@@ -311,7 +311,7 @@ function diceReducer(state: DiceGameState, action: DiceAction): DiceGameState {
     // Auto-play
     // -----------------------------------------------------------------------
     case "AUTO_PLAY_START": {
-      if (state.phase !== "idle") return state;
+      if (state.phase !== "idle" || state.autoPlay.active) return state;
       return {
         ...state,
         autoPlay: {
@@ -410,7 +410,7 @@ export function useDiceGame() {
     const result = generateDiceResult();
     const won = isWin(result, s.params.target, s.params.direction);
     const payout = won ? calculatePayout(s.betAmount, s.params.multiplier) : 0;
-    const profit = won ? payout - s.betAmount : -s.betAmount;
+    const profit = won ? calculateProfitOnWin(s.betAmount, s.params.multiplier) : -s.betAmount;
 
     // Animation duration
     const duration = s.animationSpeed === "fast"
@@ -442,7 +442,7 @@ export function useDiceGame() {
     return () => {
       if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
     };
-  }, [state.phase, state.sessionRollCount]);
+  }, [state.phase]);
 
   // ---------------------------------------------------------------------------
   // Auto-play loop (handles both first roll and subsequent rolls)
@@ -502,7 +502,7 @@ export function useDiceGame() {
     return () => {
       if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     };
-  }, [state.autoPlay.active, state.phase, state.sessionRollCount, roll]);
+  }, [state.autoPlay.active, state.phase, state.sessionRollCount, roll]); // sessionRollCount needed to trigger re-evaluation after each roll settles
 
   // ---------------------------------------------------------------------------
   // Post-session nudge timer

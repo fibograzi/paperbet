@@ -28,7 +28,6 @@ export type DiceStrategy =
   | "martingale"
   | "anti_martingale"
   | "dalembert"
-  | "delayed_martingale"
   | "zigzag"
   | "custom";
 

@@ -163,7 +163,7 @@ export default function DiceControls({
     dispatch({ type: "SET_BET_AMOUNT", amount });
   }, [dispatch]);
 
-  const isMartingaleType = selectedStrategy === "martingale" || selectedStrategy === "anti_martingale" || selectedStrategy === "delayed_martingale";
+  const isMartingaleType = selectedStrategy === "martingale" || selectedStrategy === "anti_martingale";
 
   // -------------------------------------------------------------------------
   // Render
