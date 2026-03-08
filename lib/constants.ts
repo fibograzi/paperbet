@@ -113,6 +113,18 @@ export const GAMES: Game[] = [
     available: true,
     rtp: 99,
   },
+  {
+    id: "hilo",
+    name: "HiLo",
+    slug: "hilo",
+    description:
+      "Predict whether the next card is higher or lower. Build cumulative multipliers with each correct guess, or cash out anytime.",
+    shortDesc: "Predict. Stack. Cash out.",
+    icon: "ArrowUpDown",
+    color: "#6366F1",
+    available: true,
+    rtp: 99,
+  },
 ];
 
 export const SITE = {

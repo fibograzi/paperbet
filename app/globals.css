@@ -302,3 +302,93 @@ html {
     opacity: 1 !important;
   }
 }
+
+/* =========================================================================
+   HiLo Game Animations
+   ========================================================================= */
+
+/* Card 3D flip (face → back or back → face) */
+.hilo-card-inner {
+  transition: transform 250ms ease-in-out;
+}
+
+/* Slide-in animation for new cards */
+@keyframes hilo-slide-in {
+  from {
+    transform: translateX(60px) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+
+.hilo-slide-in {
+  animation: hilo-slide-in 200ms ease-out forwards;
+}
+
+/* Current card glow pulse */
+@keyframes hilo-current-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.25); }
+  50% { box-shadow: 0 0 28px rgba(99, 102, 241, 0.35); }
+}
+
+.hilo-current-glow {
+  animation: hilo-current-glow 2s ease-in-out infinite;
+}
+
+/* Reference card subtle sway */
+@keyframes hilo-reference-sway-kf {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+.hilo-reference-sway {
+  animation: hilo-reference-sway-kf 4s ease-in-out infinite;
+}
+
+/* Loss card shake */
+@keyframes hilo-loss-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 1px); }
+  20% { transform: translate(2px, -1px); }
+  30% { transform: translate(-1px, 2px); }
+  40% { transform: translate(1px, -2px); }
+  50% { transform: translate(-2px, 1px); }
+  60% { transform: translate(2px, -1px); }
+  70% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -1px); }
+  90% { transform: translate(-1px, 1px); }
+}
+
+.hilo-loss-shake {
+  animation: hilo-loss-shake 300ms linear;
+}
+
+/* Reduced motion overrides for HiLo */
+@media (prefers-reduced-motion: reduce) {
+  .hilo-card-inner {
+    transition: opacity 200ms ease-in-out !important;
+    transform: none !important;
+  }
+
+  .hilo-slide-in {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .hilo-current-glow {
+    animation: none !important;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.25) !important;
+  }
+
+  .hilo-reference-sway {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .hilo-loss-shake {
+    animation: none !important;
+  }
+}

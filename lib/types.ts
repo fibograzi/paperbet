@@ -43,6 +43,6 @@ export interface SessionStats {
   bestStreak: number;
 }
 
-export type RiskLevel = "low" | "medium" | "high";
+export type RiskLevel = "low" | "medium" | "high" | "expert";
 export type PlinkoRows = 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
 export type AutoPlaySpeed = "normal" | "fast" | "turbo";
