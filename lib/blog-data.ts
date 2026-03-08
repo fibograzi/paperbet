@@ -13,7 +13,7 @@ export interface BlogPost {
   publishDate: string;
   readingTime: number;
   category: "strategy" | "guide" | "comparison";
-  game: "plinko" | "crash" | "mines" | "hilo" | "general";
+  game: "plinko" | "crash" | "mines" | "hilo" | "dice" | "general";
   keywords: string[];
   content: BlogSection[];
 }

@@ -125,6 +125,18 @@ export const GAMES: Game[] = [
     available: true,
     rtp: 99,
   },
+  {
+    id: "dice",
+    name: "Dice",
+    slug: "dice",
+    description:
+      "Set your target number, pick Roll Over or Roll Under, and test strategies like Martingale and D'Alembert. The fastest game in crypto casinos.",
+    shortDesc: "Set. Roll. Multiply.",
+    icon: "Dices",
+    color: "#14B8A6",
+    available: true,
+    rtp: 99,
+  },
 ];
 
 export const SITE = {
