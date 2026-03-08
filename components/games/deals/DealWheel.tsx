@@ -42,14 +42,64 @@ export default function DealWheel({
   phaseRef.current = phase;
   resultIndexRef.current = resultIndex;
 
-  // Track reveal start for pulse animation
+  // Track reveal start for pulse animation + restart rAF if paused
   useEffect(() => {
     if (phase === "revealing") {
       revealStartRef.current = performance.now();
     } else {
       revealStartRef.current = null;
     }
-  }, [phase]);
+
+    // Restart draw loop when transitioning out of idle
+    if (phase !== "idle" && drawRafRef.current === null) {
+      const drawFrame = () => {
+        const renderer = rendererRef.current;
+        if (!renderer) {
+          drawRafRef.current = requestAnimationFrame(drawFrame);
+          return;
+        }
+        const now = performance.now();
+        const segs = segmentsRef.current;
+        const angle = angleRef.current;
+        const ph = phaseRef.current;
+        const ri = resultIndexRef.current;
+
+        const segCount = segs.length;
+        const segArc = (2 * Math.PI) / segCount;
+        const TWO_PI = 2 * Math.PI;
+        const pointerLocal = ((3 * Math.PI / 2 - angle) % TWO_PI + TWO_PI) % TWO_PI;
+        const currentSeg = Math.floor(pointerLocal / segArc) % segCount;
+
+        if (ph === "spinning" && lastSegmentRef.current !== -1 && currentSeg !== lastSegmentRef.current) {
+          pointerBounceRef.current = 1.0;
+        }
+        lastSegmentRef.current = currentSeg;
+        pointerBounceRef.current *= 0.85;
+        if (pointerBounceRef.current < 0.01) pointerBounceRef.current = 0;
+
+        renderer.drawWheel(segs, angle, ph, now);
+
+        if (ph === "revealing" && ri !== null && revealStartRef.current) {
+          const elapsed = now - revealStartRef.current;
+          const pulseProgress = Math.min(elapsed / 2000, 1);
+          renderer.drawHighlight(ri, segs, angle, pulseProgress);
+        }
+
+        if (pointerRef.current) {
+          const bounceY = pointerBounceRef.current * 6;
+          pointerRef.current.style.transform = `translateX(-50%) translateY(${bounceY}px)`;
+        }
+
+        const isIdle = ph === "idle" && pointerBounceRef.current === 0;
+        if (isIdle) {
+          drawRafRef.current = null;
+          return;
+        }
+        drawRafRef.current = requestAnimationFrame(drawFrame);
+      };
+      drawRafRef.current = requestAnimationFrame(drawFrame);
+    }
+  }, [phase, angleRef]);
 
   // -----------------------------------------------------------------------
   // Renderer lifecycle
@@ -142,6 +192,13 @@ export default function DealWheel({
       if (pointerRef.current) {
         const bounceY = pointerBounceRef.current * 6;
         pointerRef.current.style.transform = `translateX(-50%) translateY(${bounceY}px)`;
+      }
+
+      // Pause loop when idle and pointer bounce has settled
+      const isIdle = ph === "idle" && pointerBounceRef.current === 0;
+      if (isIdle) {
+        drawRafRef.current = null;
+        return;
       }
 
       drawRafRef.current = requestAnimationFrame(drawFrame);

@@ -18,9 +18,9 @@ const footerLinks = {
   ],
   deals: [
     { label: "Spin the Wheel", href: "/deals" },
-    { label: "Stake: 200% Match", href: "/blog/best-crypto-casinos-for-plinko" },
-    { label: "Wild.io: 350% Bonus", href: "/blog/best-crypto-casinos-for-plinko" },
-    { label: "Rollbit: 15% Rakeback", href: "/blog/best-crypto-casinos-for-plinko" },
+    { label: "Stake: 200% Match", href: "/deals" },
+    { label: "Wild.io: 350% Bonus", href: "/deals" },
+    { label: "Rollbit: 15% Rakeback", href: "/deals" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
@@ -41,8 +41,8 @@ export default function Footer() {
               <Image
                 src="/logos/beeldlogo.png"
                 alt="PaperBet.io"
-                width={200}
-                height={200}
+                width={80}
+                height={80}
                 className="w-20 h-20"
               />
             </Link>

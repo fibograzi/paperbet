@@ -21,6 +21,7 @@ const initialStats: PlinkoSessionStats = {
   bestStreak: 0,
   averageMultiplier: 0,
   winRate: 0,
+  totalWins: 0,
 };
 
 const initialState: PlinkoGameState = {
@@ -116,9 +117,7 @@ function plinkoReducer(
         state.stats.averageMultiplier * state.stats.totalBets + result.multiplier;
       const averageMultiplier = totalMultipliers / totalBets;
 
-      const totalWins =
-        Math.round(state.stats.winRate * state.stats.totalBets / 100) +
-        (isWin ? 1 : 0);
+      const totalWins = state.stats.totalWins + (isWin ? 1 : 0);
       const winRate = (totalWins / totalBets) * 100;
 
       const showSessionReminder =
@@ -146,6 +145,7 @@ function plinkoReducer(
           bestStreak,
           averageMultiplier,
           winRate,
+          totalWins,
         },
       };
     }
@@ -204,6 +204,10 @@ function plinkoReducer(
         showSessionReminder: false,
       };
 
+    case "SHOW_POST_SESSION_NUDGE":
+      if (state.postSessionNudgeDismissed) return state;
+      return { ...state, showPostSessionNudge: true };
+
     case "DISMISS_POST_SESSION_NUDGE":
       return {
         ...state,
@@ -220,10 +224,12 @@ export function usePlinkoGame() {
   const [state, dispatch] = useReducer(plinkoReducer, initialState);
   const pendingDeductionRef = useRef(0);
 
-  // Reset pending deductions when balance updates (after re-render)
+  // Reset pending deductions only when all balls have landed
   useEffect(() => {
-    pendingDeductionRef.current = 0;
-  }, [state.balance]);
+    if (state.activeBalls === 0) {
+      pendingDeductionRef.current = 0;
+    }
+  }, [state.activeBalls]);
 
   const canDrop = useCallback((): boolean => {
     const effectiveBalance = state.balance - pendingDeductionRef.current;

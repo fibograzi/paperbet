@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/lib/utils";
 
 interface CasinoCardProps {
@@ -26,15 +24,10 @@ export default function CasinoCard({
   return (
     <div
       className={cn(
-        "bg-pb-bg-secondary border border-pb-border rounded-xl transition-colors duration-200",
+        "casino-card bg-pb-bg-secondary border border-pb-border rounded-xl transition-colors duration-200",
         compact ? "p-3" : "p-4"
       )}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = color;
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "";
-      }}
+      style={{ "--casino-color": color } as React.CSSProperties}
     >
       {/* Casino name */}
       <h3

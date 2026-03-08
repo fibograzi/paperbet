@@ -1,26 +1,30 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, DM_Sans, JetBrains_Mono } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ClientOverlays from "@/components/overlays/ClientOverlays";
+import { safeJsonLd } from "@/lib/utils";
 import "./globals.css";
 
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400"],
 });
 
 export const metadata: Metadata = {
@@ -42,15 +46,19 @@ export const metadata: Metadata = {
     url: "https://paperbet.io",
     siteName: "PaperBet.io",
     type: "website",
-    images: [{ url: "https://paperbet.io/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "PaperBet.io — Test Your Edge",
     description:
       "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free.",
-    images: ["https://paperbet.io/og-image.png"],
+    images: ["https://paperbet.io/opengraph-image"],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0B0F1A",
 };
 
 export default function RootLayout({
@@ -82,7 +90,7 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(siteJsonLd) }}
         />
       </head>
       <body

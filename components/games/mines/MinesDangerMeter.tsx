@@ -19,7 +19,14 @@ export default function MinesDangerMeter({
 
   return (
     <div className="w-full max-w-[500px] mx-auto px-0">
-      <div className="flex items-center gap-2">
+      <div
+        className="flex items-center gap-2"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Danger level: ${pct}%`}
+      >
         {/* Track */}
         <div className="flex-1 h-1.5 md:h-2 bg-[#1F2937] rounded-full overflow-hidden">
           <div

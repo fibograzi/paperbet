@@ -47,6 +47,7 @@ function initialStats(): MinesSessionStats {
     longestGemStreak: 0,
     avgGemsPerGame: 0,
     winRate: 0,
+    totalWins: 0,
     currentWinStreak: 0,
     bestWinStreak: 0,
   };
@@ -126,10 +127,8 @@ function updateStats(
     stats.avgGemsPerGame * stats.gamesPlayed + round.gemsRevealed;
   const avgGemsPerGame = totalGems / gamesPlayed;
 
-  const wins =
-    Math.round((stats.winRate / 100) * stats.gamesPlayed) +
-    (round.isWin ? 1 : 0);
-  const winRate = (wins / gamesPlayed) * 100;
+  const totalWins = stats.totalWins + (round.isWin ? 1 : 0);
+  const winRate = (totalWins / gamesPlayed) * 100;
 
   const currentWinStreak = round.isWin ? stats.currentWinStreak + 1 : 0;
   const bestWinStreak = Math.max(stats.bestWinStreak, currentWinStreak);
@@ -144,6 +143,7 @@ function updateStats(
     longestGemStreak,
     avgGemsPerGame,
     winRate,
+    totalWins,
     currentWinStreak,
     bestWinStreak,
   };

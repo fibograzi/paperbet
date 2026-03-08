@@ -11,7 +11,7 @@ export default function CrashPreviousRounds({ crashPoints }: CrashPreviousRounds
   const visible = crashPoints.slice(0, 20);
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide" aria-label="Previous crash points">
       <AnimatePresence initial={false}>
         {visible.map((point, index) => {
           const style = getCrashPointBadgeStyle(point);

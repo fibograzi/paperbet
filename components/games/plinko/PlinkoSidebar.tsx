@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PlinkoGameState } from "./plinkoTypes";
 import SessionStats from "@/components/shared/SessionStats";
@@ -14,8 +14,16 @@ interface PlinkoSidebarProps {
   onDismissNudge: () => void;
 }
 
+const SESSION_TIME_REMINDER_MS = 30 * 60 * 1000; // 30 minutes
+
 export default function PlinkoSidebar({ state, onDismissNudge }: PlinkoSidebarProps) {
   const { stats, history, sessionBetCount, showPostSessionNudge } = state;
+  const [showTimeReminder, setShowTimeReminder] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowTimeReminder(true), SESSION_TIME_REMINDER_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   const plinkoCasinos = useMemo(
     () => CASINOS.filter((c) => c.games.includes("plinko")).slice(0, 3),
@@ -160,6 +168,23 @@ export default function PlinkoSidebar({ state, onDismissNudge }: PlinkoSidebarPr
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Session Time Reminder */}
+      {showTimeReminder && (
+        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-xl p-3">
+          <p className="text-xs text-pb-text-secondary">
+            You&apos;ve been playing for 30+ minutes. Remember to take breaks
+            and play responsibly.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowTimeReminder(false)}
+            className="text-xs text-pb-text-muted hover:text-pb-text-secondary mt-2"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Disclaimer */}
       <p className="text-xs text-pb-text-muted leading-relaxed">

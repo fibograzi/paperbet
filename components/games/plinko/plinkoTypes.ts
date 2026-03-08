@@ -44,6 +44,7 @@ export interface PlinkoSessionStats {
   bestStreak: number;
   averageMultiplier: number;
   winRate: number;
+  totalWins: number;
 }
 
 export interface AutoPlayState {
@@ -64,8 +65,6 @@ export interface AutoPlayState {
 
 export type AutoPlaySpeed = "normal" | "fast" | "turbo";
 
-export type WinTier = "loss" | "normal" | "good" | "big" | "jackpot";
-
 export type PlinkoAction =
   | { type: "SET_BET_AMOUNT"; amount: number }
   | { type: "SET_RISK"; risk: RiskLevel }
@@ -79,6 +78,7 @@ export type PlinkoAction =
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST_BET"; amount: number }
   | { type: "DISMISS_SESSION_REMINDER" }
+  | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" };
 
 export interface PegPosition {

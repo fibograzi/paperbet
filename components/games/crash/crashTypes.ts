@@ -39,6 +39,8 @@ export interface CrashSessionStats {
   bestCashout: number;
   averageCashout: number;
   winRate: number;
+  totalWins: number;
+  cashoutCount: number;
 }
 
 // ---------------------------------------------------------------------------

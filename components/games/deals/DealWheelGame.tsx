@@ -1,40 +1,13 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 import { useDealWheel } from "./useDealWheel";
 import DealWheel from "./DealWheel";
 import DealWheelControls from "./DealWheelControls";
 import DealWheelResult from "./DealWheelResult";
 import DealWheelSidebar from "./DealWheelSidebar";
 import { FREE_SPINS } from "./dealWheelEngine";
-
-// ---------------------------------------------------------------------------
-// Reduced-motion media query hook (same pattern as CrashChart)
-// ---------------------------------------------------------------------------
-
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-
-function subscribeReducedMotion(callback: () => void): () => void {
-  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
-  mq.addEventListener("change", callback);
-  return () => mq.removeEventListener("change", callback);
-}
-
-function getReducedMotionSnapshot(): boolean {
-  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
-}
-
-function getReducedMotionServerSnapshot(): boolean {
-  return false;
-}
-
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    getReducedMotionSnapshot,
-    getReducedMotionServerSnapshot,
-  );
-}
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 
 export default function DealWheelGame() {
   const { state, spin, submitEmail, dismissResult, canSpin, angleRef } = useDealWheel();

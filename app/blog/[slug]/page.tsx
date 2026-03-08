@@ -55,7 +55,7 @@ export async function generateMetadata({
       publishedTime: post.publishDate,
       images: [
         {
-          url: "https://paperbet.io/og-image.png",
+          url: "https://paperbet.io/opengraph-image",
           width: 1200,
           height: 630,
           alt: post.title,
@@ -66,7 +66,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.metaTitle,
       description: post.metaDescription,
-      images: ["https://paperbet.io/og-image.png"],
+      images: ["https://paperbet.io/opengraph-image"],
     },
     keywords: post.keywords,
   };
@@ -403,7 +403,6 @@ export default async function BlogPostPage({ params }: PageProps) {
     headline: post.title,
     description: post.metaDescription,
     datePublished: post.publishDate,
-    dateModified: post.publishDate,
     author: {
       "@type": "Person",
       name: "PaperBet Editorial Team",

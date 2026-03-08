@@ -295,12 +295,10 @@ export default function PlinkoControls({
           max={16}
           step={1}
           value={config.rows}
-          onChange={(e) =>
-            dispatch({
-              type: "SET_ROWS",
-              rows: parseInt(e.target.value) as PlinkoRows,
-            })
-          }
+          onChange={(e) => {
+            const v = Math.max(8, Math.min(16, parseInt(e.target.value) || 8));
+            dispatch({ type: "SET_ROWS", rows: v as PlinkoRows });
+          }}
           disabled={configLocked}
           className="w-full h-1 bg-pb-border rounded-full appearance-none cursor-pointer accent-pb-accent disabled:opacity-50"
           aria-label="Number of rows"

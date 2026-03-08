@@ -1,10 +1,6 @@
-"use client";
-
-import { useRef, useState } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { motion, useInView } from "framer-motion";
 import {
-  ChevronDown,
   Gamepad2,
   BarChart3,
   Gift,
@@ -14,33 +10,45 @@ import Button from "@/components/ui/Button";
 import GameCard from "@/components/shared/GameCard";
 import CasinoCard from "@/components/shared/CasinoCard";
 import { GAMES, CASINOS } from "@/lib/constants";
+import {
+  AnimatedSection,
+  ScrollIndicator,
+  EmailCapture,
+} from "@/components/home/HomeClient";
 
-function AnimatedSection({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-40px" });
-
-  return (
-    <motion.section
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className={className}
-    >
-      {children}
-    </motion.section>
-  );
-}
+export const metadata: Metadata = {
+  title: "PaperBet.io — Test Your Edge | Free Crypto Casino Simulators",
+  description:
+    "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free, then discover featured deals at top crypto casinos.",
+  alternates: {
+    canonical: "https://paperbet.io",
+  },
+  openGraph: {
+    title: "PaperBet.io — Test Your Edge",
+    description:
+      "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free, then discover featured deals at top crypto casinos.",
+    url: "https://paperbet.io",
+    siteName: "PaperBet.io",
+    type: "website",
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PaperBet.io — Test Your Edge",
+    description:
+      "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free.",
+    images: ["https://paperbet.io/opengraph-image"],
+  },
+  keywords: [
+    "crypto casino simulator",
+    "plinko free",
+    "crash game practice",
+    "mines strategy",
+    "crypto gambling simulator",
+  ],
+};
 
 export default function Home() {
-  const [emailSubmitted, setEmailSubmitted] = useState(false);
-
   return (
     <>
       {/* ═══ SECTION 1: HERO ═══ */}
@@ -99,14 +107,7 @@ export default function Home() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="w-6 h-6 text-pb-text-muted" />
-          </motion.div>
-        </div>
+        <ScrollIndicator />
       </section>
 
       {/* ═══ SECTION 2: GAME CARDS ═══ */}
@@ -269,38 +270,7 @@ export default function Home() {
           </p>
 
           {/* Email capture */}
-          {emailSubmitted ? (
-            <p className="text-pb-accent font-medium mt-8 text-lg">
-              Thanks! We&apos;ll notify you when we launch.
-            </p>
-          ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setEmailSubmitted(true);
-              }}
-              className="flex flex-col sm:flex-row gap-3 mt-8 max-w-md mx-auto"
-            >
-              <input
-                type="email"
-                name="email"
-                required
-                aria-label="Email address"
-                placeholder="Enter your email"
-                className="flex-1 bg-pb-bg-tertiary border border-pb-border rounded-lg px-4 py-3 text-pb-text-primary placeholder:text-pb-text-muted focus:outline-none focus:ring-2 focus:ring-pb-accent/50 focus:border-pb-accent transition-all"
-              />
-              <Button variant="primary" size="md" type="submit">
-                Get Access
-              </Button>
-            </form>
-          )}
-
-          <Link
-            href="/plinko"
-            className="inline-flex items-center gap-1 text-pb-text-secondary hover:text-pb-accent text-sm mt-6 transition-colors"
-          >
-            Or start playing now <ArrowRight className="w-4 h-4" />
-          </Link>
+          <EmailCapture />
         </div>
       </AnimatedSection>
     </>

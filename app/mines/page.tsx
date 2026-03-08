@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import MinesGame from "@/components/games/mines/MinesGame";
+import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
 import { blogPosts } from "@/lib/blog-data";
+import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Free Mines Simulator — Test Strategies | PaperBet.io",
@@ -18,14 +20,14 @@ export const metadata: Metadata = {
     url: "https://paperbet.io/mines",
     siteName: "PaperBet.io",
     type: "website",
-    images: [{ url: "https://paperbet.io/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Free Mines Simulator — Test Strategies | PaperBet.io",
     description:
       "Play Mines for free. Reveal gems, avoid mines, and test different risk strategies on a 5×5 grid.",
-    images: ["https://paperbet.io/og-image.png"],
+    images: ["https://paperbet.io/opengraph-image"],
   },
 };
 
@@ -48,10 +50,12 @@ export default function MinesPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
       <section className="min-h-screen">
-        <MinesGame />
+        <GameErrorBoundary gameName="Mines">
+          <MinesGame />
+        </GameErrorBoundary>
       </section>
 
       {/* Related Guides */}

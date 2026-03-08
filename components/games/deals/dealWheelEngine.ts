@@ -336,7 +336,12 @@ export function loadWheelSession(): WheelSession | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const session = JSON.parse(raw) as WheelSession;
+    const parsed = JSON.parse(raw);
+    // Validate expected shape before trusting localStorage data
+    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.spins)) {
+      return null;
+    }
+    const session = parsed as WheelSession;
     const today = new Date().toISOString().slice(0, 10);
     if (session.lastSpinDate && session.lastSpinDate !== today) {
       // New day — keep email but clear spins

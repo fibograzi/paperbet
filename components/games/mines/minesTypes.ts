@@ -40,6 +40,7 @@ export interface MinesSessionStats {
   longestGemStreak: number;
   avgGemsPerGame: number;
   winRate: number;
+  totalWins: number;
   currentWinStreak: number;
   bestWinStreak: number;
 }

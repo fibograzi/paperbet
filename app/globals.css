@@ -37,6 +37,12 @@ body {
   color: var(--color-pb-text-primary);
 }
 
+/* Casino card hover — pure CSS using custom property */
+.casino-card:hover,
+.casino-card:focus-within {
+  border-color: var(--casino-color);
+}
+
 /* Font utility classes — reference Next.js font CSS variables directly */
 .font-heading {
   font-family: var(--font-outfit), system-ui, sans-serif;
@@ -44,6 +50,11 @@ body {
 
 .font-mono-stats {
   font-family: var(--font-jetbrains-mono), monospace;
+}
+
+/* DM Sans body font — used in Mines controls (body inherits via className) */
+.font-body {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 /* Hero entrance animation (CSS-only — works before JS hydration) */
@@ -56,6 +67,27 @@ body {
 .hero-animate-delay-1 { animation: hero-fade-in 0.5s ease-out 0.1s both; }
 .hero-animate-delay-2 { animation: hero-fade-in 0.5s ease-out 0.2s both; }
 .hero-animate-delay-3 { animation: hero-fade-in 0.5s ease-out 0.3s both; }
+
+/* Reduced motion overrides for hero & global animations */
+@media (prefers-reduced-motion: reduce) {
+  .hero-animate,
+  .hero-animate-delay-1,
+  .hero-animate-delay-2,
+  .hero-animate-delay-3 {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  .animate-glow,
+  .animate-float,
+  .animate-spin-slow {
+    animation: none !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {

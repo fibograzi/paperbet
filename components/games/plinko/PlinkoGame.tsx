@@ -29,8 +29,9 @@ export default function PlinkoGame() {
   const [winTier, setWinTier] = useState<WinTier | null>(null);
 
   // Post-session nudge timer
-  const lastDropTimeRef = useRef<number>(0);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const clearResultTimeout = useCallback(() => {
     if (resultTimeoutRef.current) {
@@ -66,7 +67,6 @@ export default function PlinkoGame() {
     if (!result) return null;
 
     dispatch({ type: "BALL_ADDED" });
-    lastDropTimeRef.current = Date.now();
 
     // Clear nudge timer on each drop
     if (nudgeTimerRef.current) {
@@ -80,25 +80,33 @@ export default function PlinkoGame() {
       multiplier: result.multiplier,
     };
 
-    boardRef.current
-      ?.dropBall(path, result)
-      .then(() => {
-        dispatch({ type: "DROP_COMPLETE", result });
-        dispatch({ type: "BALL_REMOVED" });
-        showResult(result);
+    const dropPromise = boardRef.current?.dropBall(path, result);
+    if (dropPromise) {
+      dropPromise
+        .then(() => {
+          dispatch({ type: "DROP_COMPLETE", result });
+          dispatch({ type: "BALL_REMOVED" });
+          showResult(result);
 
-        // Start post-session nudge timer after drop completes
-        if (
-          state.sessionBetCount >= 9 &&
-          !state.postSessionNudgeDismissed
-        ) {
-          nudgeTimerRef.current = setTimeout(() => {
-            if (!state.autoPlay.active) {
-              dispatch({ type: "DISMISS_POST_SESSION_NUDGE" });
-            }
-          }, 60000);
-        }
-      });
+          // Start post-session nudge timer after drop completes
+          const currentState = stateRef.current;
+          if (
+            currentState.sessionBetCount >= 9 &&
+            !currentState.postSessionNudgeDismissed
+          ) {
+            nudgeTimerRef.current = setTimeout(() => {
+              if (!stateRef.current.autoPlay.active) {
+                dispatch({ type: "SHOW_POST_SESSION_NUDGE" });
+              }
+            }, 60000);
+          }
+        })
+        .catch(() => {
+          // Ball animation failed (e.g., canvas unavailable) — still complete the round
+          dispatch({ type: "DROP_COMPLETE", result });
+          dispatch({ type: "BALL_REMOVED" });
+        });
+    }
 
     return result;
   }, [dropBall, dispatch, showResult, state.sessionBetCount, state.postSessionNudgeDismissed, state.autoPlay.active]);

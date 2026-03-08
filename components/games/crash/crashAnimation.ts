@@ -44,23 +44,33 @@ const LOG_TICKS = [1, 1.5, 2, 3, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000,
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Pre-parsed RGB cache for hot-path color operations (avoids parseInt in 60fps loop)
+const hexRgbCache = new Map<string, { r: number; g: number; b: number }>();
+
+function parseHex(hex: string): { r: number; g: number; b: number } {
+  let cached = hexRgbCache.get(hex);
+  if (!cached) {
+    cached = {
+      r: parseInt(hex.slice(1, 3), 16),
+      g: parseInt(hex.slice(3, 5), 16),
+      b: parseInt(hex.slice(5, 7), 16),
+    };
+    hexRgbCache.set(hex, cached);
+  }
+  return cached;
+}
+
 function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+  const { r, g, b } = parseHex(hex);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function lerpColor(a: string, b: string, t: number): string {
-  const ra = parseInt(a.slice(1, 3), 16);
-  const ga = parseInt(a.slice(3, 5), 16);
-  const ba = parseInt(a.slice(5, 7), 16);
-  const rb = parseInt(b.slice(1, 3), 16);
-  const gb = parseInt(b.slice(3, 5), 16);
-  const bb = parseInt(b.slice(5, 7), 16);
-  const r = Math.round(ra + (rb - ra) * t);
-  const g = Math.round(ga + (gb - ga) * t);
-  const blue = Math.round(ba + (bb - ba) * t);
+  const ca = parseHex(a);
+  const cb = parseHex(b);
+  const r = Math.round(ca.r + (cb.r - ca.r) * t);
+  const g = Math.round(ca.g + (cb.g - ca.g) * t);
+  const blue = Math.round(ca.b + (cb.b - ca.b) * t);
   return `rgb(${r}, ${g}, ${blue})`;
 }
 

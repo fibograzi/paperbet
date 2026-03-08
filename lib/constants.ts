@@ -4,7 +4,7 @@ export const CASINOS: Casino[] = [
   {
     id: "stake",
     name: "Stake",
-    url: "https://stake.com",
+    url: "https://stake.com/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
     logo: "/casinos/stake.svg",
     color: "#1475E1",
     offer: "200% deposit match up to $2,000",
@@ -17,7 +17,7 @@ export const CASINOS: Casino[] = [
   {
     id: "rollbit",
     name: "Rollbit",
-    url: "https://rollbit.com",
+    url: "https://rollbit.com/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
     logo: "/casinos/rollbit.svg",
     color: "#FFD700",
     offer: "15% rakeback on all bets",
@@ -29,7 +29,7 @@ export const CASINOS: Casino[] = [
   {
     id: "bcgame",
     name: "BC.Game",
-    url: "https://bc.game",
+    url: "https://bc.game/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
     logo: "/casinos/bcgame.svg",
     color: "#27AE60",
     offer: "Spin Lucky Wheel for up to 5 BTC",
@@ -41,7 +41,7 @@ export const CASINOS: Casino[] = [
   {
     id: "wildio",
     name: "Wild.io",
-    url: "https://wild.io",
+    url: "https://wild.io/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
     logo: "/casinos/wildio.svg",
     color: "#8B5CF6",
     offer: "350% up to $10,000 + 200 free spins",
@@ -53,7 +53,7 @@ export const CASINOS: Casino[] = [
   {
     id: "jackbit",
     name: "Jackbit",
-    url: "https://jackbit.com",
+    url: "https://jackbit.com/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
     logo: "/casinos/jackbit.svg",
     color: "#F97316",
     offer: "100 wager-free spins",
@@ -65,7 +65,7 @@ export const CASINOS: Casino[] = [
   {
     id: "coincasino",
     name: "CoinCasino",
-    url: "https://coincasino.com",
+    url: "https://coincasino.com/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
     logo: "/casinos/coincasino.svg",
     color: "#EC4899",
     offer: "200% welcome bonus + WalletConnect",

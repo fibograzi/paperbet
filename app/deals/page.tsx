@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import DealWheelGame from "@/components/games/deals/DealWheelGame";
+import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
+import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Featured Casino Deals — Spin the Wheel | PaperBet.io",
@@ -15,14 +17,14 @@ export const metadata: Metadata = {
     url: "https://paperbet.io/deals",
     siteName: "PaperBet.io",
     type: "website",
-    images: [{ url: "https://paperbet.io/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Featured Casino Deals — Spin the Wheel | PaperBet.io",
     description:
       "Spin the Deal Wheel for featured bonuses at top crypto casinos.",
-    images: ["https://paperbet.io/og-image.png"],
+    images: ["https://paperbet.io/opengraph-image"],
   },
 };
 
@@ -40,10 +42,12 @@ export default function DealsPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
       <section className="min-h-screen">
-        <DealWheelGame />
+        <GameErrorBoundary gameName="Deal Wheel">
+          <DealWheelGame />
+        </GameErrorBoundary>
       </section>
     </>
   );

@@ -182,6 +182,7 @@ export function useDealWheel() {
   const stateRef = useRef(state);
   const confettiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSpinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const consecutiveRespinRef = useRef(0);
 
   // Keep refs in sync
@@ -213,6 +214,8 @@ export function useDealWheel() {
         clearTimeout(confettiTimeoutRef.current);
       if (autoSpinTimeoutRef.current !== null)
         clearTimeout(autoSpinTimeoutRef.current);
+      if (revealTimeoutRef.current !== null)
+        clearTimeout(revealTimeoutRef.current);
     };
   }, []);
 
@@ -262,7 +265,8 @@ export function useDealWheel() {
 
       if (elapsed >= duration) {
         // Spin done — reveal after delay
-        setTimeout(() => {
+        revealTimeoutRef.current = setTimeout(() => {
+          revealTimeoutRef.current = null;
           const segment = stateRef.current.segments[segmentIndex];
           const result: SpinResult = {
             id: generateId(),
@@ -281,11 +285,13 @@ export function useDealWheel() {
 
           dispatch({ type: "SPIN_COMPLETE", result, finalAngle: targetAngle });
 
-          // Save to localStorage
-          const updatedState = stateRef.current;
-          // We need to include the new result in the save
-          const allSpins = [...updatedState.stats.prizesWon, result];
-          saveWheelSession(updatedState.email.email, allSpins);
+          // Save to localStorage — SPIN_COMPLETE already adds result to prizesWon,
+          // so we read the updated state directly (stateRef syncs on render).
+          // Use a microtask to ensure React has processed the dispatch.
+          queueMicrotask(() => {
+            const updatedState = stateRef.current;
+            saveWheelSession(updatedState.email.email, updatedState.stats.prizesWon);
+          });
 
           // Auto-clear confetti
           if (

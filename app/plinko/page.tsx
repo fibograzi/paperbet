@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import PlinkoGame from "@/components/games/plinko/PlinkoGame";
+import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
 import { blogPosts } from "@/lib/blog-data";
+import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Free Plinko Simulator — Test Strategies | PaperBet.io",
@@ -18,14 +20,14 @@ export const metadata: Metadata = {
     url: "https://paperbet.io/plinko",
     siteName: "PaperBet.io",
     type: "website",
-    images: [{ url: "https://paperbet.io/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Free Plinko Simulator — Test Strategies | PaperBet.io",
     description:
       "Play Plinko for free with casino-accurate multipliers. Test low, medium, and high risk strategies.",
-    images: ["https://paperbet.io/og-image.png"],
+    images: ["https://paperbet.io/opengraph-image"],
   },
 };
 
@@ -51,10 +53,12 @@ export default function PlinkoPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
       <section className="min-h-screen">
-        <PlinkoGame />
+        <GameErrorBoundary gameName="Plinko">
+          <PlinkoGame />
+        </GameErrorBoundary>
       </section>
 
       {/* Related Guides */}

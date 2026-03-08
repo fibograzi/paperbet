@@ -159,8 +159,8 @@ export default function MinesGame() {
         </div>
       </div>
 
-      {/* Mobile/Tablet: Sidebar below */}
-      <div className="lg:hidden mt-6">
+      {/* Mobile/Tablet: Sidebar below — extra padding when cash-out bar is visible */}
+      <div className={`lg:hidden mt-6 ${showMobileCashout ? "pb-20" : ""}`}>
         <MinesSidebar
           state={state}
           onDismissNudge={() =>

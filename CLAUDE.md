@@ -28,8 +28,7 @@ PaperBet.io is a free-to-play crypto casino simulator platform. Users practice r
 ```
 
 ### Typography
-- **Headings:** "Space Grotesk" (Google Fonts) — bold, techy, modern
-  - WAIT: Do NOT use Space Grotesk. Use "Outfit" or "Sora" instead.
+- **Headings:** "Outfit" (Google Fonts) — bold, techy, modern
 - **Body:** "DM Sans" (Google Fonts) — clean, readable
 - **Mono/Stats:** "JetBrains Mono" (Google Fonts) — for numbers, stats, code-like displays
 
@@ -46,9 +45,9 @@ PaperBet.io is a free-to-play crypto casino simulator platform. Users practice r
 - Stats displays: Use mono font, large numbers, muted labels below
 
 ## Tech Stack
-- **Framework:** Next.js 14+ (App Router, `app/` directory)
+- **Framework:** Next.js 16 (App Router, `app/` directory)
 - **Language:** TypeScript (strict mode)
-- **Styling:** Tailwind CSS v3+ with custom theme extending design tokens above
+- **Styling:** Tailwind CSS v4 with custom theme extending design tokens above
 - **Animations:** Framer Motion for React components, CSS for simple transitions
 - **Canvas:** HTML5 Canvas API for Plinko physics (no external physics libraries)
 - **State:** React useState/useReducer (no external state management)
@@ -209,61 +208,6 @@ Three detailed game spec files live in the project root. Claude Code MUST read t
 - `MINES_GAME_SPEC.md` — Complete Mines mechanics, visuals, animations, grid logic
 
 These specs are the SINGLE SOURCE OF TRUTH for how each game looks, feels, and works. They override any conflicting information in the implementation plan.
-```
-
----
-
-## Change 2: Replace the Phase 2 prompt opening
-
-Find the **first 3 lines** inside the Phase 2 code block (after the triple backticks):
-```
-Read CLAUDE.md first. Phase 0 and 1 are complete (project setup + landing page). Now build the complete Plinko simulator — the flagship game of PaperBet.io.
-
-This is the most important page on the entire site. It must be visually stunning, perfectly functional on mobile, and feel as close to a real crypto casino Plinko game as possible.
-```
-
-**Replace with:**
-```
-Read CLAUDE.md first, then read PLINKO_GAME_SPEC.md in the project root. That spec file is your SINGLE SOURCE OF TRUTH for every visual detail, animation, multiplier table, and game mechanic. Phase 0 and 1 are complete (project setup + landing page). Now build the complete Plinko simulator — the flagship game of PaperBet.io.
-
-This is the most important page on the entire site. It must be visually stunning, perfectly functional on mobile, and feel as close to a real crypto casino Plinko game as possible. Follow the game spec file for ALL visual design, animation timing, color coding, and layout decisions. The instructions below cover the technical architecture and page structure — the spec file covers how it looks and feels.
-```
-
----
-
-## Change 3: Replace the Phase 4 prompt opening
-
-Find the **first 3 lines** inside the Phase 4 code block:
-```
-Read CLAUDE.md first. Phases 0-3 are complete. Now build the Crash game simulator — the second game on PaperBet.io.
-
-Crash is a popular crypto casino game where a multiplier starts at 1.00x and rises until it randomly "crashes." The player must cash out before the crash to win. If they don't cash out in time, they lose their bet.
-```
-
-**Replace with:**
-```
-Read CLAUDE.md first, then read CRASH_GAME_SPEC.md in the project root. That spec file is your SINGLE SOURCE OF TRUTH for every visual detail, animation, multiplier logic, and game mechanic. Phases 0-3 are complete. Now build the Crash game simulator — the second game on PaperBet.io.
-
-Crash is a popular crypto casino game where a multiplier starts at 1.00x and rises until it randomly "crashes." The player must cash out before the crash to win. The spec file contains the complete visual design, animation timing, chart rendering details, and crash point math. The instructions below cover the technical architecture and page structure — the spec file covers how it looks and feels.
-```
-
----
-
-## Change 4: Replace the Phase 5 prompt opening
-
-Find the **first 3 lines** inside the Phase 5 code block:
-```
-Read CLAUDE.md first. Phases 0-4 are complete. Now build the Mines game simulator — the third game on PaperBet.io.
-
-Mines is a grid-based game where the player clicks tiles to reveal gems (safe) or mines (game over). Each safe reveal increases the multiplier. The player can cash out at any time.
-```
-
-**Replace with:**
-```
-Read CLAUDE.md first, then read MINES_GAME_SPEC.md in the project root. That spec file is your SINGLE SOURCE OF TRUTH for every visual detail, animation, multiplier formula, and game mechanic. Phases 0-4 are complete. Now build the Mines game simulator — the third game on PaperBet.io.
-
-Mines is a grid-based game where the player clicks tiles to reveal gems (safe) or mines (game over). Each safe reveal increases the multiplier. The player can cash out at any time. The spec file contains the complete visual design, grid rendering, reveal animations, and payout math. The instructions below cover the technical architecture and page structure — the spec file covers how it looks and feels.
-
 
 ## SEO Requirements
 - Every page needs: unique title tag, meta description, og:image, canonical URL

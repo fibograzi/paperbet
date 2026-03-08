@@ -6,11 +6,11 @@ import {
   useLayoutEffect,
   useRef,
   useReducer,
-  useSyncExternalStore,
 } from "react";
 import { CrashChartRenderer } from "./crashAnimation";
 import { formatCrashMultiplier, getMultiplierColor, getTimeForMultiplier } from "./crashEngine";
 import type { CrashPhase, ChartPoint } from "./crashTypes";
+import { usePrefersReducedMotion } from "@/lib/hooks/usePrefersReducedMotion";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,34 +39,6 @@ const CRASH_FLASH_DURATION = 100; // ms for red flash
 const CRASH_SHAKE_START = 100; // ms offset for shake start
 const CRASH_SHAKE_END = 200; // ms offset for shake end
 const DEBOUNCE_MS = 200;
-
-// ---------------------------------------------------------------------------
-// Reduced motion hook (useSyncExternalStore — no setState in effect)
-// ---------------------------------------------------------------------------
-
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-
-function subscribeReducedMotion(callback: () => void): () => void {
-  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
-  mq.addEventListener("change", callback);
-  return () => mq.removeEventListener("change", callback);
-}
-
-function getReducedMotionSnapshot(): boolean {
-  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
-}
-
-function getReducedMotionServerSnapshot(): boolean {
-  return false;
-}
-
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    subscribeReducedMotion,
-    getReducedMotionSnapshot,
-    getReducedMotionServerSnapshot,
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -106,6 +78,67 @@ export default function CrashChart({
   const crashCompletionFired = useRef(false);
 
   const reducedMotion = usePrefersReducedMotion();
+
+  // Restart rAF loop when it's been paused during idle
+  const restartLoop = useCallback(() => {
+    if (rafRef.current === 0 && rendererRef.current) {
+      const draw = () => {
+        const renderer = rendererRef.current;
+        if (!renderer) return;
+
+        const currentPhase = phaseRef.current;
+        const currentMult = multiplierRef.current;
+
+        if (currentPhase === "running" && currentMult > 1) {
+          const time = getTimeForMultiplier(currentMult);
+          const timeSinceLastPoint = time - lastPointTimeRef.current;
+          if (timeSinceLastPoint >= POINT_INTERVAL / 1000) {
+            pointsRef.current.push({ time, multiplier: currentMult });
+            lastPointTimeRef.current = time;
+          }
+        }
+
+        const points = pointsRef.current;
+        const bounds = renderer.getChartBounds(points);
+        renderer.clear();
+        renderer.drawGrid(bounds.maxMultiplier);
+
+        if (currentPhase === "running" && points.length >= 2) {
+          const color = getMultiplierColor(currentMult);
+          renderer.drawLine(points, color);
+        } else if (currentPhase === "crashed" && points.length >= 2) {
+          const elapsed = performance.now() - crashStartRef.current;
+          const progress = Math.min(elapsed / CRASH_DURATION, 1);
+          renderer.drawCrashState(points, progress);
+        }
+
+        if (
+          phaseRef.current === "crashed" &&
+          !crashCompletionFired.current &&
+          crashStartRef.current > 0
+        ) {
+          const elapsed = performance.now() - crashStartRef.current;
+          if (elapsed >= CRASH_DURATION) {
+            crashCompletionFired.current = true;
+            crashAnimDone.current = true;
+          }
+        }
+
+        const hasActiveAnimation =
+          phaseRef.current === "running" ||
+          (phaseRef.current === "crashed" && crashStartRef.current > 0 && !crashAnimDone.current) ||
+          (cashoutStartRef.current > 0 && performance.now() - cashoutStartRef.current < CASHOUT_FLOAT_DURATION);
+
+        if (hasActiveAnimation) {
+          forceRender();
+          rafRef.current = requestAnimationFrame(draw);
+        } else {
+          rafRef.current = 0;
+        }
+      };
+      rafRef.current = requestAnimationFrame(draw);
+    }
+  }, [forceRender]);
 
   // Previous phase ref removed — transitions now handled by useLayoutEffect
 
@@ -173,12 +206,14 @@ export default function CrashChart({
       crashAnimDone.current = false;
       crashCompletionFired.current = false;
       goStartRef.current = performance.now();
+      restartLoop();
     } else if (phase === "crashed") {
       crashStartRef.current = performance.now();
       crashAnimDone.current = false;
       crashCompletionFired.current = false;
+      restartLoop();
     }
-  }, [phase]);
+  }, [phase, restartLoop]);
 
   // Track cashout animation timing
   useLayoutEffect(() => {
@@ -288,9 +323,11 @@ export default function CrashChart({
 
       if (hasActiveAnimation) {
         forceRender();
+        rafRef.current = requestAnimationFrame(draw);
+      } else {
+        // Idle (betting or post-crash) — stop loop, draw once on next phase change
+        rafRef.current = 0;
       }
-
-      rafRef.current = requestAnimationFrame(draw);
     };
 
     rafRef.current = requestAnimationFrame(draw);

@@ -28,8 +28,8 @@ export default function BetHistory({ history, maxVisible = 25 }: BetHistoryProps
   const totalCount = history.length;
 
   return (
-    <div className="max-h-[300px] overflow-y-auto rounded-lg border border-pb-border">
-      <table className="w-full text-sm">
+    <div className="max-h-[300px] overflow-auto rounded-lg border border-pb-border">
+      <table className="w-full text-sm" aria-label="Bet history">
         <thead className="sticky top-0 z-10 bg-pb-bg-secondary">
           <tr>
             <th className="text-xs text-pb-text-muted uppercase text-left px-3 py-2">#</th>

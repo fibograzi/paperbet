@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import CrashGame from "@/components/games/crash/CrashGame";
+import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
 import { blogPosts } from "@/lib/blog-data";
+import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Free Crash Simulator — Test Cashout Strategies | PaperBet.io",
@@ -18,14 +20,14 @@ export const metadata: Metadata = {
     url: "https://paperbet.io/crash",
     siteName: "PaperBet.io",
     type: "website",
-    images: [{ url: "https://paperbet.io/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Free Crash Simulator — Test Cashout Strategies | PaperBet.io",
     description:
       "Play Crash for free with casino-accurate multiplier curves. Test auto-cashout strategies.",
-    images: ["https://paperbet.io/og-image.png"],
+    images: ["https://paperbet.io/opengraph-image"],
   },
 };
 
@@ -51,10 +53,12 @@ export default function CrashPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
       <section className="min-h-screen">
-        <CrashGame />
+        <GameErrorBoundary gameName="Crash">
+          <CrashGame />
+        </GameErrorBoundary>
       </section>
 
       {/* Related Guides */}

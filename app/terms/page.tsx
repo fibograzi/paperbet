@@ -159,9 +159,9 @@ export default function TermsOfServicePage() {
           </h2>
           <p className="text-pb-text-secondary leading-relaxed">
             These Terms of Service shall be governed by and construed in
-            accordance with the laws of the jurisdiction in which PaperBet.io
-            operates. Any disputes arising from or related to these terms shall
-            be resolved in the competent courts of that jurisdiction.
+            accordance with the laws of the Netherlands. Any disputes arising
+            from or related to these terms shall be resolved in the competent
+            courts of the Netherlands.
           </p>
 
           {/* 10. Changes to Terms */}

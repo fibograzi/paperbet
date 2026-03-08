@@ -8,37 +8,37 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: launchDate,
       changeFrequency: "weekly",
       priority: 1.0,
     },
     {
       url: `${baseUrl}/plinko`,
-      lastModified: new Date(),
+      lastModified: launchDate,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/crash`,
-      lastModified: new Date(),
+      lastModified: launchDate,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/mines`,
-      lastModified: new Date(),
+      lastModified: launchDate,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/deals`,
-      lastModified: new Date(),
+      lastModified: launchDate,
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date(),
+      lastModified: launchDate,
       changeFrequency: "weekly",
       priority: 0.8,
     },

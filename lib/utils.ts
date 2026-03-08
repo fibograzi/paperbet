@@ -1,5 +1,3 @@
-import { SessionStats } from "./types";
-
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -14,24 +12,11 @@ export function formatMultiplier(mult: number): string {
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 9);
+  return crypto.randomUUID().slice(0, 8);
 }
 
 export function cn(...classes: (string | boolean | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
-}
-
-export function getInitialSessionStats(): SessionStats {
-  return {
-    totalBets: 0,
-    totalWagered: 0,
-    totalReturns: 0,
-    netProfit: 0,
-    biggestWin: 0,
-    biggestLoss: 0,
-    currentStreak: 0,
-    bestStreak: 0,
-  };
 }
 
 export function getSlotColor(multiplier: number): string {
@@ -60,4 +45,19 @@ export function getWinTier(multiplier: number): WinTier {
   if (multiplier >= 2) return "good";
   if (multiplier >= 1) return "normal";
   return "loss";
+}
+
+export function hasConsented(): boolean {
+  try {
+    return localStorage.getItem("pb_cookie_consent") === "accepted";
+  } catch {
+    return false;
+  }
+}
+
+export function safeJsonLd(data: Record<string, unknown>): string {
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
 }

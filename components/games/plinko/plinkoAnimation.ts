@@ -56,6 +56,10 @@ interface InternalBall {
 const BASE_PEG_RADIUS = 4;
 const PEG_COLOR = "#374151";
 const PEG_FLASH_COLOR = "#00E5A0";
+
+// Pre-parsed RGB for hot-path color interpolation (avoids parseInt in 60fps loop)
+const PEG_COLOR_RGB = { r: 0x37, g: 0x41, b: 0x51 };
+const PEG_FLASH_COLOR_RGB = { r: 0x00, g: 0xe5, b: 0xa0 };
 const PEG_FLASH_DURATION = 150; // ms active flash
 const PEG_FADE_DURATION = 200; // ms fade-back after flash
 
@@ -237,6 +241,7 @@ export class PlinkoAnimator {
     }
 
     this.balls.push(ball);
+    this.startLoop(); // restart rAF if paused
   }
 
   resize(width: number, height: number): void {
@@ -284,6 +289,7 @@ export class PlinkoAnimator {
   }
 
   private startLoop(): void {
+    if (this.rafId !== null) return; // already running
     this.lastTime = performance.now();
     const loop = (now: number) => {
       if (this.destroyed) return;
@@ -292,6 +298,13 @@ export class PlinkoAnimator {
 
       this.update(dt);
       this.render();
+
+      // Pause loop when idle (no balls, no flashing pegs)
+      const hasFlashing = this.pegStates.some((ps) => ps.flashTime > 0);
+      if (this.balls.length === 0 && !hasFlashing) {
+        this.rafId = null;
+        return;
+      }
 
       this.rafId = requestAnimationFrame(loop);
     };
@@ -527,7 +540,7 @@ export class PlinkoAnimator {
       } else if (flashTime > 0) {
         // Fade back
         const fadeProgress = 1 - flashTime / PEG_FADE_DURATION;
-        color = this.lerpColor(PEG_FLASH_COLOR, PEG_COLOR, fadeProgress);
+        color = this.lerpPegColor(fadeProgress);
       } else {
         color = PEG_COLOR;
       }
@@ -582,23 +595,13 @@ export class PlinkoAnimator {
     }
   }
 
-  /** Linearly interpolate between two hex colors. */
-  private lerpColor(from: string, to: string, t: number): string {
-    const f = this.hexToRgb(from);
-    const tC = this.hexToRgb(to);
-    const r = Math.round(lerp(f.r, tC.r, t));
-    const g = Math.round(lerp(f.g, tC.g, t));
-    const b = Math.round(lerp(f.b, tC.b, t));
+  /** Linearly interpolate between pre-parsed peg colors. */
+  private lerpPegColor(t: number): string {
+    const f = PEG_FLASH_COLOR_RGB;
+    const tc = PEG_COLOR_RGB;
+    const r = Math.round(lerp(f.r, tc.r, t));
+    const g = Math.round(lerp(f.g, tc.g, t));
+    const b = Math.round(lerp(f.b, tc.b, t));
     return `rgb(${r},${g},${b})`;
-  }
-
-  /** Parse hex color to RGB components. */
-  private hexToRgb(hex: string): { r: number; g: number; b: number } {
-    const h = hex.replace("#", "");
-    return {
-      r: parseInt(h.substring(0, 2), 16),
-      g: parseInt(h.substring(2, 4), 16),
-      b: parseInt(h.substring(4, 6), 16),
-    };
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SpinResult } from "./dealWheelTypes";
 import { CONFETTI_DURATION } from "./dealWheelEngine";
@@ -155,6 +155,37 @@ export default function DealWheelResult({
   reducedMotion,
 }: DealWheelResultProps) {
   const autoCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key !== "Tab" || !dialogRef.current) return;
+
+    const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+      'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!visible) return;
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [visible, handleKeyDown]);
 
   // Auto-dismiss respin after 1.2 seconds
   useEffect(() => {
@@ -208,6 +239,7 @@ export default function DealWheelResult({
           }}
         >
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="deal-result-title"
@@ -254,6 +286,9 @@ export default function DealWheelResult({
                       </a>
                       <p className="text-xs text-pb-text-muted mt-2">
                         T&amp;Cs apply at partner site. Crypto Casino Partner Offer.
+                      </p>
+                      <p className="text-xs text-pb-text-muted mt-1">
+                        18+ only. Gamble responsibly.
                       </p>
                     </>
                   )}

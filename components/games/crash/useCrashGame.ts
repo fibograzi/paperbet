@@ -39,6 +39,8 @@ const initialStats: CrashSessionStats = {
   bestCashout: 0,
   averageCashout: 0,
   winRate: 0,
+  totalWins: 0,
+  cashoutCount: 0,
 };
 
 const initialAutoPlay: CrashAutoPlayState = {
@@ -223,25 +225,17 @@ function crashReducer(
           ? Math.max(state.stats.bestCashout, result.cashoutMultiplier)
           : state.stats.bestCashout;
 
-      // Average cashout: only count rounds where the player cashed out
-      const previousCashoutCount =
-        state.stats.averageCashout > 0 || state.stats.bestCashout > 0
-          ? Math.round(
-              (state.stats.winRate / 100) * state.stats.totalBets
-            )
-          : 0;
-      const newCashoutCount =
-        previousCashoutCount + (result.cashedOut ? 1 : 0);
+      // Average cashout: tracked with explicit cashoutCount
+      const cashoutCount =
+        state.stats.cashoutCount + (result.cashedOut ? 1 : 0);
       const averageCashout =
         result.cashedOut && result.cashoutMultiplier !== null
-          ? (state.stats.averageCashout * previousCashoutCount +
+          ? (state.stats.averageCashout * state.stats.cashoutCount +
               result.cashoutMultiplier) /
-            newCashoutCount
+            cashoutCount
           : state.stats.averageCashout;
 
-      const totalWins =
-        Math.round((state.stats.winRate / 100) * state.stats.totalBets) +
-        (isWin ? 1 : 0);
+      const totalWins = state.stats.totalWins + (isWin ? 1 : 0);
       const winRate = totalBets > 0 ? (totalWins / totalBets) * 100 : 0;
 
       const showSessionReminder =
@@ -272,6 +266,8 @@ function crashReducer(
           bestCashout,
           averageCashout,
           winRate,
+          totalWins,
+          cashoutCount,
         },
       };
     }
