@@ -137,6 +137,18 @@ export const GAMES: Game[] = [
     available: true,
     rtp: 99,
   },
+  {
+    id: "limbo",
+    name: "Limbo",
+    slug: "limbo",
+    description:
+      "Set a target multiplier, place a bet, and see if the crash point beats your target. Instant results — the fastest game in crypto casinos.",
+    shortDesc: "Target. Bet. Instant.",
+    icon: "Zap",
+    color: "#A855F7",
+    available: true,
+    rtp: 99,
+  },
 ];
 
 export const SITE = {
