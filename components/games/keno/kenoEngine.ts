@@ -95,7 +95,9 @@ export function randomPick(count: number = MAX_PICKS): number[] {
   const picked: number[] = [];
 
   for (let i = 0; i < count; i++) {
-    const idx = Math.floor(Math.random() * (POOL_SIZE - i));
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const idx = array[0] % (POOL_SIZE - i);
     picked.push(pool[idx]);
     pool[idx] = pool[POOL_SIZE - 1 - i];
   }

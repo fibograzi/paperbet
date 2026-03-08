@@ -266,7 +266,7 @@ export default function KenoControls({
         <label className="font-body text-sm block mb-2" style={{ color: "#9CA3AF" }}>
           Difficulty
         </label>
-        <div className="rounded-lg p-1 flex gap-0.5" style={{ backgroundColor: "#1F2937" }}>
+        <div className="rounded-lg p-1 flex gap-0.5" style={{ backgroundColor: "#1F2937" }} role="radiogroup" aria-label="Difficulty level">
           {DIFFICULTIES.map((diff) => {
             const isActive = difficulty === diff;
             const color = DIFFICULTY_COLORS[diff];
@@ -274,6 +274,8 @@ export default function KenoControls({
               <button
                 key={diff}
                 type="button"
+                role="radio"
+                aria-checked={isActive}
                 onClick={() => dispatch({ type: "SET_DIFFICULTY", difficulty: diff })}
                 disabled={!isIdle}
                 className="flex-1 py-2 rounded-md text-center text-xs font-body font-semibold transition-colors duration-150"

@@ -98,9 +98,8 @@ export default function KenoResultOverlay({
 
         {/* Multiplier */}
         <motion.p
-          className="font-mono-stats font-bold leading-none"
+          className="font-mono-stats font-bold leading-none text-[32px] sm:text-[48px]"
           style={{
-            fontSize: isLoss ? "32px" : isBigWin ? "48px" : "40px",
             color: isLoss ? "#6B7280" : colors.bg,
             textShadow: isBigWin
               ? `0 0 24px ${colors.bg}80`

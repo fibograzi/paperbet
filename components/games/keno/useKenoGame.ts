@@ -113,6 +113,11 @@ function updateStats(prev: KenoSessionStats, round: KenoRound): KenoSessionStats
     stats.mostHitsInOneDraw = round.matchCount;
   }
 
+  // Track biggest loss regardless of win/loss classification (catches micro-win partial losses)
+  if (round.profit < 0 && Math.abs(round.profit) > stats.biggestLoss) {
+    stats.biggestLoss = Math.abs(round.profit);
+  }
+
   if (round.isWin) {
     stats.winCount += 1;
     stats.currentStreak = stats.currentStreak > 0 ? stats.currentStreak + 1 : 1;
@@ -128,9 +133,6 @@ function updateStats(prev: KenoSessionStats, round: KenoRound): KenoSessionStats
     const absStreak = Math.abs(stats.currentStreak);
     if (absStreak > stats.bestLossStreak) {
       stats.bestLossStreak = absStreak;
-    }
-    if (round.betAmount > stats.biggestLoss) {
-      stats.biggestLoss = round.betAmount;
     }
   }
 
@@ -315,7 +317,7 @@ function kenoReducer(state: KenoGameState, action: KenoAction): KenoGameState {
       // Session reminder
       const newSessionBetCount = state.sessionBetCount + 1;
       let showSessionReminder = state.showSessionReminder;
-      if (newSessionBetCount === SESSION_REMINDER_THRESHOLD && !state.showSessionReminder) {
+      if (newSessionBetCount > 0 && newSessionBetCount % SESSION_REMINDER_THRESHOLD === 0) {
         showSessionReminder = true;
       }
 
@@ -593,7 +595,8 @@ export function useKenoGame() {
     return () => {
       if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     };
-  }, [state.autoPlay.active, state.phase, state.sessionBetCount, bet, state.betAmount, state.balance, state.history, state.autoPlay.config, state.autoPlay.progress, state.instantBet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.autoPlay.active, state.phase, state.sessionBetCount, bet, state.balance, state.autoPlay.config, state.autoPlay.progress, state.instantBet]);
 
   // ---------------------------------------------------------------------------
   // Post-session nudge timer
