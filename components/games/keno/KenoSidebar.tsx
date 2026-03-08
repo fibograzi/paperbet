@@ -276,7 +276,7 @@ export default function KenoSidebar({ state, onDismissNudge, onDismissReminder }
                         transition={{ duration: 0.2 }}
                         className={`${isEven ? "bg-pb-bg-primary" : "bg-pb-bg-secondary"} hover:bg-pb-bg-tertiary transition-colors`}
                         style={{
-                          borderLeft: entry.isWin ? "3px solid #00E5A0" : "3px solid transparent",
+                          borderLeft: entry.isWin ? "3px solid #00E5A0" : "3px solid #EF4444",
                         }}
                       >
                         <td className="font-mono-stats text-pb-text-muted px-1.5 py-1.5 text-center">

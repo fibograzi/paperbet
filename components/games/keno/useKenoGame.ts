@@ -20,6 +20,7 @@ import {
   SESSION_REMINDER_THRESHOLD,
   POST_SESSION_NUDGE_THRESHOLD,
   AUTO_PLAY_MAX_CONSECUTIVE,
+  AUTO_PLAY_WARNING_THRESHOLD,
   TILE_REVEAL_STAGGER,
   RESULT_DISPLAY_DELAY,
   RESULT_DISPLAY_DURATION,
@@ -69,6 +70,7 @@ function createInitialState(): KenoGameState {
       progress: null,
       startingNetProfit: 0,
     },
+    autoPlayPausedForWarning: false,
   };
 }
 
@@ -373,6 +375,7 @@ function kenoReducer(state: KenoGameState, action: KenoAction): KenoGameState {
       if (state.selectedNumbers.length === 0) return state;
       return {
         ...state,
+        autoPlayPausedForWarning: false,
         autoPlay: {
           active: true,
           config: action.config,
@@ -426,6 +429,14 @@ function kenoReducer(state: KenoGameState, action: KenoAction): KenoGameState {
       };
     }
 
+    case "SHOW_AUTO_PLAY_WARNING": {
+      return { ...state, autoPlayPausedForWarning: true };
+    }
+
+    case "DISMISS_AUTO_PLAY_WARNING": {
+      return { ...state, autoPlayPausedForWarning: false };
+    }
+
     default:
       return state;
   }
@@ -440,7 +451,6 @@ export function useKenoGame() {
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -541,6 +551,13 @@ export function useKenoGame() {
       return;
     }
 
+    // 200-round responsible gambling pause
+    if (progress.currentBet > 0 && progress.currentBet % AUTO_PLAY_WARNING_THRESHOLD === 0) {
+      dispatch({ type: "AUTO_PLAY_STOP" });
+      dispatch({ type: "SHOW_AUTO_PLAY_WARNING" });
+      return;
+    }
+
     // Check stop conditions
     if (checkAutoPlayStopConditions(state, config, progress)) {
       dispatch({ type: "AUTO_PLAY_STOP" });
@@ -618,7 +635,6 @@ export function useKenoGame() {
 
   useEffect(() => {
     return () => {
-      if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
       if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
       if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
       if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);

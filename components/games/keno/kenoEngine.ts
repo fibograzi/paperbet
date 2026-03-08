@@ -17,6 +17,7 @@ export const MAX_PREVIOUS_RESULTS = 15;
 export const SESSION_REMINDER_THRESHOLD = 100;
 export const POST_SESSION_NUDGE_THRESHOLD = 10;
 export const AUTO_PLAY_MAX_CONSECUTIVE = 500;
+export const AUTO_PLAY_WARNING_THRESHOLD = 200;
 
 // Animation timing (ms)
 export const TILE_REVEAL_STAGGER = 100;    // delay between each tile reveal

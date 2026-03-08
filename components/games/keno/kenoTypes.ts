@@ -128,6 +128,7 @@ export interface KenoGameState {
     progress: KenoAutoPlayProgress | null;
     startingNetProfit: number;
   };
+  autoPlayPausedForWarning: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,4 +153,6 @@ export type KenoAction =
   | { type: "AUTO_PLAY_ADJUST"; betAmount: number }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
-  | { type: "DISMISS_POST_SESSION_NUDGE" };
+  | { type: "DISMISS_POST_SESSION_NUDGE" }
+  | { type: "SHOW_AUTO_PLAY_WARNING" }
+  | { type: "DISMISS_AUTO_PLAY_WARNING" };

@@ -97,8 +97,7 @@ function KenoTileInner({ number, visualState, disabled, onClick }: KenoTileProps
       <span>{number}</span>
       {isHit && (
         <Gem
-          className="absolute bottom-0.5 sm:bottom-1"
-          size={14}
+          className="absolute bottom-0.5 sm:bottom-1 w-4 h-4 sm:w-5 sm:h-5"
           style={{
             color: "#00E5A0",
             filter: "drop-shadow(0 0 6px rgba(0, 229, 160, 0.5))",

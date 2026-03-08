@@ -49,7 +49,7 @@ export default function KenoControls({
   onStartAutoPlay,
   onStopAutoPlay,
 }: KenoControlsProps) {
-  const { phase, betAmount, balance, difficulty, selectedNumbers, instantBet, autoPlay } = state;
+  const { phase, betAmount, balance, difficulty, selectedNumbers, instantBet, autoPlay, autoPlayPausedForWarning } = state;
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const isIdle = phase === "idle";
   const isDrawing = phase === "drawing";
@@ -647,23 +647,43 @@ export default function KenoControls({
                 </span>
               </label>
 
+              {/* 200-round responsible gambling warning */}
+              {autoPlayPausedForWarning && (
+                <div
+                  className="rounded-lg p-3"
+                  style={{ backgroundColor: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)" }}
+                >
+                  <p className="font-body text-xs" style={{ color: "#F59E0B" }}>
+                    Auto-play paused after 200 rounds. Take a moment to review your session before continuing.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "DISMISS_AUTO_PLAY_WARNING" })}
+                    className="text-xs mt-1.5 hover:underline"
+                    style={{ color: "#9CA3AF" }}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
               {/* Start Auto button */}
               <motion.button
                 type="button"
                 onClick={handleStartAuto}
-                disabled={hasNoPicks || balance < betAmount}
+                disabled={!isIdle || hasNoPicks || balance < betAmount}
                 className="w-full py-3 rounded-[10px] font-body text-base font-bold transition-all"
                 style={{
-                  backgroundColor: hasNoPicks || balance < betAmount ? "#374151" : "#00E5A0",
-                  color: hasNoPicks || balance < betAmount ? "#6B7280" : "#0B0F1A",
-                  boxShadow: hasNoPicks || balance < betAmount ? "none" : "0 0 20px rgba(0,229,160,0.2)",
-                  cursor: hasNoPicks || balance < betAmount ? "not-allowed" : "pointer",
+                  backgroundColor: !isIdle || hasNoPicks || balance < betAmount ? "#374151" : "#00E5A0",
+                  color: !isIdle || hasNoPicks || balance < betAmount ? "#6B7280" : "#0B0F1A",
+                  boxShadow: !isIdle || hasNoPicks || balance < betAmount ? "none" : "0 0 20px rgba(0,229,160,0.2)",
+                  cursor: !isIdle || hasNoPicks || balance < betAmount ? "not-allowed" : "pointer",
                 }}
-                whileHover={!hasNoPicks && balance >= betAmount ? {
+                whileHover={isIdle && !hasNoPicks && balance >= betAmount ? {
                   backgroundColor: "#1AFFA8",
                   boxShadow: "0 0 30px rgba(0,229,160,0.3)",
                 } : undefined}
-                whileTap={!hasNoPicks && balance >= betAmount ? { scale: 0.98 } : undefined}
+                whileTap={isIdle && !hasNoPicks && balance >= betAmount ? { scale: 0.98 } : undefined}
               >
                 Start Auto
               </motion.button>
