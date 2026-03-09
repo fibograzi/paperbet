@@ -32,13 +32,19 @@ export const AUTO_SPEED_TURBO = 500;
 // Random number generation — Crash point formula
 // ---------------------------------------------------------------------------
 
-/** Generate a crash point using the same formula as Crash game */
+/**
+ * Generate a result multiplier using Stake's Limbo formula.
+ * Formula: max(1, floor(99 / u) / 100) where u ~ Uniform[0, 1)
+ * P(result >= m) = 0.99/m — exactly 1% house edge.
+ */
 export function generateCrashPoint(): number {
   const buffer = new Uint32Array(1);
   crypto.getRandomValues(buffer);
-  // R in [0, 0.99) — uniform random
-  const R = (buffer[0] % 9900) / 10000;
-  const raw = Math.floor(99 / (1 - R)) / 100;
+  // u in [0, 1) — uniform with full 32-bit precision
+  const u = buffer[0] / 4294967296;
+  // Handle u = 0 edge case (division by zero)
+  if (u === 0) return MAX_RESULT_CAP;
+  const raw = Math.floor(99 / u) / 100;
   return Math.min(MAX_RESULT_CAP, Math.max(1.00, raw));
 }
 

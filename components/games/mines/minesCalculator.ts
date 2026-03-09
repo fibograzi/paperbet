@@ -23,7 +23,7 @@ export function precomputeMultipliers(mineCount: number): number[] {
   let survivalProb = 1.0;
   for (let k = 1; k <= maxGems; k++) {
     survivalProb *= (TOTAL_TILES - mineCount - (k - 1)) / (TOTAL_TILES - (k - 1));
-    multipliers.push(HOUSE_EDGE / survivalProb);
+    multipliers.push(Math.floor((HOUSE_EDGE / survivalProb) * 100) / 100);
   }
 
   multiplierCache.set(mineCount, multipliers);

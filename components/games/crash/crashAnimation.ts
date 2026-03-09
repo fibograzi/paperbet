@@ -50,11 +50,16 @@ const hexRgbCache = new Map<string, { r: number; g: number; b: number }>();
 function parseHex(hex: string): { r: number; g: number; b: number } {
   let cached = hexRgbCache.get(hex);
   if (!cached) {
-    cached = {
-      r: parseInt(hex.slice(1, 3), 16),
-      g: parseInt(hex.slice(3, 5), 16),
-      b: parseInt(hex.slice(5, 7), 16),
-    };
+    if (hex.startsWith("rgb")) {
+      const nums = hex.match(/\d+/g)!;
+      cached = { r: +nums[0], g: +nums[1], b: +nums[2] };
+    } else {
+      cached = {
+        r: parseInt(hex.slice(1, 3), 16),
+        g: parseInt(hex.slice(3, 5), 16),
+        b: parseInt(hex.slice(5, 7), 16),
+      };
+    }
     hexRgbCache.set(hex, cached);
   }
   return cached;

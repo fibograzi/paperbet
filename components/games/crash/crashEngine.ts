@@ -1,8 +1,9 @@
 /**
  * Crash game engine — pure math functions.
  *
- * Crash point formula: max(1, floor(99 / (1 - R)) / 100)
- * where R is uniform in [0, 0.99).
+ * Crash point formula: max(1, floor(99 / u) / 100)
+ * where u is uniform in [0, 1).
+ * Equivalent to Stake's: max(1, floor(0.99 / u × 100) / 100)
  *
  * Multiplier growth: multiplier(t) = e^(GROWTH_RATE * t)
  * where t is elapsed time in seconds.
@@ -36,20 +37,26 @@ export const POST_CRASH_DELAY = 2000;
 /**
  * Generate a provably-fair crash point.
  *
+ * Formula: max(1, floor(99 / u) / 100) where u ~ Uniform[0, 1)
+ * This matches Stake.com's crash formula exactly.
+ *
  * Distribution:
- * - ~1% instant crash at 1.00x (house edge)
- * - Low multipliers are very common
- * - High multipliers are exponentially rare
+ * - ~2% crash at 1.00x (house edge mechanism)
+ * - P(crash >= m) = 0.99/m for any target m
+ * - EV = 0.99 for any cashout target (1% house edge)
  */
 export function generateCrashPoint(): number {
   const array = new Uint32Array(1);
   crypto.getRandomValues(array);
 
-  // R in [0, 0.99) — uniform
-  const R = (array[0] / (0xffffffff + 1)) * 0.99;
+  // u in [0, 1) — uniform with full 32-bit precision
+  const u = array[0] / (0xffffffff + 1);
 
-  // Formula: max(1, floor(99 / (1 - R)) / 100)
-  const raw = Math.floor(99 / (1 - R)) / 100;
+  // Handle u = 0 edge case (division by zero)
+  if (u === 0) return MAX_MULTIPLIER;
+
+  // Formula: max(1, floor(99 / u) / 100)
+  const raw = Math.floor(99 / u) / 100;
   const capped = Math.min(raw, MAX_MULTIPLIER);
 
   return Math.max(1, capped);

@@ -444,7 +444,7 @@ export default function LimboResultDisplay({
 
       {/* Previous result at low opacity (idle) */}
       {isIdleWithResult && result !== null && (
-        <div className="font-mono-stats font-bold z-10" style={{ opacity: 0.4 }}>
+        <div className="font-mono-stats font-bold z-10" style={{ opacity: 0.5 }}>
           <span
             className="hidden md:inline"
             style={{ fontSize: 80, color: resultColor }}
