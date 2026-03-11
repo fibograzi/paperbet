@@ -570,7 +570,7 @@ export function useCrashGame() {
         handleAutoPlayPostRound(didCashOut);
       }
 
-      const delay = stateRef.current.instantMode ? 300 : POST_CRASH_DELAY;
+      const delay = stateRef.current.instantMode ? 750 : POST_CRASH_DELAY;
       postCrashTimeoutRef.current = setTimeout(() => {
         postCrashTimeoutRef.current = null;
         if (!gameActiveRef.current) return;
@@ -774,7 +774,7 @@ export function useCrashGame() {
             }
 
             // After crash delay, start next round
-            const crashDelay = stateRef.current.instantMode ? 300 : POST_CRASH_DELAY;
+            const crashDelay = stateRef.current.instantMode ? 750 : POST_CRASH_DELAY;
             postCrashTimeoutRef.current = setTimeout(() => {
               postCrashTimeoutRef.current = null;
 
