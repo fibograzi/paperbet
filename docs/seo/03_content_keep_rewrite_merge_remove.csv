@@ -1,0 +1,29 @@
+url,page_type,current_status,decision,action_detail,primary_keyword,priority
+/,homepage,live,KEEP (optimize),"Optimize H1 + meta description + structured data for brand + game discovery","crypto casino simulator",HIGH
+/plinko,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + calculator section + internal links to blog","plinko simulator",HIGH
+/crash,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + internal links to blog","crash game simulator",HIGH
+/mines,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + calculator section + internal links to blog","mines simulator",HIGH
+/dice,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + calculator section + internal links to blog","dice simulator",HIGH
+/flip,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section (low priority — thin keyword data)","coin flip simulator",LOW
+/hilo,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + internal links to blog","hilo simulator",MEDIUM
+/keno,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + calculator section + internal links to blog","keno simulator",HIGH
+/limbo,game landing page,live,KEEP (optimize),"Add below-the-fold SEO content section + FAQ schema + internal links to blog","limbo simulator",MEDIUM
+/roulette,game hub page,live,KEEP (optimize),"Optimize as hub page — strong keyword coverage already. Improve H1 + meta + internal linking","roulette simulator",HIGH
+/roulette/free-play,roulette tool,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","free roulette simulator game",HIGH
+/roulette/strategy-tester,roulette tool,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","roulette strategy tester",MEDIUM
+/roulette/odds-calculator,roulette tool,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","roulette odds calculator",MEDIUM
+/roulette/risk-of-ruin,roulette tool,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","roulette risk of ruin calculator",MEDIUM
+/roulette/simulators/martingale,roulette tool,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","martingale roulette simulator",MEDIUM
+/roulette/simulators/fibonacci,roulette tool,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","fibonacci roulette simulator",MEDIUM
+/roulette/learn,roulette educational,live,KEEP (optimize),"Optimize title tag + meta description for target keyword","learn roulette",MEDIUM
+/deals,conversion page,live,KEEP (as-is),"No SEO changes — conversion-focused page not driven by organic search","n/a",NONE
+/blog,blog index,live,KEEP (optimize),"Optimize index page meta description + title tag","casino strategy guides",LOW
+/privacy,legal page,live,KEEP (as-is),"No changes needed","n/a",NONE
+/terms,legal page,live,KEEP (as-is),"No changes needed","n/a",NONE
+/responsible-gambling,legal page,live,KEEP (as-is),"No changes needed","n/a",NONE
+/roulette/disclaimer,legal page,live,KEEP (as-is),"No changes needed","n/a",NONE
+/blog/plinko-strategy-guide,blog post,live,KEEP (no changes),"Already well-optimized — no changes needed","plinko strategy",NONE
+/blog/crash-strategy-guide,blog post,live,KEEP (no changes),"Already well-optimized — no changes needed","crash strategy",NONE
+/blog/mines-strategy-guide,blog post,live,KEEP (no changes),"Already well-optimized — no changes needed","mines strategy",NONE
+/blog/plinko-high-risk-vs-low-risk,blog post,live,REWRITE,"Optimize keywords + add calculator reference + update data tables","plinko risk levels",LOW
+/blog/best-crypto-casinos-for-plinko,blog post,live,REWRITE,"Update with latest offers + add cross-links to roulette comparison post","best crypto casinos for plinko",LOW

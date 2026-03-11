@@ -1,0 +1,36 @@
+priority_rank,url,page_type,action,primary_keyword,supporting_keywords,search_intent,monthly_volume,business_purpose,estimated_effort,wave
+1,/plinko,game landing page,Optimize — add SEO content section + FAQ schema,plinko simulator,"plinko demo, free plinko game, plinko game online, plinko unblocked",tool,50000,Drive organic traffic to simulator + casino CTAs,Medium,1
+2,/crash,game landing page,Optimize — add SEO content section + FAQ schema,crash game simulator,"crash game, crash gambling, crash casino game",tool,50000,Drive organic traffic to simulator + casino CTAs,Medium,1
+3,/mines,game landing page,Optimize — add SEO content section + FAQ schema,mines simulator,"mines demo, free mines game, mines game, mines gamble",tool,50000,Drive organic traffic to simulator + casino CTAs,Medium,1
+4,/dice,game landing page,Optimize — add SEO content section + FAQ schema,dice simulator,"dice roll simulator, dice game, dice free, roll a dice",tool,50000,Drive organic traffic to simulator + casino CTAs,Medium,1
+5,/roulette,game hub page,Optimize — improve H1 + meta + internal linking,roulette simulator,"roulette demo, free roulette, online roulette, roulette wheel simulator",tool,50000,Hub page for roulette tool ecosystem,Medium,1
+6,/keno,game landing page,Optimize — add SEO content section + FAQ schema,keno simulator,"free keno game, keno game online, keno casino, play keno free",tool,5000,Drive organic traffic to simulator + casino CTAs,Medium,1
+7,/hilo,game landing page,Optimize — add SEO content section + FAQ schema,hilo simulator,"hilo game, hilo casino game, hi lo casino game",tool,500,Drive organic traffic to simulator + casino CTAs,Low,1
+8,/limbo,game landing page,Optimize — add SEO content section + FAQ schema,limbo simulator,"limbo casino, limbo casino game",tool,500,Drive organic traffic to simulator + casino CTAs,Low,1
+9,/flip,game landing page,Optimize — add SEO content section,coin flip simulator,"coin flip game, flip gamble",tool,50,Drive organic traffic to simulator + casino CTAs,Low,1
+10,/roulette/free-play,roulette tool,Optimize — title + meta,free roulette simulator game,"play roulette free, free roulette game",tool,5000,Capture tool-intent searches,Low,1
+11,/roulette/strategy-tester,roulette tool,Optimize — title + meta,roulette strategy tester,"roulette strategy simulator, test roulette strategy",tool,500,Capture strategy-tool searches,Low,1
+12,/roulette/odds-calculator,roulette tool,Optimize — title + meta,roulette odds calculator,"roulette probability calculator, roulette payout calculator",tool,500,Capture calculator-intent searches,Low,1
+13,/roulette/risk-of-ruin,roulette tool,Optimize — title + meta,roulette risk of ruin calculator,"roulette bankroll calculator, risk of ruin formula",tool,500,Capture advanced calculator searches,Low,1
+14,/roulette/simulators/martingale,roulette tool,Optimize — title + meta,martingale roulette simulator,"martingale strategy test, martingale system roulette",strategy,500,Capture strategy-specific searches,Low,1
+15,/roulette/simulators/fibonacci,roulette tool,Optimize — title + meta,fibonacci roulette simulator,"fibonacci strategy test, fibonacci system roulette",strategy,500,Capture strategy-specific searches,Low,1
+16,/roulette/learn,roulette educational,Optimize — title + meta,learn roulette,"roulette rules, how to play roulette, roulette for beginners",informational,5000,Educational funnel entry point,Low,1
+17,/blog/roulette-strategy-guide,blog post,CREATE — new strategy guide,roulette strategy,"best roulette strategy, roulette betting strategy, roulette system",strategy,5000,Strategy content + simulator CTA + casino CTA,High,1
+18,/blog/dice-strategy-guide,blog post,CREATE — new strategy guide,dice strategy,"dice game strategy, dice betting strategy",strategy,500,Strategy content + simulator CTA + casino CTA,High,1
+19,/blog/keno-strategy-guide,blog post,CREATE — new strategy guide,keno strategy,"keno odds guide, best keno strategy, keno tips",strategy,500,Strategy content + simulator CTA + casino CTA,High,2
+20,/blog/best-crypto-casinos-for-roulette,blog post,CREATE — new comparison post,best online roulette casino,"top roulette casinos, roulette casino review",commercial,5000,Affiliate conversion content,High,2
+21,/blog/best-crypto-casinos-for-crash,blog post,CREATE — new comparison post,best crash game casino,"crash game casinos, top crash casino",commercial,500,Affiliate conversion content,High,2
+22,/blog/best-crypto-casinos-for-mines,blog post,CREATE — new comparison post,best mines casino,"mines game casinos, top mines casino",commercial,500,Affiliate conversion content,High,2
+23,/dice (section),calculator section,ADD — dice probability calculator section,dice probability calculator,"dice chance calculator, dice calculator",tool,5000,Retain users + demonstrate expertise,Medium,2
+24,/mines (section),calculator section,ADD — mines calculator section,mines calculator,"mines probability calculator, mines odds",tool,5000,Retain users + demonstrate expertise,Medium,2
+25,/keno (section),calculator section,ADD — keno odds calculator section,keno odds calculator,"keno probability calculator, keno payout calculator",tool,500,Retain users + demonstrate expertise,Medium,2
+26,/plinko (section),calculator section,ADD — plinko probability calculator section,plinko probability calculator,"plinko odds calculator, plinko strategy calculator",tool,50,Retain users + demonstrate expertise,Medium,2
+27,/blog/hilo-strategy-guide,blog post,CREATE — new strategy guide,hilo strategy,"hi lo card game strategy, hilo tips",strategy,50,Strategy content + simulator CTA,Medium,3
+28,/blog/limbo-strategy-guide,blog post,CREATE — new strategy guide,limbo strategy,"limbo crypto casino strategy, limbo tips",strategy,50,Strategy content + simulator CTA,Medium,3
+29,/blog/best-crypto-casinos-for-dice,blog post,CREATE — new comparison post,best dice casino,"dice game casinos, top dice casino",commercial,500,Affiliate conversion content,Medium,3
+30,/blog/what-is-provably-fair,blog post,CREATE — new educational post,provably fair,"provably fair meaning, provably fair explained",informational,500,Educational authority + trust signal,Medium,3
+31,/blog/understanding-house-edge-rtp,blog post,CREATE — new educational post,house edge explained,"rtp meaning, return to player explained, casino house edge",informational,500,Educational authority + trust signal,Medium,3
+32,/blog/flip-strategy-guide,blog post,CREATE — new strategy guide,coin flip strategy,"coin flip game strategy",strategy,0,Completeness — very thin keyword data,Low,4
+33,/blog/crypto-casino-beginners-guide,blog post,CREATE — new educational post,crypto casino guide,"how crypto casinos work, crypto gambling guide",informational,500,Top-of-funnel awareness content,Low,4
+34,/blog/plinko-high-risk-vs-low-risk,blog post,REWRITE — optimize keywords + add calculator ref,plinko risk levels,"plinko high risk, plinko low risk strategy",strategy,50,Refresh existing content,Low,4
+35,/blog/best-crypto-casinos-for-plinko,blog post,REWRITE — update offers + add cross-links,best crypto casinos for plinko,"top plinko casinos, plinko casino review",commercial,500,Refresh existing affiliate content,Low,4
