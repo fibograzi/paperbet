@@ -333,6 +333,9 @@ function limboReducer(state: LimboGameState, action: LimboAction): LimboGameStat
       };
     }
 
+    case "RESET_BALANCE":
+      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+
     default:
       return state;
   }

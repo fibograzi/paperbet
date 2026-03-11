@@ -2,19 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Minus,
-  Plus,
   Shuffle,
   ChevronDown,
 } from "lucide-react";
 import type { MinesGameState, MinesAction, MinesAutoPlayState } from "./minesTypes";
+import { useBetInput } from "@/lib/useBetInput";
 import {
   formatMinesMultiplier,
   getMultiplier,
-  getRiskLabel,
   maxGems,
 } from "./minesCalculator";
 import { formatCurrency, cn } from "@/lib/utils";
+import BalanceBar from "@/components/shared/BalanceBar";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -37,8 +36,6 @@ interface MinesControlsProps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const MINE_PRESETS = [1, 3, 5, 10, 24];
-const AUTO_PLAY_COUNTS: (number | null)[] = [10, 25, 50, 100, null];
 const AUTO_REVEAL_PRESETS = [1, 3, 5, 10];
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
@@ -69,8 +66,13 @@ export default function MinesControls({
     postRevealPhase,
   } = state;
 
+  // Tab & UI state
+  const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [numberOfBetsInput, setNumberOfBetsInput] = useState("10");
+  const [isInfinite, setIsInfinite] = useState(false);
+
   // Auto-play local state
-  const [showAutoPlay, setShowAutoPlay] = useState(false);
   const [autoCount, setAutoCount] = useState<number | null>(10);
   const [autoRevealTarget, setAutoRevealTarget] = useState(5);
   const [autoOnWin, setAutoOnWin] = useState<WinLossAction>("reset");
@@ -89,9 +91,7 @@ export default function MinesControls({
   const isGameOver = phase === "GAME_OVER";
   const isIdle = phase === "IDLE";
 
-  const riskInfo = getRiskLabel(mineCount);
   const safeGems = maxGems(mineCount);
-  const firstGemMultiplier = getMultiplier(1, mineCount);
 
   // Ensure auto-reveal target doesn't exceed max gems
   useEffect(() => {
@@ -100,9 +100,9 @@ export default function MinesControls({
     }
   }, [mineCount, safeGems, autoRevealTarget]);
 
-  // Auto-expand panel when auto-play becomes active
+  // Auto-switch to auto tab when auto-play becomes active
   useEffect(() => {
-    if (autoPlay.active) setShowAutoPlay(true);
+    if (autoPlay.active) setActiveTab("auto");
   }, [autoPlay.active]);
 
   // Spacebar shortcut
@@ -137,13 +137,7 @@ export default function MinesControls({
     [dispatch],
   );
 
-  const handleBetInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = parseFloat(e.target.value);
-      if (!isNaN(val)) setBet(val);
-    },
-    [setBet],
-  );
+  const betInput = useBetInput(betAmount, setBet);
 
   // --- Mine Count Handlers ---
   const setMines = useCallback(
@@ -153,10 +147,40 @@ export default function MinesControls({
     [dispatch],
   );
 
+  // --- Number of Bets input handler ---
+  const handleNumberOfBetsChange = useCallback((value: string) => {
+    setNumberOfBetsInput(value);
+    const parsed = parseInt(value, 10);
+    if (!isNaN(parsed) && parsed >= 1) {
+      const capped = Math.min(500, parsed);
+      setAutoCount(capped);
+      if (capped < parsed) setNumberOfBetsInput(String(capped));
+    }
+  }, []);
+
+  // --- Infinity toggle ---
+  const savedBetsRef = useRef(numberOfBetsInput);
+  const toggleInfinite = useCallback(() => {
+    setIsInfinite((prev) => {
+      if (!prev) {
+        // Going infinite — save current value
+        savedBetsRef.current = numberOfBetsInput;
+        setAutoCount(null);
+        return true;
+      } else {
+        // Coming back from infinite — restore
+        setNumberOfBetsInput(savedBetsRef.current);
+        const parsed = parseInt(savedBetsRef.current, 10);
+        setAutoCount(!isNaN(parsed) && parsed >= 1 ? Math.min(500, parsed) : 10);
+        return false;
+      }
+    });
+  }, [numberOfBetsInput]);
+
   // --- Auto-play start ---
   const handleStartAutoPlay = useCallback(() => {
     onStartAutoPlay({
-      totalCount: autoCount,
+      totalCount: isInfinite ? null : Math.min(500, autoCount ?? 10),
       autoRevealTarget,
       onWin: autoOnWin,
       onLoss: autoOnLoss,
@@ -167,6 +191,7 @@ export default function MinesControls({
       stopOnLoss: stopOnLossEnabled ? stopOnLossAmount : null,
     });
   }, [
+    isInfinite,
     autoCount,
     autoRevealTarget,
     autoOnWin,
@@ -181,206 +206,211 @@ export default function MinesControls({
     onStartAutoPlay,
   ]);
 
+  // --- Total profit calculation ---
+  const multiplier = gemsRevealed > 0 ? currentMultiplier : 1;
+  const totalProfit =
+    isIdle || gemsRevealed === 0
+      ? 0
+      : betAmount * currentMultiplier - betAmount;
+
   // --- Render ---
   return (
     <div className="flex flex-col gap-3 w-full">
+      {/* Balance */}
+      <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
+
+      {/* Tab Switcher */}
+      <div
+        className="flex rounded-lg p-1"
+        style={{ backgroundColor: "#1F2937" }}
+      >
+        {(["manual", "auto"] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className="flex-1 py-2 rounded-md text-center font-body text-sm font-semibold transition-all"
+            style={{
+              backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
+              color: activeTab === tab ? "#F9FAFB" : "#6B7280",
+            }}
+          >
+            {tab === "manual" ? "Manual" : "Auto"}
+          </button>
+        ))}
+      </div>
+
       {/* Bet Amount Card */}
       <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
         <label className="text-sm text-pb-text-secondary font-body block mb-2">
           Bet Amount
         </label>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={controlsDisabled || autoPlay.active}
-            onClick={() => setBet(betAmount - 0.1)}
-            className="w-9 h-9 rounded-full bg-pb-bg-tertiary border border-pb-border flex items-center justify-center text-pb-text-secondary hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        <div
+          className="flex items-center rounded-lg overflow-hidden"
+          style={{ border: "1px solid #374151" }}
+        >
+          <div
+            className="flex items-center flex-1 px-3 py-2.5"
+            style={{ backgroundColor: "#1F2937" }}
           >
-            <Minus size={14} />
-          </button>
-          <div className="relative flex-1">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-pb-text-muted font-mono-stats text-sm">
-              $
-            </span>
+            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
             <input
+              suppressHydrationWarning
               ref={betInputRef}
-              type="number"
-              step="0.10"
-              min="0.10"
-              max="1000"
-              value={betAmount.toFixed(2)}
-              onChange={handleBetInput}
+              type="text"
+              inputMode="decimal"
+              value={betInput.value}
+              onChange={betInput.onChange}
+              onFocus={betInput.onFocus}
+              onBlur={betInput.onBlur}
+              onKeyDown={betInput.onKeyDown}
               disabled={controlsDisabled || autoPlay.active}
-              className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 pl-7 pr-3 text-right font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
+              style={{ fontSize: 18, color: "#F9FAFB" }}
+              aria-label="Bet amount"
             />
           </div>
-          <button
-            type="button"
-            disabled={controlsDisabled || autoPlay.active}
-            onClick={() => setBet(betAmount + 0.1)}
-            className="w-9 h-9 rounded-full bg-pb-bg-tertiary border border-pb-border flex items-center justify-center text-pb-text-secondary hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-        {/* Quick select */}
-        <div className="flex gap-2 mt-2">
-          {[
-            { label: "½", action: () => setBet(betAmount / 2) },
-            { label: "2×", action: () => setBet(betAmount * 2) },
-            { label: "Min", action: () => setBet(0.1) },
-            { label: "Max", action: () => setBet(Math.min(1000, balance)) },
-          ].map((btn) => (
+          <div className="w-px self-stretch" style={{ backgroundColor: "#374151" }} />
+          <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
             <button
-              key={btn.label}
               type="button"
               disabled={controlsDisabled || autoPlay.active}
-              onClick={btn.action}
-              className="flex-1 py-1 text-xs font-body font-medium text-pb-text-muted bg-pb-bg-tertiary border border-pb-border rounded-md hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={() => setBet(betAmount / 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
             >
-              {btn.label}
+              &frac12;
             </button>
-          ))}
+            <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
+            <button
+              type="button"
+              disabled={controlsDisabled || autoPlay.active}
+              onClick={() => setBet(betAmount * 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
+            >
+              2&times;
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mine Count Card */}
+      {/* Mines Dropdown */}
       <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
         <label className="text-sm text-pb-text-secondary font-body block mb-2">
           Mines
         </label>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
+        <div className="relative">
+          <select
+            value={mineCount}
             disabled={controlsDisabled || autoPlay.active}
-            onClick={() => setMines(mineCount - 1)}
-            className="w-9 h-9 rounded-full bg-pb-bg-tertiary border border-pb-border flex items-center justify-center text-pb-text-secondary hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onChange={(e) => setMines(parseInt(e.target.value, 10))}
+            className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 12px center",
+            }}
           >
-            <Minus size={14} />
-          </button>
-          <div className="relative flex-1">
-            <input
-              type="number"
-              min="1"
-              max="24"
-              value={mineCount}
-              onChange={(e) => setMines(parseInt(e.target.value, 10) || 3)}
-              disabled={controlsDisabled || autoPlay.active}
-              className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 text-center font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </div>
-          <button
-            type="button"
-            disabled={controlsDisabled || autoPlay.active}
-            onClick={() => setMines(mineCount + 1)}
-            className="w-9 h-9 rounded-full bg-pb-bg-tertiary border border-pb-border flex items-center justify-center text-pb-text-secondary hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Plus size={14} />
-          </button>
+            {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
         </div>
-        {/* Quick select */}
-        <div className="flex gap-2 mt-2">
-          {MINE_PRESETS.map((count) => (
-            <button
-              key={count}
-              type="button"
-              disabled={controlsDisabled || autoPlay.active}
-              onClick={() => setMines(count)}
-              className={cn(
-                "flex-1 py-1 text-xs font-body font-medium border rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors",
-                mineCount === count
-                  ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                  : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
-              )}
-            >
-              {count}
-            </button>
-          ))}
-        </div>
-        {/* Info displays */}
-        <div className="flex items-center justify-between mt-2 text-xs">
-          <span className="text-pb-text-secondary">
-            {safeGems} gems to find
-          </span>
-          <span style={{ color: riskInfo.color }} className="font-medium">
-            {riskInfo.text}
-          </span>
-        </div>
-        <p className="text-xs text-pb-text-muted mt-1">
-          1st gem: {formatMinesMultiplier(firstGemMultiplier)}
-        </p>
       </div>
 
-      {/* Pick Random Button */}
-      <button
-        type="button"
-        disabled={!isPlaying || state.revealingTile !== null || autoPlay.active}
-        onClick={onPickRandom}
-        className="w-full h-9 rounded-lg bg-pb-bg-tertiary border border-pb-border text-sm text-pb-text-secondary font-body hover:bg-[#374151] hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-      >
-        <Shuffle size={14} />
-        Pick Random
-      </button>
+      {/* Gems Read-only Field */}
+      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4 opacity-70">
+        <label className="text-sm text-pb-text-secondary font-body block mb-2">
+          Gems
+        </label>
+        <div className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg text-pb-text-primary">
+          {safeGems}
+        </div>
+      </div>
 
-      {/* Action Button */}
-      {renderActionButton()}
+      {/* ===== MANUAL TAB ===== */}
+      {activeTab === "manual" && (
+        <>
+          {/* Action Button */}
+          {renderActionButton()}
 
-      {/* Auto-Play Toggle */}
-      <button
-        type="button"
-        onClick={() => setShowAutoPlay(!showAutoPlay)}
-        className="w-full flex items-center justify-between py-2 px-3 text-sm text-pb-text-secondary font-body hover:text-pb-text-primary transition-colors"
-      >
-        <span className="flex items-center gap-2">
-          {autoPlay.active && (
-            <span className="w-2 h-2 rounded-full bg-pb-accent animate-pulse" />
-          )}
-          Auto
-        </span>
-        <ChevronDown
-          size={14}
-          className={cn(
-            "transition-transform",
-            showAutoPlay ? "rotate-180" : "",
-          )}
-        />
-      </button>
+          {/* Pick Random Button */}
+          <button
+            type="button"
+            disabled={!isPlaying || state.revealingTile !== null || autoPlay.active}
+            onClick={onPickRandom}
+            className="w-full h-9 rounded-lg bg-pb-bg-tertiary border border-pb-border text-sm text-pb-text-secondary font-body hover:bg-[#374151] hover:text-pb-text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            <Shuffle size={14} />
+            Random Pick
+          </button>
 
-      {/* Auto-Play Panel */}
-      {showAutoPlay && (
-        <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4 space-y-3">
-          {/* Game count */}
-          <div>
-            <label className="text-xs text-pb-text-muted block mb-1">
-              Number of Games
+          {/* Total Profit */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
+            <label className="text-sm text-pb-text-secondary font-body block mb-2">
+              Total Profit ({formatMinesMultiplier(multiplier)})
             </label>
-            <div className="flex gap-1.5">
-              {AUTO_PLAY_COUNTS.map((count) => (
-                <button
-                  key={count ?? "inf"}
-                  type="button"
-                  disabled={autoPlay.active}
-                  onClick={() => setAutoCount(count)}
-                  className={cn(
-                    "flex-1 py-1 text-xs font-mono-stats rounded-md border disabled:opacity-50 disabled:cursor-not-allowed transition-colors",
-                    autoCount === count
-                      ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                      : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
-                  )}
-                >
-                  {count ?? "∞"}
-                </button>
-              ))}
+            <div
+              className={cn(
+                "w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg",
+                totalProfit > 0
+                  ? "text-pb-accent"
+                  : totalProfit < 0
+                    ? "text-pb-danger"
+                    : "text-pb-text-primary",
+              )}
+            >
+              {formatCurrency(totalProfit)}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ===== AUTO TAB ===== */}
+      {activeTab === "auto" && (
+        <>
+          {/* Number of Bets */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
+            <label className="text-sm text-pb-text-secondary font-body block mb-2">
+              Number of Bets
+            </label>
+            <div className="flex items-center gap-2">
+              <input suppressHydrationWarning
+                type="number"
+                min={1}
+                max={500}
+                value={isInfinite ? "" : numberOfBetsInput}
+                placeholder={isInfinite ? "∞" : ""}
+                onChange={(e) => handleNumberOfBetsChange(e.target.value)}
+                disabled={autoPlay.active || isInfinite}
+                className="flex-1 bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                disabled={autoPlay.active}
+                onClick={toggleInfinite}
+                className={cn(
+                  "w-10 h-10 rounded-lg border flex items-center justify-center font-mono-stats text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+                  isInfinite
+                    ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
+                    : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
+                )}
+              >
+                ∞
+              </button>
             </div>
           </div>
 
-          {/* Auto-reveal target */}
-          <div>
+          {/* Tiles to Reveal */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
             <label className="text-xs text-pb-text-muted block mb-1">
               Tiles to Reveal (then auto-cashout)
             </label>
             <div className="flex items-center gap-2">
-              <input
+              <input suppressHydrationWarning
                 type="number"
                 min={1}
                 max={safeGems}
@@ -435,186 +465,207 @@ export default function MinesControls({
             </p>
           </div>
 
-          {/* On Win */}
-          <div>
-            <label className="text-xs text-pb-text-muted block mb-1">
-              On Win
-            </label>
-            <div className="flex gap-1.5">
-              {(["reset", "same", "increase"] as const).map((action) => (
-                <button
-                  key={action}
-                  type="button"
-                  disabled={autoPlay.active}
-                  onClick={() => setAutoOnWin(action)}
-                  className={cn(
-                    "flex-1 py-1 text-xs font-body rounded-md border disabled:opacity-50 disabled:cursor-not-allowed capitalize transition-colors",
-                    autoOnWin === action
-                      ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                      : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
+          {/* Advanced Toggle */}
+          <div className="rounded-lg border border-pb-border">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between px-3 py-2"
+            >
+              <span className="font-body text-sm text-pb-text-secondary">Advanced</span>
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "text-pb-text-muted transition-transform",
+                  showAdvanced ? "rotate-180" : "",
+                )}
+              />
+            </button>
+            {showAdvanced && (
+              <div className="px-3 pb-3 space-y-3">
+                {/* On Win */}
+                <div>
+                  <label className="text-xs text-pb-text-muted block mb-1">
+                    On Win
+                  </label>
+                  <div className="flex gap-1.5">
+                    {(["reset", "same", "increase"] as const).map((action) => (
+                      <button
+                        key={action}
+                        type="button"
+                        disabled={autoPlay.active}
+                        onClick={() => setAutoOnWin(action)}
+                        className={cn(
+                          "flex-1 py-1 text-xs font-body rounded-md border disabled:opacity-50 disabled:cursor-not-allowed capitalize transition-colors",
+                          autoOnWin === action
+                            ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
+                            : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
+                        )}
+                      >
+                        {action === "increase" ? "Increase" : action === "reset" ? "Reset" : "Same"}
+                      </button>
+                    ))}
+                  </div>
+                  {autoOnWin === "increase" && (
+                    <div className="mt-1.5">
+                      <div className="flex gap-1">
+                        {INCREASE_PRESETS.map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            disabled={autoPlay.active}
+                            onClick={() => setIncreaseOnWinPercent(pct)}
+                            className={cn(
+                              "flex-1 py-1 text-[10px] font-mono-stats rounded border disabled:opacity-50 transition-colors",
+                              increaseOnWinPercent === pct
+                                ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
+                                : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted",
+                            )}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                      <input suppressHydrationWarning
+                        type="number"
+                        min={1}
+                        max={10000}
+                        value={increaseOnWinPercent}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 1)
+                            setIncreaseOnWinPercent(Math.min(10000, val));
+                        }}
+                        disabled={autoPlay.active}
+                        className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
+                        aria-label="Custom increase on win percentage"
+                      />
+                    </div>
                   )}
-                >
-                  {action === "increase" ? "Increase" : action === "reset" ? "Reset" : "Same"}
-                </button>
-              ))}
-            </div>
-            {autoOnWin === "increase" && (
-              <div className="mt-1.5">
-                <div className="flex gap-1">
-                  {INCREASE_PRESETS.map((pct) => (
-                    <button
-                      key={pct}
-                      type="button"
-                      disabled={autoPlay.active}
-                      onClick={() => setIncreaseOnWinPercent(pct)}
-                      className={cn(
-                        "flex-1 py-1 text-[10px] font-mono-stats rounded border disabled:opacity-50 transition-colors",
-                        increaseOnWinPercent === pct
-                          ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                          : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted",
-                      )}
-                    >
-                      {pct}%
-                    </button>
-                  ))}
                 </div>
-                <input
-                  type="number"
-                  min={1}
-                  max={10000}
-                  value={increaseOnWinPercent}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10);
-                    if (!isNaN(val) && val >= 1)
-                      setIncreaseOnWinPercent(Math.min(10000, val));
-                  }}
-                  disabled={autoPlay.active}
-                  className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-                  aria-label="Custom increase on win percentage"
-                />
+
+                {/* On Loss */}
+                <div>
+                  <label className="text-xs text-pb-text-muted block mb-1">
+                    On Loss
+                  </label>
+                  <div className="flex gap-1.5">
+                    {(["reset", "same", "increase"] as const).map((action) => (
+                      <button
+                        key={action}
+                        type="button"
+                        disabled={autoPlay.active}
+                        onClick={() => setAutoOnLoss(action)}
+                        className={cn(
+                          "flex-1 py-1 text-xs font-body rounded-md border disabled:opacity-50 disabled:cursor-not-allowed capitalize transition-colors",
+                          autoOnLoss === action
+                            ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
+                            : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
+                        )}
+                      >
+                        {action === "increase" ? "Increase" : action === "reset" ? "Reset" : "Same"}
+                      </button>
+                    ))}
+                  </div>
+                  {autoOnLoss === "increase" && (
+                    <div className="mt-1.5">
+                      <div className="flex gap-1">
+                        {INCREASE_PRESETS.map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            disabled={autoPlay.active}
+                            onClick={() => setIncreaseOnLossPercent(pct)}
+                            className={cn(
+                              "flex-1 py-1 text-[10px] font-mono-stats rounded border disabled:opacity-50 transition-colors",
+                              increaseOnLossPercent === pct
+                                ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
+                                : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted",
+                            )}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                      <input suppressHydrationWarning
+                        type="number"
+                        min={1}
+                        max={10000}
+                        value={increaseOnLossPercent}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val >= 1)
+                            setIncreaseOnLossPercent(Math.min(10000, val));
+                        }}
+                        disabled={autoPlay.active}
+                        className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
+                        aria-label="Custom increase on loss percentage"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Stop on Profit */}
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-xs text-pb-text-muted cursor-pointer">
+                    <input suppressHydrationWarning
+                      type="checkbox"
+                      checked={stopOnProfitEnabled}
+                      onChange={(e) => setStopOnProfitEnabled(e.target.checked)}
+                      disabled={autoPlay.active}
+                      className="accent-pb-accent"
+                    />
+                    Stop on Profit ≥
+                  </label>
+                  <input suppressHydrationWarning
+                    type="number"
+                    min={1}
+                    value={stopOnProfitAmount}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val > 0) setStopOnProfitAmount(val);
+                    }}
+                    disabled={autoPlay.active || !stopOnProfitEnabled}
+                    className="w-20 bg-pb-bg-tertiary border border-pb-border rounded py-1 px-2 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
+                  />
+                </div>
+
+                {/* Stop on Loss */}
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-xs text-pb-text-muted cursor-pointer">
+                    <input suppressHydrationWarning
+                      type="checkbox"
+                      checked={stopOnLossEnabled}
+                      onChange={(e) => setStopOnLossEnabled(e.target.checked)}
+                      disabled={autoPlay.active}
+                      className="accent-pb-accent"
+                    />
+                    Stop on Loss ≥
+                  </label>
+                  <input suppressHydrationWarning
+                    type="number"
+                    min={1}
+                    value={stopOnLossAmount}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val > 0) setStopOnLossAmount(val);
+                    }}
+                    disabled={autoPlay.active || !stopOnLossEnabled}
+                    className="w-20 bg-pb-bg-tertiary border border-pb-border rounded py-1 px-2 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
+                  />
+                </div>
               </div>
             )}
           </div>
 
-          {/* On Loss */}
-          <div>
-            <label className="text-xs text-pb-text-muted block mb-1">
-              On Loss
-            </label>
-            <div className="flex gap-1.5">
-              {(["reset", "same", "increase"] as const).map((action) => (
-                <button
-                  key={action}
-                  type="button"
-                  disabled={autoPlay.active}
-                  onClick={() => setAutoOnLoss(action)}
-                  className={cn(
-                    "flex-1 py-1 text-xs font-body rounded-md border disabled:opacity-50 disabled:cursor-not-allowed capitalize transition-colors",
-                    autoOnLoss === action
-                      ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                      : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
-                  )}
-                >
-                  {action === "increase" ? "Increase" : action === "reset" ? "Reset" : "Same"}
-                </button>
-              ))}
-            </div>
-            {autoOnLoss === "increase" && (
-              <div className="mt-1.5">
-                <div className="flex gap-1">
-                  {INCREASE_PRESETS.map((pct) => (
-                    <button
-                      key={pct}
-                      type="button"
-                      disabled={autoPlay.active}
-                      onClick={() => setIncreaseOnLossPercent(pct)}
-                      className={cn(
-                        "flex-1 py-1 text-[10px] font-mono-stats rounded border disabled:opacity-50 transition-colors",
-                        increaseOnLossPercent === pct
-                          ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                          : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted",
-                      )}
-                    >
-                      {pct}%
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  max={10000}
-                  value={increaseOnLossPercent}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10);
-                    if (!isNaN(val) && val >= 1)
-                      setIncreaseOnLossPercent(Math.min(10000, val));
-                  }}
-                  disabled={autoPlay.active}
-                  className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-                  aria-label="Custom increase on loss percentage"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Stop on Profit */}
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-xs text-pb-text-muted cursor-pointer">
-              <input
-                type="checkbox"
-                checked={stopOnProfitEnabled}
-                onChange={(e) => setStopOnProfitEnabled(e.target.checked)}
-                disabled={autoPlay.active}
-                className="accent-pb-accent"
-              />
-              Stop on Profit ≥
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={stopOnProfitAmount}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                if (!isNaN(val) && val > 0) setStopOnProfitAmount(val);
-              }}
-              disabled={autoPlay.active || !stopOnProfitEnabled}
-              className="w-20 bg-pb-bg-tertiary border border-pb-border rounded py-1 px-2 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-            />
-          </div>
-
-          {/* Stop on Loss */}
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-xs text-pb-text-muted cursor-pointer">
-              <input
-                type="checkbox"
-                checked={stopOnLossEnabled}
-                onChange={(e) => setStopOnLossEnabled(e.target.checked)}
-                disabled={autoPlay.active}
-                className="accent-pb-accent"
-              />
-              Stop on Loss ≥
-            </label>
-            <input
-              type="number"
-              min={1}
-              value={stopOnLossAmount}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value);
-                if (!isNaN(val) && val > 0) setStopOnLossAmount(val);
-              }}
-              disabled={autoPlay.active || !stopOnLossEnabled}
-              className="w-20 bg-pb-bg-tertiary border border-pb-border rounded py-1 px-2 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-            />
-          </div>
-
-          {/* Start/Stop Auto-Play */}
+          {/* Start/Stop Autobet */}
           {autoPlay.active ? (
             <button
               type="button"
               onClick={onStopAutoPlay}
               className="w-full h-10 rounded-lg bg-pb-danger/20 border border-pb-danger/30 text-pb-danger font-heading font-bold text-sm transition-colors hover:bg-pb-danger/30"
             >
-              Stop Auto-Play
+              Stop Autobet
             </button>
           ) : (
             <button
@@ -623,7 +674,7 @@ export default function MinesControls({
               onClick={handleStartAutoPlay}
               className="w-full h-10 rounded-lg bg-pb-accent/15 border border-pb-accent/30 text-pb-accent font-heading font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors hover:bg-pb-accent/25"
             >
-              Start Auto-Play
+              Start Autobet
             </button>
           )}
 
@@ -651,16 +702,9 @@ export default function MinesControls({
               </span>
             </div>
           )}
-        </div>
+        </>
       )}
 
-      {/* Balance display */}
-      <div className="text-center text-xs text-pb-text-muted">
-        Balance:{" "}
-        <span className="font-mono-stats text-pb-text-primary">
-          {formatCurrency(balance)}
-        </span>
-      </div>
     </div>
   );
 
@@ -688,7 +732,7 @@ export default function MinesControls({
       );
     }
 
-    // IDLE → Bet button
+    // IDLE → Bet button (no dollar amount subtitle)
     if (isIdle) {
       return (
         <button
@@ -698,10 +742,7 @@ export default function MinesControls({
           className="w-full h-12 rounded-[10px] bg-pb-accent text-[#0B0F1A] font-heading font-bold text-base hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           style={{ boxShadow: "0 0 20px rgba(0, 229, 160, 0.2)" }}
         >
-          <span className="block">Bet</span>
-          <span className="block text-xs opacity-80 -mt-0.5">
-            {formatCurrency(betAmount)}
-          </span>
+          Bet
         </button>
       );
     }

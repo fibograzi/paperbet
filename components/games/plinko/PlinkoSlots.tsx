@@ -55,7 +55,7 @@ export default function PlinkoSlots({
               }}
             >
               {mult >= 1000
-                ? `${(mult / 1000).toFixed(0)}K`
+                ? `${(mult / 1000).toFixed(mult >= 10000 ? 0 : 1).replace(/\.0$/, "")}K`
                 : mult >= 100
                   ? `${mult.toFixed(0)}x`
                   : `${mult % 1 === 0 ? mult.toFixed(0) : mult.toFixed(1)}x`}

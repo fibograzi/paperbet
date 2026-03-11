@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Triangle, TrendingUp, Grid3x3 } from "lucide-react";
+import { X, Triangle, TrendingUp, Grid3x3, Coins, ArrowUpDown, Dices, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GAMES } from "@/lib/constants";
 import { Game } from "@/lib/types";
@@ -14,6 +14,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Triangle,
   TrendingUp,
   Grid3x3,
+  Coins,
+  ArrowUpDown,
+  Dices,
+  Zap,
 };
 
 interface MobileNavProps {
@@ -37,13 +41,24 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          className="fixed inset-0 z-50 bg-pb-bg-primary backdrop-blur-lg"
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ type: "tween", duration: 0.3 }}
-        >
+        <>
+          {/* Backdrop overlay */}
+          <motion.div
+            className="fixed inset-0 z-40 bg-black/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="fixed inset-0 z-50"
+            style={{ backgroundColor: "#0B0F1A" }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+          >
           {/* Top bar */}
           <div className="flex justify-between items-center p-4">
             <Link href="/" onClick={onClose} className="flex items-center">
@@ -52,7 +67,8 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
                 alt="PaperBet.io"
                 width={180}
                 height={40}
-                className="h-8 w-auto"
+                className="h-8"
+                style={{ width: "auto" }}
               />
             </Link>
             <button
@@ -135,6 +151,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             </div>
           </nav>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   );

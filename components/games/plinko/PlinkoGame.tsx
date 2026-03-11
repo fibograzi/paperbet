@@ -177,6 +177,18 @@ export default function PlinkoGame() {
 
         {/* Center: Board + Slots */}
         <div className="flex-1 min-w-0">
+          {/* Mobile/Tablet: Controls above game area */}
+          <div className="lg:hidden mb-4">
+            <PlinkoControls
+              state={state}
+              dispatch={dispatch}
+              onDrop={handleDrop}
+              canDrop={canDrop()}
+              onStartAutoPlay={handleStartAutoPlay}
+              onStopAutoPlay={handleStopAutoPlay}
+            />
+          </div>
+
           <div className="relative max-w-[600px] mx-auto">
             {/* Result Overlay */}
             <PlinkoResultOverlay
@@ -203,22 +215,10 @@ export default function PlinkoGame() {
               />
             </div>
           </div>
-
-          {/* Mobile/Tablet: Controls below board */}
-          <div className="lg:hidden mt-4">
-            <PlinkoControls
-              state={state}
-              dispatch={dispatch}
-              onDrop={handleDrop}
-              canDrop={canDrop()}
-              onStartAutoPlay={handleStartAutoPlay}
-              onStopAutoPlay={handleStopAutoPlay}
-            />
-          </div>
         </div>
 
-        {/* Right: Sidebar (desktop) */}
-        <div className="hidden lg:block w-[320px] shrink-0">
+        {/* Right: Sidebar */}
+        <div className="w-full lg:w-[320px] shrink-0">
           <PlinkoSidebar
             state={state}
             onDismissNudge={() =>
@@ -226,16 +226,6 @@ export default function PlinkoGame() {
             }
           />
         </div>
-      </div>
-
-      {/* Mobile/Tablet: Sidebar content below */}
-      <div className="lg:hidden mt-6">
-        <PlinkoSidebar
-          state={state}
-          onDismissNudge={() =>
-            dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })
-          }
-        />
       </div>
     </div>
   );

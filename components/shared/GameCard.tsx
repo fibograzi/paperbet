@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Triangle, TrendingUp, Grid3x3, ArrowRight } from "lucide-react";
+import { Triangle, TrendingUp, Grid3x3, ArrowRight, Coins, ArrowUpDown, Dices, Zap } from "lucide-react";
 import type { Game } from "@/lib/types";
 import Badge from "@/components/ui/Badge";
 
@@ -11,6 +11,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; style?: 
   Triangle,
   TrendingUp,
   Grid3x3,
+  Coins,
+  ArrowUpDown,
+  Dices,
+  Zap,
 };
 
 interface GameCardProps {

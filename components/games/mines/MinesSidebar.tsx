@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { MinesGameState } from "./minesTypes";
 import SessionStats from "@/components/shared/SessionStats";
-import RealMoneyDisplay from "@/components/shared/RealMoneyDisplay";
-import CasinoCard from "@/components/shared/CasinoCard";
+
+import GameProviders from "@/components/shared/GameProviders";
 import { CASINOS, SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -27,12 +27,10 @@ export default function MinesSidebar({
 }: MinesSidebarProps) {
   const { stats, history, sessionGameCount, showPostSessionNudge } = state;
 
-  const minesCasinos = useMemo(
-    () => CASINOS.filter((c) => c.games.includes("mines")).slice(0, 3),
+  const topCasino = useMemo(
+    () => CASINOS.find((c) => c.games.includes("mines")) ?? null,
     [],
   );
-
-  const topCasino = minesCasinos[0] ?? null;
 
   const biggestWin = useMemo(() => {
     if (!stats.bestWin || stats.bestWin.profit <= 0) return null;
@@ -54,25 +52,8 @@ export default function MinesSidebar({
         biggestWin={biggestWin}
       />
 
-      {/* Casino Recommendations */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-heading font-semibold text-pb-text-secondary">
-          Crypto Casino Partner Offers
-        </h3>
-        {minesCasinos.map((casino) => (
-          <CasinoCard
-            key={casino.id}
-            name={casino.name}
-            color={casino.color}
-            offer={casino.offerShort}
-            features={casino.features}
-            url={casino.url}
-            termsUrl={casino.termsUrl}
-            regionNote={casino.regionNote}
-            compact
-          />
-        ))}
-      </div>
+      {/* Casinos that offer this game */}
+      <GameProviders gameId="mines" gameName="Mines" />
 
       {/* Spin the Deal Wheel CTA */}
       <div
@@ -100,24 +81,6 @@ export default function MinesSidebar({
         </a>
       </div>
 
-      {/* "What You Would Have Won" */}
-      <RealMoneyDisplay
-        totalWagered={stats.totalWagered}
-        totalReturns={stats.totalReturns}
-        netProfit={stats.netProfit}
-        visible={sessionGameCount >= 5}
-        topCasino={
-          topCasino
-            ? {
-                name: topCasino.name,
-                color: topCasino.color,
-                offer: topCasino.offerShort,
-                url: topCasino.url,
-                termsUrl: topCasino.termsUrl,
-              }
-            : undefined
-        }
-      />
 
       {/* Bet History */}
       {history.length > 0 && (

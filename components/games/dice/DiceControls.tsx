@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Minus, Plus, Dices, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Infinity as InfinityIcon, Dices, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useBetInput } from "@/lib/useBetInput";
 import type {
   DiceGameState,
   DiceAction,
@@ -15,6 +17,7 @@ import type {
 } from "./diceTypes";
 import { MIN_BET, MAX_BET, clampBet } from "./diceEngine";
 import { formatCurrency } from "@/lib/utils";
+import BalanceBar from "@/components/shared/BalanceBar";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -79,6 +82,7 @@ export default function DiceControls({
   // -------------------------------------------------------------------------
 
   const [autoNumberOfRolls, setAutoNumberOfRolls] = useState(100);
+  const [isInfinite, setIsInfinite] = useState(false);
   const [autoSpeed, setAutoSpeed] = useState<DiceAutoBetSpeed>("normal");
   const [onWinBetAction, setOnWinBetAction] = useState<DiceBetAdjustment>("same");
   const [onWinBetValue, setOnWinBetValue] = useState(100);
@@ -98,6 +102,7 @@ export default function DiceControls({
   const [showStrategies, setShowStrategies] = useState(false);
   const [showOnWin, setShowOnWin] = useState(false);
   const [showOnLoss, setShowOnLoss] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // -------------------------------------------------------------------------
   // Strategy application
@@ -126,7 +131,7 @@ export default function DiceControls({
   // -------------------------------------------------------------------------
 
   const buildAutoConfig = useCallback((): DiceAutoPlayConfig => ({
-    numberOfRolls: autoNumberOfRolls,
+    numberOfRolls: isInfinite ? Infinity : autoNumberOfRolls,
     speed: autoSpeed,
     onWinBetAction,
     onWinBetValue,
@@ -144,7 +149,7 @@ export default function DiceControls({
     stopOnLossStreak: null,
     strategy: selectedStrategy,
   }), [
-    autoNumberOfRolls, autoSpeed,
+    autoNumberOfRolls, isInfinite, autoSpeed,
     onWinBetAction, onWinBetValue,
     onLossBetAction, onLossBetValue,
     onWinTargetAction, onWinTargetValue,
@@ -163,6 +168,8 @@ export default function DiceControls({
     dispatch({ type: "SET_BET_AMOUNT", amount });
   }, [dispatch]);
 
+  const betInput = useBetInput(betAmount, setBet);
+
   const isMartingaleType = selectedStrategy === "martingale" || selectedStrategy === "anti_martingale";
 
   // -------------------------------------------------------------------------
@@ -171,6 +178,9 @@ export default function DiceControls({
 
   return (
     <div className="flex flex-col gap-4 w-full">
+      {/* Balance */}
+      <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
+
       {/* Tab toggle */}
       <div
         className="flex rounded-lg p-1"
@@ -192,9 +202,9 @@ export default function DiceControls({
         ))}
       </div>
 
-      {/* Bet amount */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-        <div className="flex items-center justify-between mb-2">
+      {/* Bet amount — Stake-style inline */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
           <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>Bet Amount</span>
           {isAutoRunning && isMartingaleType && (
             <span className="text-xs font-body px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(20,184,166,0.15)", color: "#14B8A6" }}>
@@ -203,79 +213,51 @@ export default function DiceControls({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={!isIdle || betAmount <= MIN_BET}
-            onClick={() => setBet(betAmount - 0.10)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              opacity: !isIdle || betAmount <= MIN_BET ? 0.4 : 1,
-            }}
-          >
-            <Minus size={16} style={{ color: "#9CA3AF" }} />
-          </button>
-
+        <div
+          className="flex items-center rounded-lg overflow-hidden"
+          style={{ border: "1px solid #374151" }}
+        >
           <div
-            className="flex-1 rounded-lg px-3 py-2 flex items-center"
-            style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
+            className="flex items-center flex-1 px-3 py-2.5"
+            style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
-            <input
-              type="number"
-              value={betAmount.toFixed(2)}
-              onChange={(e) => setBet(parseFloat(e.target.value) || MIN_BET)}
+            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <input suppressHydrationWarning
+              type="text"
+              inputMode="decimal"
+              value={betInput.value}
+              onChange={betInput.onChange}
+              onFocus={betInput.onFocus}
+              onBlur={betInput.onBlur}
+              onKeyDown={betInput.onKeyDown}
               disabled={!isIdle}
               className="flex-1 bg-transparent font-mono-stats text-right outline-none"
               style={{ fontSize: 18, color: "#F9FAFB" }}
-              step={0.10}
-              min={MIN_BET}
-              max={MAX_BET}
               aria-label="Bet amount"
             />
           </div>
-
-          <button
-            type="button"
-            disabled={!isIdle || betAmount >= MAX_BET}
-            onClick={() => setBet(betAmount + 0.10)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              opacity: !isIdle || betAmount >= MAX_BET ? 0.4 : 1,
-            }}
-          >
-            <Plus size={16} style={{ color: "#9CA3AF" }} />
-          </button>
-        </div>
-
-        {/* Quick-select buttons */}
-        <div className="grid grid-cols-4 gap-2 mt-2">
-          {[
-            { label: "½", action: () => setBet(betAmount / 2) },
-            { label: "2×", action: () => setBet(betAmount * 2) },
-            { label: "Min", action: () => setBet(MIN_BET) },
-            { label: "Max", action: () => setBet(MAX_BET) },
-          ].map((btn) => (
+          <div className="w-px self-stretch" style={{ backgroundColor: "#374151" }} />
+          <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
             <button
-              key={btn.label}
               type="button"
               disabled={!isIdle}
-              onClick={btn.action}
-              className="py-1.5 rounded-md font-body text-xs transition-colors"
-              style={{
-                backgroundColor: "#1F2937",
-                border: "1px solid #374151",
-                color: "#9CA3AF",
-                opacity: !isIdle ? 0.5 : 1,
-              }}
+              onClick={() => setBet(betAmount / 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
             >
-              {btn.label}
+              &frac12;
             </button>
-          ))}
+            <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
+            <button
+              type="button"
+              disabled={!isIdle}
+              onClick={() => setBet(betAmount * 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
+            >
+              2&times;
+            </button>
+          </div>
         </div>
 
         {isMartingaleType && (
@@ -288,7 +270,7 @@ export default function DiceControls({
       {/* ===== MANUAL TAB ===== */}
       {activeTab === "manual" && (
         <>
-          {/* Roll button */}
+          {/* Bet button */}
           <motion.button
             type="button"
             disabled={isRolling || balance < betAmount || isAutoRunning}
@@ -307,8 +289,16 @@ export default function DiceControls({
             aria-label="Roll the dice"
           >
             <Dices size={18} />
-            {isRolling ? "Rolling..." : "Roll"}
+            {isRolling ? "Rolling..." : "Bet"}
           </motion.button>
+
+          {/* Profit on Win */}
+          <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+            <span className="font-body text-sm block mb-1" style={{ color: "#9CA3AF" }}>Profit on Win</span>
+            <span className="font-mono-stats font-medium" style={{ fontSize: 16, color: "#9CA3AF" }}>
+              {formatCurrency(state.params.profitOnWin)}
+            </span>
+          </div>
 
           {/* Speed toggle */}
           <div>
@@ -336,27 +326,151 @@ export default function DiceControls({
       {/* ===== AUTO TAB ===== */}
       {activeTab === "auto" && (
         <>
-          {/* Number of Rolls */}
+          {/* Number of Bets */}
           <div>
-            <span className="font-body text-sm block mb-1.5" style={{ color: "#9CA3AF" }}>Number of Rolls</span>
-            <div className="grid grid-cols-6 gap-1">
-              {[10, 25, 50, 100, 500, Infinity].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={isAutoRunning}
-                  onClick={() => setAutoNumberOfRolls(n)}
-                  className="py-1.5 rounded-md font-body text-xs font-semibold transition-colors"
-                  style={{
-                    backgroundColor: autoNumberOfRolls === n ? "rgba(20,184,166,0.15)" : "transparent",
-                    color: autoNumberOfRolls === n ? "#14B8A6" : "#9CA3AF",
+            <label className="font-body text-sm block mb-1.5" style={{ color: "#9CA3AF" }}>
+              Number of Bets
+            </label>
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <input suppressHydrationWarning
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={isInfinite ? "" : autoNumberOfRolls}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val >= 1)
+                      setAutoNumberOfRolls(Math.min(500, val));
                   }}
-                >
-                  {isFinite(n) ? n : "\u221E"}
-                </button>
-              ))}
+                  disabled={isInfinite || isAutoRunning}
+                  placeholder={isInfinite ? "∞" : undefined}
+                  className="w-full rounded-lg py-1.5 pl-3 pr-3 text-right font-mono-stats text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(20,184,166,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: "#1F2937",
+                    border: "1px solid #374151",
+                    color: "#F9FAFB",
+                  }}
+                  aria-label="Number of bets"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={isAutoRunning}
+                onClick={() => setIsInfinite(!isInfinite)}
+                className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: isInfinite ? "rgba(20,184,166,0.15)" : "#1F2937",
+                  border: isInfinite ? "1px solid rgba(20,184,166,0.3)" : "1px solid #374151",
+                  color: isInfinite ? "#14B8A6" : "#9CA3AF",
+                }}
+                aria-label="Toggle infinite bets"
+              >
+                <InfinityIcon size={16} />
+              </button>
             </div>
           </div>
+
+          {/* Advanced (collapsible) */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 w-full text-left py-1"
+          >
+            <ChevronDown
+              size={14}
+              className={cn(
+                "transition-transform",
+                showAdvanced && "rotate-180"
+              )}
+              style={{ color: "#6B7280" }}
+            />
+            <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>Advanced</span>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {showAdvanced && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.15 }}
+                className="overflow-hidden space-y-2"
+              >
+                {/* On Win (nested collapsible) */}
+                <CollapsibleSection title="On Win" open={showOnWin} onToggle={() => setShowOnWin(!showOnWin)}>
+                  <BetAdjustmentSelector
+                    label="Bet"
+                    action={onWinBetAction}
+                    value={onWinBetValue}
+                    disabled={isAutoRunning}
+                    onActionChange={setOnWinBetAction}
+                    onValueChange={setOnWinBetValue}
+                  />
+                  <TargetAdjustmentSelector
+                    action={onWinTargetAction}
+                    value={onWinTargetValue}
+                    disabled={isAutoRunning}
+                    onActionChange={setOnWinTargetAction}
+                    onValueChange={setOnWinTargetValue}
+                  />
+                  <ToggleOption
+                    label="Switch direction on win"
+                    checked={switchOnWin}
+                    disabled={isAutoRunning}
+                    onChange={setSwitchOnWin}
+                  />
+                </CollapsibleSection>
+
+                {/* On Loss (nested collapsible) */}
+                <CollapsibleSection title="On Loss" open={showOnLoss} onToggle={() => setShowOnLoss(!showOnLoss)}>
+                  <BetAdjustmentSelector
+                    label="Bet"
+                    action={onLossBetAction}
+                    value={onLossBetValue}
+                    disabled={isAutoRunning}
+                    onActionChange={setOnLossBetAction}
+                    onValueChange={setOnLossBetValue}
+                  />
+                  <TargetAdjustmentSelector
+                    action={onLossTargetAction}
+                    value={onLossTargetValue}
+                    disabled={isAutoRunning}
+                    onActionChange={setOnLossTargetAction}
+                    onValueChange={setOnLossTargetValue}
+                  />
+                  <ToggleOption
+                    label="Switch direction on loss"
+                    checked={switchOnLoss}
+                    disabled={isAutoRunning}
+                    onChange={setSwitchOnLoss}
+                  />
+                </CollapsibleSection>
+
+                {/* Stop conditions */}
+                <div className="space-y-2">
+                  <StopCondition
+                    label="Stop on Profit"
+                    prefix="$"
+                    enabled={stopOnProfitEnabled}
+                    value={stopOnProfitAmount}
+                    disabled={isAutoRunning}
+                    onToggle={setStopOnProfitEnabled}
+                    onValueChange={setStopOnProfitAmount}
+                  />
+                  <StopCondition
+                    label="Stop on Loss"
+                    prefix="$"
+                    enabled={stopOnLossEnabled}
+                    value={stopOnLossAmount}
+                    disabled={isAutoRunning}
+                    onToggle={setStopOnLossEnabled}
+                    onValueChange={setStopOnLossAmount}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Speed */}
           <div>
@@ -378,78 +492,6 @@ export default function DiceControls({
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* On Win (collapsible) */}
-          <CollapsibleSection title="On Win" open={showOnWin} onToggle={() => setShowOnWin(!showOnWin)}>
-            <BetAdjustmentSelector
-              label="Bet"
-              action={onWinBetAction}
-              value={onWinBetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnWinBetAction}
-              onValueChange={setOnWinBetValue}
-            />
-            <TargetAdjustmentSelector
-              action={onWinTargetAction}
-              value={onWinTargetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnWinTargetAction}
-              onValueChange={setOnWinTargetValue}
-            />
-            <ToggleOption
-              label="Switch direction on win"
-              checked={switchOnWin}
-              disabled={isAutoRunning}
-              onChange={setSwitchOnWin}
-            />
-          </CollapsibleSection>
-
-          {/* On Loss (collapsible) */}
-          <CollapsibleSection title="On Loss" open={showOnLoss} onToggle={() => setShowOnLoss(!showOnLoss)}>
-            <BetAdjustmentSelector
-              label="Bet"
-              action={onLossBetAction}
-              value={onLossBetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnLossBetAction}
-              onValueChange={setOnLossBetValue}
-            />
-            <TargetAdjustmentSelector
-              action={onLossTargetAction}
-              value={onLossTargetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnLossTargetAction}
-              onValueChange={setOnLossTargetValue}
-            />
-            <ToggleOption
-              label="Switch direction on loss"
-              checked={switchOnLoss}
-              disabled={isAutoRunning}
-              onChange={setSwitchOnLoss}
-            />
-          </CollapsibleSection>
-
-          {/* Stop conditions */}
-          <div className="space-y-2">
-            <StopCondition
-              label="Stop on Profit"
-              prefix="$"
-              enabled={stopOnProfitEnabled}
-              value={stopOnProfitAmount}
-              disabled={isAutoRunning}
-              onToggle={setStopOnProfitEnabled}
-              onValueChange={setStopOnProfitAmount}
-            />
-            <StopCondition
-              label="Stop on Loss"
-              prefix="$"
-              enabled={stopOnLossEnabled}
-              value={stopOnLossAmount}
-              disabled={isAutoRunning}
-              onToggle={setStopOnLossEnabled}
-              onValueChange={setStopOnLossAmount}
-            />
           </div>
 
           {/* Strategy presets (collapsible) */}
@@ -483,7 +525,7 @@ export default function DiceControls({
             </div>
           </CollapsibleSection>
 
-          {/* Start/Stop Auto button */}
+          {/* Start/Stop Autobet button */}
           <motion.button
             type="button"
             disabled={!isAutoRunning && (balance < betAmount)}
@@ -508,12 +550,12 @@ export default function DiceControls({
             {isAutoRunning ? (
               <>
                 <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
-                Stop Auto
+                Stop Autobet
               </>
             ) : (
               <>
                 <Dices size={18} />
-                Start Auto
+                Start Autobet
               </>
             )}
           </motion.button>
@@ -545,13 +587,6 @@ export default function DiceControls({
         </>
       )}
 
-      {/* Balance display */}
-      <div className="text-center mt-1">
-        <span className="font-body text-xs" style={{ color: "#6B7280" }}>Balance: </span>
-        <span className="font-mono-stats text-sm font-bold" style={{ color: "#F9FAFB" }}>
-          {formatCurrency(balance)}
-        </span>
-      </div>
     </div>
   );
 }
@@ -635,7 +670,7 @@ function BetAdjustmentSelector({
         ))}
       </select>
       {(action === "increase_percent" || action === "increase_flat" || action === "decrease_flat") && (
-        <input
+        <input suppressHydrationWarning
           type="number"
           value={value}
           disabled={disabled}
@@ -684,7 +719,7 @@ function TargetAdjustmentSelector({
         ))}
       </select>
       {action !== "same" && (
-        <input
+        <input suppressHydrationWarning
           type="number"
           value={value}
           disabled={disabled}
@@ -712,7 +747,7 @@ function ToggleOption({
 }) {
   return (
     <label className="flex items-center gap-2 cursor-pointer">
-      <input
+      <input suppressHydrationWarning
         type="checkbox"
         checked={checked}
         disabled={disabled}
@@ -744,7 +779,7 @@ function StopCondition({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <input
+      <input suppressHydrationWarning
         type="checkbox"
         checked={enabled}
         disabled={disabled}
@@ -759,7 +794,7 @@ function StopCondition({
         style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
       >
         <span className="font-mono-stats text-xs" style={{ color: "#6B7280" }}>{prefix}</span>
-        <input
+        <input suppressHydrationWarning
           type="number"
           value={value}
           disabled={disabled || !enabled}

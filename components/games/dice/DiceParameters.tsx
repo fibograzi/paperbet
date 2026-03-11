@@ -98,7 +98,7 @@ function ParameterField({
             {prefix}
           </span>
         )}
-        <input
+        <input suppressHydrationWarning
           ref={inputRef}
           type={editing ? "text" : "text"}
           value={editing ? editValue : (prefix ? value.replace(prefix, "").trim() : value)}
@@ -227,7 +227,7 @@ export default function DiceParametersPanel({
       {/* Desktop: 4-column row + toggle */}
       <div className="hidden md:grid grid-cols-4 gap-2">
         <ParameterField
-          label="Target"
+          label={params.direction === "over" ? "Roll Over" : "Roll Under"}
           value={targetStr}
           disabled={disabled}
           onChange={handleTargetChange}
@@ -258,7 +258,7 @@ export default function DiceParametersPanel({
       {/* Mobile: 2x2 grid */}
       <div className="md:hidden grid grid-cols-2 gap-2">
         <ParameterField
-          label="Target"
+          label={params.direction === "over" ? "Roll Over" : "Roll Under"}
           value={targetStr}
           disabled={disabled}
           onChange={handleTargetChange}

@@ -168,7 +168,7 @@ export class PlinkoAnimator {
     this.ballRadius = BASE_BALL_RADIUS * this.dpr;
 
     this.rebuildPegs();
-    this.startLoop();
+    this.render();
   }
 
   // -----------------------------------------------------------------------
@@ -181,6 +181,7 @@ export class PlinkoAnimator {
     this.options.rows = rows;
     this.options.risk = risk;
     this.rebuildPegs();
+    this.render();
   }
 
   dropBall(
@@ -228,7 +229,7 @@ export class PlinkoAnimator {
       slotBounceElapsed: -1,
     };
 
-    if (this.reducedMotion) {
+    if (this.reducedMotion || document.hidden) {
       // Skip animation — place ball at final slot immediately
       const finalX = getBallSlotX(path.slotIndex, this.rows, this.width);
       const usableHeight = this.height - this.options.slotHeight;
@@ -253,10 +254,31 @@ export class PlinkoAnimator {
     this.pegRadius = BASE_PEG_RADIUS * this.dpr;
     this.ballRadius = BASE_BALL_RADIUS * this.dpr;
     this.rebuildPegs();
+    this.render();
   }
 
   setReducedMotion(reduced: boolean): void {
     this.reducedMotion = reduced;
+  }
+
+  /** Instantly complete all active ball animations (background tab support). */
+  fastForwardAll(): void {
+    const completedBalls = [...this.balls];
+    this.balls = [];
+
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+
+    for (const ball of completedBalls) {
+      if (ball.slotBounceElapsed < 0) {
+        this.options.onBallLand?.(ball.state.path.slotIndex);
+      }
+      ball.onComplete();
+    }
+
+    this.render();
   }
 
   destroy(): void {

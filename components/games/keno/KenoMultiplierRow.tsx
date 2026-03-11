@@ -86,7 +86,7 @@ export default function KenoMultiplierRow({
                 boxShadow: shadow,
               }}
               animate={isActive ? { scale: [1, 1.15, 1] } : { scale: isPassed ? 0.95 : 1 }}
-              transition={{ duration: 0.3, type: "spring" }}
+              transition={isActive ? { duration: 0.3, type: "tween", ease: "easeInOut" } : { duration: 0.3, type: "spring" }}
             >
               <span
                 className="font-mono-stats text-[10px] sm:text-xs font-bold leading-tight"

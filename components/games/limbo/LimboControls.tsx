@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Minus, Plus, Zap, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { useBetInput } from "@/lib/useBetInput";
 import type {
   LimboGameState,
   LimboAction,
@@ -16,14 +17,11 @@ import type {
 import {
   MIN_BET,
   MAX_BET,
-  MIN_TARGET,
-  MAX_TARGET,
   clampBet,
-  clampTarget,
-  calculateWinChance,
-  getWinChanceColor,
+  calculateProfitOnWin,
 } from "./limboEngine";
 import { formatCurrency } from "@/lib/utils";
+import BalanceBar from "@/components/shared/BalanceBar";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -51,8 +49,8 @@ interface StrategyPreset {
   onWinBetValue: number;
   onLossBet: LimboBetAdjustment;
   onLossBetValue: number;
-  stopOnLoss?: number;    // multiplier of base bet
-  stopOnProfit?: number;  // multiplier of base bet
+  stopOnLoss?: number;
+  stopOnProfit?: number;
 }
 
 const STRATEGY_PRESETS: StrategyPreset[] = [
@@ -76,7 +74,7 @@ export default function LimboControls({
   onStartAutoPlay,
   onStopAutoPlay,
 }: LimboControlsProps) {
-  const { phase, betAmount, balance, targetMultiplier, winChance, animationSpeed, autoPlay } = state;
+  const { phase, betAmount, balance, targetMultiplier, animationSpeed, autoPlay } = state;
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const isIdle = phase === "idle";
   const isAnimating = phase === "animating";
@@ -87,6 +85,7 @@ export default function LimboControls({
   // -------------------------------------------------------------------------
 
   const [autoNumberOfBets, setAutoNumberOfBets] = useState(100);
+  const [autoInfinite, setAutoInfinite] = useState(false);
   const [autoSpeed, setAutoSpeed] = useState<LimboAutoBetSpeed>("normal");
   const [onWinBetAction, setOnWinBetAction] = useState<LimboBetAdjustment>("same");
   const [onWinBetValue, setOnWinBetValue] = useState(100);
@@ -104,8 +103,7 @@ export default function LimboControls({
   const [stopOnWinMultValue, setStopOnWinMultValue] = useState(100);
   const [selectedStrategy, setSelectedStrategy] = useState<LimboStrategy>("custom");
   const [showStrategies, setShowStrategies] = useState(false);
-  const [showOnWin, setShowOnWin] = useState(false);
-  const [showOnLoss, setShowOnLoss] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // -------------------------------------------------------------------------
   // Strategy application
@@ -121,12 +119,10 @@ export default function LimboControls({
     setOnLossTargetAction("same");
     dispatch({ type: "SET_TARGET", target: preset.target });
 
-    // Set bet amount if preset specifies one
     if (preset.betAmount !== undefined) {
       dispatch({ type: "SET_BET_AMOUNT", amount: preset.betAmount });
     }
 
-    // Configure stop-on-loss if preset specifies (multiplier of current bet)
     if (preset.stopOnLoss !== undefined) {
       setStopOnLossEnabled(true);
       setStopOnLossAmount(preset.stopOnLoss * (preset.betAmount ?? betAmount));
@@ -134,7 +130,6 @@ export default function LimboControls({
       setStopOnLossEnabled(false);
     }
 
-    // Configure stop-on-profit if preset specifies (multiplier of current bet)
     if (preset.stopOnProfit !== undefined) {
       setStopOnProfitEnabled(true);
       setStopOnProfitAmount(preset.stopOnProfit * (preset.betAmount ?? betAmount));
@@ -148,7 +143,7 @@ export default function LimboControls({
   // -------------------------------------------------------------------------
 
   const buildAutoConfig = useCallback((): LimboAutoPlayConfig => ({
-    numberOfBets: autoNumberOfBets,
+    numberOfBets: autoInfinite ? Infinity : Math.min(500, autoNumberOfBets),
     speed: autoSpeed,
     onWinBetAction,
     onWinBetValue,
@@ -163,7 +158,7 @@ export default function LimboControls({
     stopOnWinMultiplier: stopOnWinMultEnabled ? stopOnWinMultValue : null,
     strategy: selectedStrategy,
   }), [
-    autoNumberOfBets, autoSpeed,
+    autoNumberOfBets, autoInfinite, autoSpeed,
     onWinBetAction, onWinBetValue,
     onLossBetAction, onLossBetValue,
     onWinTargetAction, onWinTargetValue,
@@ -182,31 +177,9 @@ export default function LimboControls({
     dispatch({ type: "SET_BET_AMOUNT", amount });
   }, [dispatch]);
 
+  const betInput = useBetInput(betAmount, setBet);
+
   const isMartingaleType = selectedStrategy === "martingale" || selectedStrategy === "anti_martingale";
-
-  // Target step logic
-  const getTargetStep = (target: number) => {
-    if (target < 2) return 0.01;
-    if (target < 100) return 0.10;
-    return 1.00;
-  };
-
-  // Payout display
-  const payout = Math.floor(betAmount * targetMultiplier * 100) / 100;
-
-  // Win chance color
-  const wcColor = getWinChanceColor(winChance);
-
-  // -------------------------------------------------------------------------
-  // Editable linked fields
-  // -------------------------------------------------------------------------
-
-  const [editingTarget, setEditingTarget] = useState(false);
-  const [editTargetValue, setEditTargetValue] = useState("");
-  const [editingWinChance, setEditingWinChance] = useState(false);
-  const [editWinChanceValue, setEditWinChanceValue] = useState("");
-  const targetInputRef = useRef<HTMLInputElement>(null);
-  const wcInputRef = useRef<HTMLInputElement>(null);
 
   // -------------------------------------------------------------------------
   // Render
@@ -214,6 +187,9 @@ export default function LimboControls({
 
   return (
     <div className="flex flex-col gap-4 w-full">
+      {/* Balance */}
+      <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
+
       {/* Tab toggle */}
       <div
         className="flex rounded-lg p-1"
@@ -235,7 +211,7 @@ export default function LimboControls({
         ))}
       </div>
 
-      {/* Bet amount */}
+      {/* Bet amount — Stake-style */}
       <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
         <div className="flex items-center justify-between mb-2">
           <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>Bet Amount</span>
@@ -246,79 +222,52 @@ export default function LimboControls({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={!isIdle || betAmount <= MIN_BET}
-            onClick={() => setBet(betAmount - 0.10)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              opacity: !isIdle || betAmount <= MIN_BET ? 0.4 : 1,
-            }}
-          >
-            <Minus size={16} style={{ color: "#9CA3AF" }} />
-          </button>
-
+        <div
+          className="flex items-center rounded-lg overflow-hidden"
+          style={{ border: "1px solid #374151" }}
+        >
           <div
-            className="flex-1 rounded-lg px-3 py-2 flex items-center"
-            style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
+            className="flex items-center flex-1 px-3 py-2.5"
+            style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
             <input
-              type="number"
-              value={betAmount.toFixed(2)}
-              onChange={(e) => setBet(parseFloat(e.target.value) || MIN_BET)}
+              suppressHydrationWarning
+              type="text"
+              inputMode="decimal"
+              value={betInput.value}
+              onChange={betInput.onChange}
+              onFocus={betInput.onFocus}
+              onBlur={betInput.onBlur}
+              onKeyDown={betInput.onKeyDown}
               disabled={!isIdle}
               className="flex-1 bg-transparent font-mono-stats text-right outline-none"
               style={{ fontSize: 18, color: "#F9FAFB" }}
-              step={0.10}
-              min={MIN_BET}
-              max={MAX_BET}
               aria-label="Bet amount"
             />
           </div>
-
-          <button
-            type="button"
-            disabled={!isIdle || betAmount >= MAX_BET}
-            onClick={() => setBet(betAmount + 0.10)}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              opacity: !isIdle || betAmount >= MAX_BET ? 0.4 : 1,
-            }}
-          >
-            <Plus size={16} style={{ color: "#9CA3AF" }} />
-          </button>
-        </div>
-
-        {/* Quick-select buttons */}
-        <div className="grid grid-cols-4 gap-2 mt-2">
-          {[
-            { label: "\u00BD", action: () => setBet(betAmount / 2) },
-            { label: "2\u00D7", action: () => setBet(betAmount * 2) },
-            { label: "Min", action: () => setBet(MIN_BET) },
-            { label: "Max", action: () => setBet(MAX_BET) },
-          ].map((btn) => (
+          <div className="w-px self-stretch" style={{ backgroundColor: "#374151" }} />
+          <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
             <button
-              key={btn.label}
               type="button"
               disabled={!isIdle}
-              onClick={btn.action}
-              className="py-1.5 rounded-md font-body text-xs transition-colors"
-              style={{
-                backgroundColor: "#1F2937",
-                border: "1px solid #374151",
-                color: "#9CA3AF",
-                opacity: !isIdle ? 0.5 : 1,
-              }}
+              onClick={() => setBet(betAmount / 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
             >
-              {btn.label}
+              &frac12;
             </button>
-          ))}
+            <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
+            <button
+              type="button"
+              disabled={!isIdle}
+              onClick={() => setBet(betAmount * 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
+            >
+              2&times;
+            </button>
+          </div>
         </div>
 
         {isMartingaleType && (
@@ -326,160 +275,6 @@ export default function LimboControls({
             Can lead to rapid bankroll depletion
           </p>
         )}
-      </div>
-
-      {/* Target Multiplier */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-        <span className="font-body text-sm block mb-2" style={{ color: "#9CA3AF" }}>Target Multiplier</span>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            disabled={!isIdle || targetMultiplier <= MIN_TARGET}
-            onClick={() => dispatch({ type: "SET_TARGET", target: targetMultiplier - getTargetStep(targetMultiplier) })}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              opacity: !isIdle || targetMultiplier <= MIN_TARGET ? 0.4 : 1,
-            }}
-          >
-            <Minus size={16} style={{ color: "#9CA3AF" }} />
-          </button>
-
-          <div
-            className="flex-1 rounded-lg px-3 py-2 flex items-center"
-            style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
-          >
-            <input
-              ref={targetInputRef}
-              type={editingTarget ? "text" : "number"}
-              value={editingTarget ? editTargetValue : targetMultiplier.toFixed(2)}
-              onChange={(e) => {
-                if (editingTarget) {
-                  setEditTargetValue(e.target.value);
-                } else {
-                  const val = parseFloat(e.target.value);
-                  if (!isNaN(val)) dispatch({ type: "SET_TARGET", target: val });
-                }
-              }}
-              onFocus={() => {
-                setEditingTarget(true);
-                setEditTargetValue(targetMultiplier.toFixed(2));
-                setTimeout(() => targetInputRef.current?.select(), 0);
-              }}
-              onBlur={() => {
-                setEditingTarget(false);
-                const val = parseFloat(editTargetValue);
-                if (!isNaN(val)) dispatch({ type: "SET_TARGET", target: val });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                if (e.key === "Escape") setEditingTarget(false);
-              }}
-              disabled={!isIdle}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB" }}
-              step={0.01}
-              min={MIN_TARGET}
-              max={MAX_TARGET}
-              aria-label="Target multiplier"
-            />
-            <span className="font-mono-stats ml-1" style={{ fontSize: 18, color: "#6B7280" }}>x</span>
-          </div>
-
-          <button
-            type="button"
-            disabled={!isIdle || targetMultiplier >= MAX_TARGET}
-            onClick={() => dispatch({ type: "SET_TARGET", target: targetMultiplier + getTargetStep(targetMultiplier) })}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              opacity: !isIdle || targetMultiplier >= MAX_TARGET ? 0.4 : 1,
-            }}
-          >
-            <Plus size={16} style={{ color: "#9CA3AF" }} />
-          </button>
-        </div>
-
-        {/* Quick-select targets */}
-        <div className="grid grid-cols-4 gap-2 mt-2">
-          {[1.5, 2, 10, 100].map((t) => (
-            <button
-              key={t}
-              type="button"
-              disabled={!isIdle}
-              onClick={() => dispatch({ type: "SET_TARGET", target: t })}
-              className="py-1.5 rounded-md font-body text-xs transition-colors"
-              style={{
-                backgroundColor: targetMultiplier === t ? "rgba(0,229,160,0.15)" : "#1F2937",
-                border: targetMultiplier === t ? "1px solid rgba(0,229,160,0.3)" : "1px solid #374151",
-                color: targetMultiplier === t ? "#00E5A0" : "#9CA3AF",
-                opacity: !isIdle ? 0.5 : 1,
-              }}
-            >
-              {t}x
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Linked fields indicator */}
-      <div className="flex items-center justify-center gap-1.5 -mb-2">
-        <div className="h-px flex-1" style={{ backgroundColor: "#374151" }} />
-        <span className="font-mono-stats text-xs px-1.5" style={{ color: "#6B7280" }}>&harr;</span>
-        <div className="h-px flex-1" style={{ backgroundColor: "#374151" }} />
-      </div>
-
-      {/* Win Chance & Payout row */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Win Chance (editable, linked to target) */}
-        <div className="rounded-xl p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-          <span className="font-body text-xs block mb-1" style={{ color: "#6B7280" }}>Win Chance</span>
-          <div className="flex items-center">
-            <input
-              ref={wcInputRef}
-              type={editingWinChance ? "text" : "number"}
-              value={editingWinChance ? editWinChanceValue : winChance.toFixed(winChance < 1 ? 4 : 2)}
-              onChange={(e) => {
-                if (editingWinChance) {
-                  setEditWinChanceValue(e.target.value);
-                } else {
-                  const val = parseFloat(e.target.value);
-                  if (!isNaN(val)) dispatch({ type: "SET_WIN_CHANCE", winChance: val });
-                }
-              }}
-              onFocus={() => {
-                setEditingWinChance(true);
-                setEditWinChanceValue(winChance.toFixed(winChance < 1 ? 4 : 2));
-                setTimeout(() => wcInputRef.current?.select(), 0);
-              }}
-              onBlur={() => {
-                setEditingWinChance(false);
-                const val = parseFloat(editWinChanceValue);
-                if (!isNaN(val)) dispatch({ type: "SET_WIN_CHANCE", winChance: val });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                if (e.key === "Escape") setEditingWinChance(false);
-              }}
-              disabled={!isIdle}
-              className="flex-1 bg-transparent font-mono-stats font-medium outline-none"
-              style={{ fontSize: 16, color: wcColor }}
-              aria-label="Win chance"
-            />
-            <span className="font-mono-stats" style={{ fontSize: 14, color: "#6B7280" }}>%</span>
-          </div>
-        </div>
-
-        {/* Payout (read-only) */}
-        <div className="rounded-xl p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-          <span className="font-body text-xs block mb-1" style={{ color: "#6B7280" }}>Payout on Win</span>
-          <p className="font-mono-stats font-medium" style={{ fontSize: 16, color: "#F9FAFB" }}>
-            {formatCurrency(payout)}
-          </p>
-        </div>
       </div>
 
       {/* ===== MANUAL TAB ===== */}
@@ -503,9 +298,16 @@ export default function LimboControls({
             whileTap={!isAnimating && !isAutoRunning ? { scale: 0.98 } : {}}
             aria-label="Place bet"
           >
-            <Zap size={18} />
             {isAnimating ? "..." : "Bet"}
           </motion.button>
+
+          {/* Profit on Win */}
+          <div className="rounded-xl p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+            <span className="font-body text-xs block mb-1" style={{ color: "#6B7280" }}>Profit on Win</span>
+            <p className="font-mono-stats font-medium" style={{ fontSize: 16, color: "#F9FAFB" }}>
+              {formatCurrency(calculateProfitOnWin(betAmount, targetMultiplier))}
+            </p>
+          </div>
 
           {/* Animation speed toggle */}
           <div>
@@ -535,25 +337,54 @@ export default function LimboControls({
       {/* ===== AUTO TAB ===== */}
       {activeTab === "auto" && (
         <>
-          {/* Number of Bets */}
+          {/* Number of Bets — text input + ∞ toggle */}
           <div>
             <span className="font-body text-sm block mb-1.5" style={{ color: "#9CA3AF" }}>Number of Bets</span>
-            <div className="grid grid-cols-6 gap-1">
-              {[10, 25, 50, 100, 500, Infinity].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={isAutoRunning}
-                  onClick={() => setAutoNumberOfBets(n)}
-                  className="py-1.5 rounded-md font-body text-xs font-semibold transition-colors"
-                  style={{
-                    backgroundColor: autoNumberOfBets === n ? "rgba(0,229,160,0.15)" : "transparent",
-                    color: autoNumberOfBets === n ? "#00E5A0" : "#9CA3AF",
+            <div className="flex items-center gap-2">
+              <div
+                className="flex-1 rounded-lg px-3 py-2"
+                style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
+              >
+                <input
+                  suppressHydrationWarning
+                  type="number"
+                  inputMode="numeric"
+                  value={autoInfinite ? "" : autoNumberOfBets}
+                  placeholder={autoInfinite ? "\u221E" : undefined}
+                  disabled={isAutoRunning || autoInfinite}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setAutoNumberOfBets(Math.min(500, Math.max(1, val)));
                   }}
-                >
-                  {isFinite(n) ? n : "\u221E"}
-                </button>
-              ))}
+                  className="w-full bg-transparent font-mono-stats text-sm outline-none"
+                  style={{ color: autoInfinite ? "#6B7280" : "#F9FAFB" }}
+                  max={500}
+                  min={1}
+                  aria-label="Number of bets"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={isAutoRunning}
+                onClick={() => {
+                  if (autoInfinite) {
+                    setAutoInfinite(false);
+                    setAutoNumberOfBets(100);
+                  } else {
+                    setAutoInfinite(true);
+                  }
+                }}
+                className="w-10 h-10 rounded-lg flex items-center justify-center font-mono-stats text-lg font-bold transition-colors"
+                style={{
+                  backgroundColor: autoInfinite ? "rgba(0,229,160,0.15)" : "#1F2937",
+                  border: autoInfinite ? "1px solid rgba(0,229,160,0.3)" : "1px solid #374151",
+                  color: autoInfinite ? "#00E5A0" : "#9CA3AF",
+                  opacity: isAutoRunning ? 0.5 : 1,
+                }}
+                aria-label="Infinite bets"
+              >
+                &infin;
+              </button>
             </div>
           </div>
 
@@ -579,75 +410,87 @@ export default function LimboControls({
             </div>
           </div>
 
-          {/* On Win (collapsible) */}
-          <CollapsibleSection title="On Win" open={showOnWin} onToggle={() => setShowOnWin(!showOnWin)}>
-            <BetAdjustmentSelector
-              label="Bet"
-              action={onWinBetAction}
-              value={onWinBetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnWinBetAction}
-              onValueChange={setOnWinBetValue}
-            />
-            <TargetAdjustmentSelector
-              action={onWinTargetAction}
-              value={onWinTargetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnWinTargetAction}
-              onValueChange={setOnWinTargetValue}
-            />
-          </CollapsibleSection>
+          {/* Advanced (collapsible) — contains On Win, On Loss, Stop conditions */}
+          <CollapsibleSection title="Advanced" open={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+            {/* On Win */}
+            <div className="space-y-2">
+              <span className="font-body text-xs font-semibold block" style={{ color: "#9CA3AF" }}>On Win</span>
+              <BetAdjustmentSelector
+                label="Bet"
+                action={onWinBetAction}
+                value={onWinBetValue}
+                disabled={isAutoRunning}
+                onActionChange={setOnWinBetAction}
+                onValueChange={setOnWinBetValue}
+              />
+              <TargetAdjustmentSelector
+                action={onWinTargetAction}
+                value={onWinTargetValue}
+                disabled={isAutoRunning}
+                onActionChange={setOnWinTargetAction}
+                onValueChange={setOnWinTargetValue}
+              />
+            </div>
 
-          {/* On Loss (collapsible) */}
-          <CollapsibleSection title="On Loss" open={showOnLoss} onToggle={() => setShowOnLoss(!showOnLoss)}>
-            <BetAdjustmentSelector
-              label="Bet"
-              action={onLossBetAction}
-              value={onLossBetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnLossBetAction}
-              onValueChange={setOnLossBetValue}
-            />
-            <TargetAdjustmentSelector
-              action={onLossTargetAction}
-              value={onLossTargetValue}
-              disabled={isAutoRunning}
-              onActionChange={setOnLossTargetAction}
-              onValueChange={setOnLossTargetValue}
-            />
-          </CollapsibleSection>
+            {/* Divider */}
+            <div className="h-px my-2" style={{ backgroundColor: "#374151" }} />
 
-          {/* Stop conditions */}
-          <div className="space-y-2">
-            <StopCondition
-              label="Stop on Profit"
-              prefix="$"
-              enabled={stopOnProfitEnabled}
-              value={stopOnProfitAmount}
-              disabled={isAutoRunning}
-              onToggle={setStopOnProfitEnabled}
-              onValueChange={setStopOnProfitAmount}
-            />
-            <StopCondition
-              label="Stop on Loss"
-              prefix="$"
-              enabled={stopOnLossEnabled}
-              value={stopOnLossAmount}
-              disabled={isAutoRunning}
-              onToggle={setStopOnLossEnabled}
-              onValueChange={setStopOnLossAmount}
-            />
-            <StopCondition
-              label="Stop on Result"
-              prefix=""
-              suffix="x"
-              enabled={stopOnWinMultEnabled}
-              value={stopOnWinMultValue}
-              disabled={isAutoRunning}
-              onToggle={setStopOnWinMultEnabled}
-              onValueChange={setStopOnWinMultValue}
-            />
-          </div>
+            {/* On Loss */}
+            <div className="space-y-2">
+              <span className="font-body text-xs font-semibold block" style={{ color: "#9CA3AF" }}>On Loss</span>
+              <BetAdjustmentSelector
+                label="Bet"
+                action={onLossBetAction}
+                value={onLossBetValue}
+                disabled={isAutoRunning}
+                onActionChange={setOnLossBetAction}
+                onValueChange={setOnLossBetValue}
+              />
+              <TargetAdjustmentSelector
+                action={onLossTargetAction}
+                value={onLossTargetValue}
+                disabled={isAutoRunning}
+                onActionChange={setOnLossTargetAction}
+                onValueChange={setOnLossTargetValue}
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="h-px my-2" style={{ backgroundColor: "#374151" }} />
+
+            {/* Stop conditions */}
+            <div className="space-y-2">
+              <span className="font-body text-xs font-semibold block" style={{ color: "#9CA3AF" }}>Stop Conditions</span>
+              <StopCondition
+                label="Stop on Profit"
+                prefix="$"
+                enabled={stopOnProfitEnabled}
+                value={stopOnProfitAmount}
+                disabled={isAutoRunning}
+                onToggle={setStopOnProfitEnabled}
+                onValueChange={setStopOnProfitAmount}
+              />
+              <StopCondition
+                label="Stop on Loss"
+                prefix="$"
+                enabled={stopOnLossEnabled}
+                value={stopOnLossAmount}
+                disabled={isAutoRunning}
+                onToggle={setStopOnLossEnabled}
+                onValueChange={setStopOnLossAmount}
+              />
+              <StopCondition
+                label="Stop on Result"
+                prefix=""
+                suffix="x"
+                enabled={stopOnWinMultEnabled}
+                value={stopOnWinMultValue}
+                disabled={isAutoRunning}
+                onToggle={setStopOnWinMultEnabled}
+                onValueChange={setStopOnWinMultValue}
+              />
+            </div>
+          </CollapsibleSection>
 
           {/* Strategy presets */}
           <CollapsibleSection
@@ -680,7 +523,7 @@ export default function LimboControls({
             </div>
           </CollapsibleSection>
 
-          {/* Start/Stop Auto button */}
+          {/* Start/Stop Autobet button */}
           <motion.button
             type="button"
             disabled={!isAutoRunning && (balance < betAmount)}
@@ -705,13 +548,10 @@ export default function LimboControls({
             {isAutoRunning ? (
               <>
                 <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
-                Stop Auto
+                Stop Autobet
               </>
             ) : (
-              <>
-                <Zap size={18} />
-                Start Auto
-              </>
+              "Start Autobet"
             )}
           </motion.button>
 
@@ -742,13 +582,6 @@ export default function LimboControls({
         </>
       )}
 
-      {/* Balance display */}
-      <div className="text-center mt-1">
-        <span className="font-body text-xs" style={{ color: "#6B7280" }}>Balance: </span>
-        <span className="font-mono-stats text-sm font-bold" style={{ color: "#F9FAFB" }}>
-          {formatCurrency(balance)}
-        </span>
-      </div>
     </div>
   );
 }
@@ -829,6 +662,7 @@ function BetAdjustmentSelector({
       </select>
       {(action === "increase_percent" || action === "increase_flat" || action === "decrease_flat") && (
         <input
+          suppressHydrationWarning
           type="number"
           value={value}
           disabled={disabled}
@@ -878,6 +712,7 @@ function TargetAdjustmentSelector({
       </select>
       {action !== "same" && (
         <input
+          suppressHydrationWarning
           type="number"
           value={value}
           disabled={disabled}
@@ -914,6 +749,7 @@ function StopCondition({
   return (
     <div className="flex items-center gap-2">
       <input
+        suppressHydrationWarning
         type="checkbox"
         checked={enabled}
         disabled={disabled}
@@ -930,6 +766,7 @@ function StopCondition({
       >
         {prefix && <span className="font-mono-stats text-xs" style={{ color: "#6B7280" }}>{prefix}</span>}
         <input
+          suppressHydrationWarning
           type="number"
           value={value}
           disabled={disabled || !enabled}

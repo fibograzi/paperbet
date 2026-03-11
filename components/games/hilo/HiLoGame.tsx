@@ -90,12 +90,8 @@ export default function HiLoGame() {
 
         {/* Center: Card Arena */}
         <div className="flex-1 min-w-0">
-          <div className="max-w-[700px] mx-auto">
-            <HiLoCardArena state={state} />
-          </div>
-
-          {/* Mobile/Tablet: Controls below arena */}
-          <div className="lg:hidden mt-4">
+          {/* Mobile/Tablet: Controls above game area */}
+          <div className="lg:hidden mb-4">
             <HiLoControls
               state={state}
               dispatch={dispatch}
@@ -105,10 +101,14 @@ export default function HiLoGame() {
               onCashOut={cashOut}
             />
           </div>
+
+          <div className="max-w-[700px] mx-auto">
+            <HiLoCardArena state={state} />
+          </div>
         </div>
 
-        {/* Right: Sidebar (desktop) */}
-        <div className="hidden lg:block w-[320px] shrink-0">
+        {/* Sidebar — single responsive render */}
+        <div className="w-full lg:w-[320px] shrink-0">
           <HiLoSidebar
             state={state}
             onDismissNudge={() =>
@@ -116,16 +116,6 @@ export default function HiLoGame() {
             }
           />
         </div>
-      </div>
-
-      {/* Mobile/Tablet: Sidebar content below */}
-      <div className="lg:hidden mt-6">
-        <HiLoSidebar
-          state={state}
-          onDismissNudge={() =>
-            dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })
-          }
-        />
       </div>
     </div>
   );

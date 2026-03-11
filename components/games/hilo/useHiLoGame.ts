@@ -516,6 +516,9 @@ function hiloReducer(
         postSessionNudgeDismissed: true,
       };
 
+    case "RESET_BALANCE":
+      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+
     default:
       return state;
   }
@@ -533,6 +536,7 @@ export function useHiLoGame() {
   const pendingPredictionRef = useRef<Prediction | null>(null);
   const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRoundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoPlayStartBetCountRef = useRef(0);
 
   // --- Manual actions ---
 
@@ -660,6 +664,11 @@ export function useHiLoGame() {
     // IDLE → start a new round
     if (state.phase === "idle") {
       const s = stateRef.current;
+      // Track the sessionBetCount when auto-play starts so the bet
+      // adjustment effect can skip stale manual results
+      if (s.autoPlay.progress?.currentRound === 0) {
+        autoPlayStartBetCountRef.current = s.sessionBetCount;
+      }
       if (s.balance < s.config.betAmount) {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
@@ -713,7 +722,9 @@ export function useHiLoGame() {
   useEffect(() => {
     if (!state.autoPlay.active || !state.autoPlay.config) return;
     if (state.phase !== "idle") return;
-    if (state.sessionBetCount === 0) return;
+    // Skip if no auto-play rounds have completed yet (prevents processing
+    // stale manual round results when auto-play first starts)
+    if (state.sessionBetCount <= autoPlayStartBetCountRef.current) return;
 
     // This fires when a round finishes and we're back to idle
     const lastResult = state.history[0];

@@ -30,7 +30,7 @@ const SESSION_REMINDER_THRESHOLD = 30;
 const POST_SESSION_NUDGE_GAMES = 10;
 const POST_SESSION_NUDGE_IDLE_MS = 60_000;
 const MAX_HISTORY = 200;
-const MAX_AUTO_PLAY_GAMES = 200;
+const MAX_AUTO_PLAY_GAMES = 500;
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -526,6 +526,9 @@ function minesReducer(
         showPostSessionNudge: false,
         postSessionNudgeDismissed: true,
       };
+
+    case "RESET_BALANCE":
+      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
 
     default:
       return state;

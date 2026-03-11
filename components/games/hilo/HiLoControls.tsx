@@ -2,23 +2,18 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Minus, Plus, ChevronDown } from "lucide-react";
+import { ChevronDown, Infinity as InfinityIcon } from "lucide-react";
+import { useBetInput } from "@/lib/useBetInput";
 import type {
   HiLoGameState,
   HiLoAction,
   Prediction,
   HiLoAutoPlayConfig,
 } from "./hiloTypes";
-import {
-  getPredictionInfo,
-  formatHiLoMultiplier,
-  getMultiplierColor,
-  calculateProfit,
-  calculatePayout,
-} from "./hiloEngine";
+import { getPredictionInfo } from "./hiloEngine";
 import { formatCurrency, cn } from "@/lib/utils";
 import HiLoActionButtons from "./HiLoActionButtons";
-import HiLoProfitPreview from "./HiLoProfitPreview";
+import BalanceBar from "@/components/shared/BalanceBar";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -37,7 +32,7 @@ interface HiLoControlsProps {
 // Constants
 // ---------------------------------------------------------------------------
 
-const AUTO_PLAY_COUNTS: (number | null)[] = [10, 25, 50, 100, null];
+const MAX_AUTO_ROUNDS = 500;
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
 type WinLossAction = "reset" | "increase";
@@ -63,7 +58,7 @@ export default function HiLoControls({
   // Auto-play local state
   const [autoStrategy, setAutoStrategy] = useState<AutoStrategy>("smart");
   const [autoCashOutAt, setAutoCashOutAt] = useState(2.0);
-  const [autoCount, setAutoCount] = useState<number | null>(10);
+  const [autoCount, setAutoCount] = useState<number>(10);
   const [autoOnWin, setAutoOnWin] = useState<WinLossAction>("reset");
   const [autoOnLoss, setAutoOnLoss] = useState<WinLossAction>("reset");
   const [increaseOnWinPercent, setIncreaseOnWinPercent] = useState(50);
@@ -101,13 +96,7 @@ export default function HiLoControls({
     [dispatch],
   );
 
-  const handleBetInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = parseFloat(e.target.value);
-      if (!isNaN(val)) setBet(val);
-    },
-    [setBet],
-  );
+  const betInput = useBetInput(config.betAmount, setBet);
 
   // --- Auto-play start ---
   const handleAutoPlayStart = useCallback(() => {
@@ -154,6 +143,9 @@ export default function HiLoControls({
 
   return (
     <div className="flex flex-col gap-3 w-full">
+      {/* Balance */}
+      <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
+
       {/* Manual / Auto Tab Toggle */}
       <div
         className="flex rounded-lg p-1"
@@ -190,83 +182,52 @@ export default function HiLoControls({
         >
           Bet Amount
         </label>
-        <div className="flex items-center gap-2 mb-2">
-          <button
-            type="button"
-            disabled={config.betAmount <= 0.1 || controlsDisabled}
-            onClick={() => setBet(config.betAmount - 0.1)}
-            className="w-9 h-9 rounded-full bg-pb-bg-tertiary border border-pb-border flex items-center justify-center text-pb-text-secondary hover:text-pb-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        <div
+          className="flex items-center rounded-lg overflow-hidden"
+          style={{ border: "1px solid #374151" }}
+        >
+          <div
+            className="flex items-center flex-1 px-3 py-2.5"
+            style={{ backgroundColor: "#1F2937" }}
           >
-            <Minus size={14} />
-          </button>
-          <div className="relative flex-1">
-            <span
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-              style={{ color: "#6B7280" }}
-            >
-              $
-            </span>
+            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
             <input
-              type="number"
-              step="0.10"
-              min="0.10"
-              max="1000"
-              value={config.betAmount.toFixed(2)}
-              onChange={handleBetInput}
+              suppressHydrationWarning
+              type="text"
+              inputMode="decimal"
+              value={betInput.value}
+              onChange={betInput.onChange}
+              onFocus={betInput.onFocus}
+              onBlur={betInput.onBlur}
+              onKeyDown={betInput.onKeyDown}
               disabled={controlsDisabled}
-              className="w-full rounded-lg py-2 pl-7 pr-3 text-right font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: "#1F2937",
-                border: "1px solid #374151",
-              }}
+              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
+              style={{ fontSize: 18, color: "#F9FAFB", opacity: controlsDisabled ? 0.5 : 1 }}
               aria-label="Bet amount"
             />
           </div>
-          <button
-            type="button"
-            disabled={config.betAmount >= 1000 || controlsDisabled}
-            onClick={() => setBet(config.betAmount + 0.1)}
-            className="w-9 h-9 rounded-full bg-pb-bg-tertiary border border-pb-border flex items-center justify-center text-pb-text-secondary hover:text-pb-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-        {/* Quick buttons */}
-        <div className="flex gap-2">
-          {[
-            { label: "\u00BD", action: () => setBet(config.betAmount / 2) },
-            { label: "2\u00D7", action: () => setBet(config.betAmount * 2) },
-            { label: "Min", action: () => setBet(0.1) },
-            {
-              label: "Max",
-              action: () => setBet(Math.min(1000, balance)),
-            },
-          ].map((btn) => (
+          <div className="w-px self-stretch" style={{ backgroundColor: "#374151" }} />
+          <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
             <button
-              key={btn.label}
               type="button"
               disabled={controlsDisabled}
-              onClick={btn.action}
-              className="flex-1 py-1 rounded-md font-body text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: "#1F2937",
-                border: "1px solid #374151",
-                color: "#9CA3AF",
-              }}
-              onMouseEnter={(e) => {
-                if (!controlsDisabled) {
-                  (e.currentTarget as HTMLElement).style.color = "#F9FAFB";
-                  (e.currentTarget as HTMLElement).style.backgroundColor = "#374151";
-                }
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "#9CA3AF";
-                (e.currentTarget as HTMLElement).style.backgroundColor = "#1F2937";
-              }}
+              onClick={() => setBet(config.betAmount / 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
             >
-              {btn.label}
+              &frac12;
             </button>
-          ))}
+            <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
+            <button
+              type="button"
+              disabled={controlsDisabled}
+              onClick={() => setBet(config.betAmount * 2)}
+              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              style={{ color: "#9CA3AF" }}
+            >
+              2&times;
+            </button>
+          </div>
         </div>
       </div>
 
@@ -292,7 +253,7 @@ export default function HiLoControls({
           aria-label="Toggle instant bet"
         >
           <span
-            className="absolute top-0.5 rounded-full bg-white transition-transform duration-200"
+            className="absolute left-0 top-0.5 rounded-full bg-white transition-transform duration-200"
             style={{
               width: 16,
               height: 16,
@@ -344,8 +305,7 @@ export default function HiLoControls({
 
           {/* Action buttons during predicting phase */}
           {isPredicting && round && predictionInfo && (
-            <>
-              <HiLoActionButtons
+            <HiLoActionButtons
                 predictionInfo={predictionInfo}
                 cumulativeMultiplier={round.cumulativeMultiplier}
                 correctPredictions={round.correctPredictions}
@@ -358,13 +318,6 @@ export default function HiLoControls({
                 onSkip={onSkip}
                 onCashOut={onCashOut}
               />
-              <HiLoProfitPreview
-                predictionInfo={predictionInfo}
-                cumulativeMultiplier={round.cumulativeMultiplier}
-                betAmount={config.betAmount}
-                correctPredictions={round.correctPredictions}
-              />
-            </>
           )}
 
           {/* Loss phase — show "New Round" hint */}
@@ -377,60 +330,6 @@ export default function HiLoControls({
             </div>
           )}
 
-          {/* Total Profit Display (during round) */}
-          {isRoundActive && round && round.correctPredictions >= 1 && (
-            <div
-              className="rounded-lg p-3"
-              style={{
-                backgroundColor: "#111827",
-                border: "1px solid #374151",
-              }}
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span
-                  className="font-body text-xs"
-                  style={{ color: "#6B7280" }}
-                >
-                  Current Multiplier
-                </span>
-                <span
-                  className="font-mono-stats text-2xl font-bold"
-                  style={{
-                    color: getMultiplierColor(round.cumulativeMultiplier),
-                  }}
-                >
-                  {formatHiLoMultiplier(round.cumulativeMultiplier)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span
-                  className="font-body text-xs"
-                  style={{ color: "#6B7280" }}
-                >
-                  Payout
-                </span>
-                <span
-                  className="font-mono-stats text-lg font-semibold"
-                  style={{
-                    color: getMultiplierColor(round.cumulativeMultiplier),
-                  }}
-                >
-                  {formatCurrency(
-                    calculatePayout(
-                      config.betAmount,
-                      round.cumulativeMultiplier
-                    )
-                  )}
-                </span>
-              </div>
-              <div
-                className="text-center font-body text-xs mt-1"
-                style={{ color: "#6B7280" }}
-              >
-                on {formatCurrency(config.betAmount)} bet
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -487,11 +386,9 @@ export default function HiLoControls({
               Cash Out At
             </label>
             <div className="relative">
-              <input
-                type="number"
-                min={1.01}
-                max={10000}
-                step={0.1}
+              <input suppressHydrationWarning
+                type="text"
+                inputMode="decimal"
                 value={autoCashOutAt.toFixed(2)}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
@@ -526,29 +423,49 @@ export default function HiLoControls({
             >
               Number of Rounds
             </label>
-            <div className="flex gap-1.5">
-              {AUTO_PLAY_COUNTS.map((count) => (
-                <button
-                  key={count ?? "inf"}
-                  type="button"
-                  disabled={autoPlay.active}
-                  onClick={() => setAutoCount(count)}
-                  className="flex-1 py-1.5 rounded-md text-xs font-mono-stats transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor:
-                      autoCount === count
-                        ? "rgba(99, 102, 241, 0.15)"
-                        : "#1F2937",
-                    color: autoCount === count ? "#6366F1" : "#9CA3AF",
-                    border:
-                      autoCount === count
-                        ? "1px solid rgba(99, 102, 241, 0.3)"
-                        : "1px solid #374151",
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  suppressHydrationWarning
+                  type="number"
+                  min={1}
+                  max={MAX_AUTO_ROUNDS}
+                  value={autoCount}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val >= 1)
+                      setAutoCount(Math.min(MAX_AUTO_ROUNDS, val));
                   }}
-                >
-                  {count ?? "\u221E"}
-                </button>
-              ))}
+                  disabled={autoPlay.active}
+                  className="w-full rounded-lg py-2 pl-3 pr-3 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-[#6366F1]/50 disabled:opacity-50"
+                  style={{
+                    backgroundColor: "#1F2937",
+                    border: "1px solid #374151",
+                  }}
+                  aria-label="Number of auto-play rounds"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={autoPlay.active}
+                onClick={() => setAutoCount(MAX_AUTO_ROUNDS)}
+                className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor:
+                    autoCount === MAX_AUTO_ROUNDS
+                      ? "rgba(99, 102, 241, 0.15)"
+                      : "#1F2937",
+                  border:
+                    autoCount === MAX_AUTO_ROUNDS
+                      ? "1px solid rgba(99, 102, 241, 0.3)"
+                      : "1px solid #374151",
+                  color:
+                    autoCount === MAX_AUTO_ROUNDS ? "#6366F1" : "#9CA3AF",
+                }}
+                aria-label="Set to maximum rounds"
+              >
+                <InfinityIcon size={18} />
+              </button>
             </div>
           </div>
 
@@ -651,7 +568,7 @@ export default function HiLoControls({
                         ))}
                       </div>
                       <div className="relative">
-                        <input
+                        <input suppressHydrationWarning
                           type="number"
                           min={1}
                           max={10000}
@@ -748,7 +665,7 @@ export default function HiLoControls({
                         ))}
                       </div>
                       <div className="relative">
-                        <input
+                        <input suppressHydrationWarning
                           type="number"
                           min={1}
                           max={10000}
@@ -780,7 +697,7 @@ export default function HiLoControls({
                 {/* Stop on Profit */}
                 <div>
                   <label className="flex items-center gap-2 mb-1.5 cursor-pointer">
-                    <input
+                    <input suppressHydrationWarning
                       type="checkbox"
                       checked={stopOnProfitEnabled}
                       onChange={(e) =>
@@ -804,7 +721,7 @@ export default function HiLoControls({
                       >
                         $
                       </span>
-                      <input
+                      <input suppressHydrationWarning
                         type="number"
                         min={1}
                         max={100000}
@@ -831,7 +748,7 @@ export default function HiLoControls({
                 {/* Stop on Loss */}
                 <div>
                   <label className="flex items-center gap-2 mb-1.5 cursor-pointer">
-                    <input
+                    <input suppressHydrationWarning
                       type="checkbox"
                       checked={stopOnLossEnabled}
                       onChange={(e) =>
@@ -855,7 +772,7 @@ export default function HiLoControls({
                       >
                         $
                       </span>
-                      <input
+                      <input suppressHydrationWarning
                         type="number"
                         min={1}
                         max={100000}
@@ -893,7 +810,7 @@ export default function HiLoControls({
                 color: "#F9FAFB",
               }}
             >
-              Stop Auto
+              Stop Autobet
             </button>
           ) : (
             <button
@@ -906,7 +823,7 @@ export default function HiLoControls({
                 color: "#F9FAFB",
               }}
             >
-              Start Auto
+              Start Autobet
             </button>
           )}
 
@@ -956,14 +873,6 @@ export default function HiLoControls({
           )}
         </div>
       )}
-
-      {/* Balance display */}
-      <div className="text-center text-xs" style={{ color: "#6B7280" }}>
-        Balance:{" "}
-        <span className="font-mono-stats text-pb-text-primary">
-          {formatCurrency(balance)}
-        </span>
-      </div>
 
       {/* Session Reminder */}
       {state.showSessionReminder && (

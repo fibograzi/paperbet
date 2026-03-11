@@ -85,12 +85,8 @@ export default function LimboGame() {
 
         {/* Center: Game Area */}
         <div className="flex-1 min-w-0">
-          <div className="max-w-[700px] mx-auto">
-            <LimboGameArea state={state} />
-          </div>
-
-          {/* Mobile/Tablet: Controls below arena */}
-          <div className="lg:hidden mt-4">
+          {/* Mobile/Tablet: Controls above game area */}
+          <div className="lg:hidden mb-4">
             <LimboControls
               state={state}
               dispatch={dispatch}
@@ -99,25 +95,20 @@ export default function LimboGame() {
               onStopAutoPlay={stopAutoPlay}
             />
           </div>
+
+          <div className="max-w-[700px] mx-auto">
+            <LimboGameArea state={state} dispatch={dispatch} />
+          </div>
         </div>
 
-        {/* Right: Sidebar (desktop) */}
-        <div className="hidden lg:block w-[320px] shrink-0">
+        {/* Sidebar — single responsive render */}
+        <div className="w-full lg:w-[320px] shrink-0">
           <LimboSidebar
             state={state}
             onDismissNudge={() => dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })}
             onDismissReminder={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
           />
         </div>
-      </div>
-
-      {/* Mobile/Tablet: Sidebar content below */}
-      <div className="lg:hidden mt-6">
-        <LimboSidebar
-          state={state}
-          onDismissNudge={() => dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })}
-          onDismissReminder={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-        />
       </div>
     </div>
   );

@@ -10,8 +10,8 @@ import {
   SUIT_SYMBOLS,
 } from "./hiloEngine";
 import SessionStats from "@/components/shared/SessionStats";
-import RealMoneyDisplay from "@/components/shared/RealMoneyDisplay";
-import CasinoCard from "@/components/shared/CasinoCard";
+
+import GameProviders from "@/components/shared/GameProviders";
 import { CASINOS, SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 
@@ -43,12 +43,10 @@ export default function HiLoSidebar({ state, onDismissNudge }: HiLoSidebarProps)
   // Derived data
   // ---------------------------------------------------------------------------
 
-  const hiloCasinos = useMemo(
-    () => CASINOS.filter((c) => c.games.includes("hilo")).slice(0, 3),
+  const topCasino = useMemo(
+    () => CASINOS.find((c) => c.games.includes("hilo")) ?? null,
     []
   );
-
-  const topCasino = hiloCasinos[0] ?? null;
 
   const biggestWin = useMemo(() => {
     if (stats.biggestWin <= 0) return null;
@@ -72,27 +70,8 @@ export default function HiLoSidebar({ state, onDismissNudge }: HiLoSidebarProps)
         biggestWin={biggestWin}
       />
 
-      {/* Casino Recommendations */}
-      {hiloCasinos.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-heading font-semibold text-pb-text-secondary">
-            Crypto Casino Partner Offers
-          </h3>
-          {hiloCasinos.map((casino) => (
-            <CasinoCard
-              key={casino.id}
-              name={casino.name}
-              color={casino.color}
-              offer={casino.offerShort}
-              features={casino.features}
-              url={casino.url}
-              termsUrl={casino.termsUrl}
-              regionNote={casino.regionNote}
-              compact
-            />
-          ))}
-        </div>
-      )}
+      {/* Casinos that offer this game */}
+      <GameProviders gameId="hilo" gameName="HiLo" />
 
       {/* Spin the Deal Wheel CTA */}
       <div
@@ -122,24 +101,6 @@ export default function HiLoSidebar({ state, onDismissNudge }: HiLoSidebarProps)
         </a>
       </div>
 
-      {/* "What You Would Have Won" */}
-      <RealMoneyDisplay
-        totalWagered={stats.totalWagered}
-        totalReturns={stats.totalReturns}
-        netProfit={stats.netProfit}
-        visible={sessionBetCount >= 5}
-        topCasino={
-          topCasino
-            ? {
-                name: topCasino.name,
-                color: topCasino.color,
-                offer: topCasino.offerShort,
-                url: topCasino.url,
-                termsUrl: topCasino.termsUrl,
-              }
-            : undefined
-        }
-      />
 
       {/* HiLo Bet History */}
       {history.length > 0 && (

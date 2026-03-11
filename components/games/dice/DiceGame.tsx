@@ -95,12 +95,8 @@ export default function DiceGame() {
 
         {/* Center: Game Area */}
         <div className="flex-1 min-w-0">
-          <div className="max-w-[700px] mx-auto">
-            <DiceGameArea state={state} dispatch={dispatch} />
-          </div>
-
-          {/* Mobile/Tablet: Controls below arena */}
-          <div className="lg:hidden mt-4">
+          {/* Mobile/Tablet: Controls above game area */}
+          <div className="lg:hidden mb-4">
             <DiceControls
               state={state}
               dispatch={dispatch}
@@ -109,24 +105,20 @@ export default function DiceGame() {
               onStopAutoPlay={stopAutoPlay}
             />
           </div>
+
+          <div className="max-w-[700px] mx-auto">
+            <DiceGameArea state={state} dispatch={dispatch} />
+          </div>
         </div>
 
-        {/* Right: Sidebar (desktop) */}
-        <div className="hidden lg:block w-[320px] shrink-0">
+        {/* Sidebar — single responsive render */}
+        <div className="w-full lg:w-[320px] shrink-0">
           <DiceSidebar
             state={state}
             onDismissNudge={() => dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })}
             onDismissReminder={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
           />
         </div>
-      </div>
-
-      {/* Mobile/Tablet: Sidebar content below */}
-      <div className="lg:hidden mt-6">
-        <DiceSidebar
-          state={state}
-          onDismissNudge={() => dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })}
-        />
       </div>
     </div>
   );

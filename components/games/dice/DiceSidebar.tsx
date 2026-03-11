@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { DiceGameState, DiceRound } from "./diceTypes";
 import { formatDiceResult, formatDiceMultiplier, formatWinChance } from "./diceEngine";
 import SessionStats from "@/components/shared/SessionStats";
-import RealMoneyDisplay from "@/components/shared/RealMoneyDisplay";
-import CasinoCard from "@/components/shared/CasinoCard";
+
+import GameProviders from "@/components/shared/GameProviders";
 import { CASINOS, SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 
@@ -36,13 +36,10 @@ export default function DiceSidebar({ state, onDismissNudge, onDismissReminder }
     return () => clearTimeout(timer);
   }, []);
 
-  // Filtered casinos for Dice
-  const diceCasinos = useMemo(
-    () => CASINOS.filter((c) => c.games.includes("dice")).slice(0, 3),
+  const topCasino = useMemo(
+    () => CASINOS.find((c) => c.games.includes("dice")) ?? null,
     [],
   );
-
-  const topCasino = diceCasinos[0] ?? null;
 
   const biggestWin = useMemo(() => {
     if (!stats.bestWin) return null;
@@ -106,27 +103,8 @@ export default function DiceSidebar({ state, onDismissNudge, onDismissReminder }
         )}
       </div>
 
-      {/* Casino Recommendations */}
-      {diceCasinos.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-heading font-semibold text-pb-text-secondary">
-            Crypto Casino Partner Offers
-          </h3>
-          {diceCasinos.map((casino) => (
-            <CasinoCard
-              key={casino.id}
-              name={casino.name}
-              color={casino.color}
-              offer={casino.offerShort}
-              features={casino.features}
-              url={casino.url}
-              termsUrl={casino.termsUrl}
-              regionNote={casino.regionNote}
-              compact
-            />
-          ))}
-        </div>
-      )}
+      {/* Casinos that offer this game */}
+      <GameProviders gameId="dice" gameName="Dice" />
 
       {/* Spin the Deal Wheel CTA */}
       <div
@@ -153,24 +131,6 @@ export default function DiceSidebar({ state, onDismissNudge, onDismissReminder }
         </a>
       </div>
 
-      {/* "What You Would Have Won" */}
-      <RealMoneyDisplay
-        totalWagered={stats.totalWagered}
-        totalReturns={stats.totalReturns}
-        netProfit={stats.netProfit}
-        visible={sessionRollCount >= 15}
-        topCasino={
-          topCasino
-            ? {
-                name: topCasino.name,
-                color: topCasino.color,
-                offer: topCasino.offerShort,
-                url: topCasino.url,
-                termsUrl: topCasino.termsUrl,
-              }
-            : undefined
-        }
-      />
 
       {/* Session reminder */}
       <AnimatePresence>

@@ -31,6 +31,12 @@
 - Close dropdowns and mobile menus on route change using `usePathname()` from next/navigation
 - Add active state to nav links using pathname comparison
 
+## Auto-play bet adjustment in separate useEffect
+- When auto-play bet adjustment logic lives in a SEPARATE useEffect from the auto-play loop (HiLo, Flip pattern), it can fire on auto-play START if deps like `sessionBetCount > 0` from manual play. This processes stale manual round results.
+- Fix: track `sessionBetCount` at auto-play start via a ref, and guard the adjustment effect with `sessionBetCount <= startRef`. This ensures only auto-play results trigger adjustment.
+- Safer pattern (Dice, Limbo, Keno): put adjustment logic in the SAME auto-play loop effect, guarded by `progress.currentBet > 0` to skip the first round.
+- Safer pattern (Mines): adjustment runs in a setTimeout that only fires from GAME_OVER phase — auto-play start is in IDLE phase so no stale processing occurs.
+
 ## React useEffect + setTimeout + dispatch
 - NEVER put state that your own effect modifies into the dependency array. If an effect dispatches `POST_REVEAL_START` (setting `postRevealPhase = true`), and `postRevealPhase` is in the deps, React re-renders → cleanup fires → cancels all setTimeout handles created in the same callback. This silently breaks staggered animations.
 - Use a **ref guard** (`postRevealInitiatedRef`) for one-time effects that manage their own lifecycle via setTimeout chains. Only depend on the trigger state (e.g., `state.phase`), not intermediate flags.

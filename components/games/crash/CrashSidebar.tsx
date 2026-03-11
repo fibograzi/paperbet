@@ -4,8 +4,8 @@ import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { CrashGameState } from "./crashTypes";
 import SessionStats from "@/components/shared/SessionStats";
-import RealMoneyDisplay from "@/components/shared/RealMoneyDisplay";
-import CasinoCard from "@/components/shared/CasinoCard";
+
+import GameProviders from "@/components/shared/GameProviders";
 import { CASINOS, SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -34,12 +34,10 @@ export default function CrashSidebar({ state, onDismissNudge }: CrashSidebarProp
   // Derived data
   // ---------------------------------------------------------------------------
 
-  const crashCasinos = useMemo(
-    () => CASINOS.filter((c) => c.games.includes("crash")).slice(0, 3),
+  const topCasino = useMemo(
+    () => CASINOS.find((c) => c.games.includes("crash")) ?? null,
     []
   );
-
-  const topCasino = crashCasinos[0] ?? null;
 
   const biggestWin = useMemo(() => {
     if (stats.biggestWin <= 0) return null;
@@ -64,25 +62,8 @@ export default function CrashSidebar({ state, onDismissNudge }: CrashSidebarProp
         biggestWin={biggestWin}
       />
 
-      {/* Casino Recommendations */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-heading font-semibold text-pb-text-secondary">
-          Crypto Casino Partner Offers
-        </h3>
-        {crashCasinos.map((casino) => (
-          <CasinoCard
-            key={casino.id}
-            name={casino.name}
-            color={casino.color}
-            offer={casino.offerShort}
-            features={casino.features}
-            url={casino.url}
-            termsUrl={casino.termsUrl}
-            regionNote={casino.regionNote}
-            compact
-          />
-        ))}
-      </div>
+      {/* Casinos that offer this game */}
+      <GameProviders gameId="crash" gameName="Crash" />
 
       {/* Spin the Deal Wheel CTA */}
       <div
@@ -110,24 +91,6 @@ export default function CrashSidebar({ state, onDismissNudge }: CrashSidebarProp
         </a>
       </div>
 
-      {/* "What You Would Have Won" */}
-      <RealMoneyDisplay
-        totalWagered={stats.totalWagered}
-        totalReturns={stats.totalReturns}
-        netProfit={stats.netProfit}
-        visible={sessionRoundCount >= 5}
-        topCasino={
-          topCasino
-            ? {
-                name: topCasino.name,
-                color: topCasino.color,
-                offer: topCasino.offerShort,
-                url: topCasino.url,
-                termsUrl: topCasino.termsUrl,
-              }
-            : undefined
-        }
-      />
 
       {/* Crash Bet History */}
       {history.length > 0 && (

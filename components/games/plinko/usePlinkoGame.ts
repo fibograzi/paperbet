@@ -215,6 +215,9 @@ function plinkoReducer(
         postSessionNudgeDismissed: true,
       };
 
+    case "RESET_BALANCE":
+      return { ...state, balance: 1000, stats: { ...state.stats, netProfit: 0 } };
+
     default:
       return state;
   }

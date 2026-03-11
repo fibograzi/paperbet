@@ -325,6 +325,9 @@ function crashReducer(
         postSessionNudgeDismissed: true,
       };
 
+    case "RESET_BALANCE":
+      return { ...state, balance: 1000, stats: { ...state.stats, netProfit: 0 } };
+
     default:
       return state;
   }
@@ -462,6 +465,83 @@ export function useCrashGame() {
   }, []);
 
   // ------------------------------------------------------------------
+  // Fast-forward round when tab is hidden (skip rAF animation)
+  // ------------------------------------------------------------------
+
+  const fastForwardCrash = useCallback(
+    (hasBet: boolean) => {
+      stopAnimationLoop();
+
+      const s = stateRef.current;
+      const crashPoint = crashPointRef.current;
+
+      let didCashOut = s.cashedOut;
+      let cashoutMult = s.cashoutMultiplier;
+
+      if (hasBet && !didCashOut) {
+        const autoCashoutTarget = s.autoPlay.active
+          ? s.autoPlay.cashoutAt
+          : s.config.autoCashout;
+
+        if (autoCashoutTarget !== null && autoCashoutTarget <= crashPoint) {
+          dispatch({ type: "UPDATE_MULTIPLIER", multiplier: autoCashoutTarget });
+          dispatch({ type: "CASH_OUT" });
+          didCashOut = true;
+          cashoutMult = autoCashoutTarget;
+        }
+      }
+
+      dispatch({ type: "CRASH" });
+      dispatch({ type: "ADD_CRASH_POINT", crashPoint });
+
+      if (hasBet) {
+        const betAmount = s.config.betAmount;
+        const profit = calculateCrashProfit(betAmount, didCashOut, cashoutMult);
+
+        const result: CrashBetResult = {
+          id: generateId(),
+          amount: betAmount,
+          multiplier:
+            didCashOut && cashoutMult !== null ? cashoutMult : crashPoint,
+          profit,
+          timestamp: Date.now(),
+          crashPoint,
+          cashedOut: didCashOut,
+          cashoutMultiplier: cashoutMult,
+        };
+
+        dispatch({ type: "ROUND_COMPLETE", result });
+        handleAutoPlayPostRound(didCashOut);
+      }
+
+      postCrashTimeoutRef.current = setTimeout(() => {
+        postCrashTimeoutRef.current = null;
+        if (!gameActiveRef.current) return;
+        if (stateRef.current.autoPlay.active && shouldAutoPlayStop()) {
+          dispatch({ type: "AUTO_PLAY_STOP" });
+        }
+        startNewRoundRef.current();
+      }, POST_CRASH_DELAY);
+    },
+    [stopAnimationLoop, dispatch, handleAutoPlayPostRound, shouldAutoPlayStop]
+  );
+
+  // Handle background tabs — fast-forward running rounds when hidden
+  useEffect(() => {
+    const handler = () => {
+      if (
+        document.hidden &&
+        gameActiveRef.current &&
+        stateRef.current.phase === "running"
+      ) {
+        fastForwardCrash(stateRef.current.hasBet);
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [fastForwardCrash]);
+
+  // ------------------------------------------------------------------
   // Start a new round (forward-declared via ref for recursion)
   // ------------------------------------------------------------------
 
@@ -519,6 +599,30 @@ export function useCrashGame() {
 
         // Start the running phase
         dispatch({ type: "START_ROUND" });
+
+        // If tab is hidden, skip animation and resolve instantly
+        if (document.hidden) {
+          // Cancel deferred auto-play bet timeout and place bet directly
+          const betNotYetPlaced = autoPlayBetTimeoutRef.current !== null;
+          if (autoPlayBetTimeoutRef.current !== null) {
+            clearTimeout(autoPlayBetTimeoutRef.current);
+            autoPlayBetTimeoutRef.current = null;
+          }
+          let hasBet = stateRef.current.hasBet;
+          if (
+            betNotYetPlaced &&
+            stateRef.current.autoPlay.active &&
+            !shouldAutoPlayStop() &&
+            stateRef.current.balance >= stateRef.current.config.betAmount
+          ) {
+            dispatch({ type: "PLACE_BET" });
+            dispatch({ type: "AUTO_PLAY_TICK" });
+            hasBet = true;
+          }
+          fastForwardCrash(hasBet);
+          return;
+        }
+
         roundStartTimeRef.current = performance.now();
 
         // Begin animation loop
@@ -602,7 +706,7 @@ export function useCrashGame() {
         animationFrameRef.current = requestAnimationFrame(tick);
       }
     }, 1000);
-  }, [dispatch, stopAnimationLoop, handleAutoPlayPostRound, shouldAutoPlayStop]);
+  }, [dispatch, stopAnimationLoop, handleAutoPlayPostRound, shouldAutoPlayStop, fastForwardCrash]);
 
   // Keep the ref in sync so the recursive setTimeout always calls the latest version
   startNewRoundRef.current = startNewRound;

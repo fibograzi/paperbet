@@ -98,6 +98,20 @@ export default function MinesGame() {
 
         {/* Center: Multiplier Bar + Danger Meter + Board */}
         <div className="flex-1 min-w-0">
+          {/* Mobile/Tablet: Controls above game area */}
+          <div className="lg:hidden mb-4">
+            <MinesControls
+              state={state}
+              dispatch={dispatch}
+              onStartGame={startGame}
+              onCashOut={cashOut}
+              onNewGame={newGame}
+              onPickRandom={pickRandom}
+              onStartAutoPlay={handleStartAutoPlay}
+              onStopAutoPlay={handleStopAutoPlay}
+            />
+          </div>
+
           <div className="max-w-[500px] mx-auto">
             {/* Multiplier Bar */}
             <MinesMultiplierBar
@@ -129,24 +143,10 @@ export default function MinesGame() {
               shaking={shaking}
             />
           </div>
-
-          {/* Mobile/Tablet: Controls below board */}
-          <div className="lg:hidden mt-4">
-            <MinesControls
-              state={state}
-              dispatch={dispatch}
-              onStartGame={startGame}
-              onCashOut={cashOut}
-              onNewGame={newGame}
-              onPickRandom={pickRandom}
-              onStartAutoPlay={handleStartAutoPlay}
-              onStopAutoPlay={handleStopAutoPlay}
-            />
-          </div>
         </div>
 
-        {/* Right: Sidebar (desktop) */}
-        <div className="hidden lg:block w-[320px] shrink-0">
+        {/* Right: Sidebar */}
+        <div className="w-full lg:w-[320px] shrink-0">
           <MinesSidebar
             state={state}
             onDismissNudge={() =>
@@ -157,19 +157,6 @@ export default function MinesGame() {
             }
           />
         </div>
-      </div>
-
-      {/* Mobile/Tablet: Sidebar below — extra padding when cash-out bar is visible */}
-      <div className={`lg:hidden mt-6 ${showMobileCashout ? "pb-20" : ""}`}>
-        <MinesSidebar
-          state={state}
-          onDismissNudge={() =>
-            dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })
-          }
-          onDismissReminder={() =>
-            dispatch({ type: "DISMISS_SESSION_REMINDER" })
-          }
-        />
       </div>
 
       {/* Mobile: Fixed Cash Out bar */}

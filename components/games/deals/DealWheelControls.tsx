@@ -197,7 +197,7 @@ export default function DealWheelControls({
           </p>
           <form onSubmit={handleEmailSubmit} className="mt-3 space-y-3">
             <div>
-              <input
+              <input suppressHydrationWarning
                 type="email"
                 value={emailInput}
                 onChange={(e) => {

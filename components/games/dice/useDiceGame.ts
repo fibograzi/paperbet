@@ -375,6 +375,9 @@ function diceReducer(state: DiceGameState, action: DiceAction): DiceGameState {
       };
     }
 
+    case "RESET_BALANCE":
+      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+
     default:
       return state;
   }

@@ -148,4 +148,5 @@ export type LimboAction =
   | { type: "AUTO_PLAY_ADJUST"; betAmount: number; targetMultiplier: number; winChance: number }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
-  | { type: "DISMISS_POST_SESSION_NUDGE" };
+  | { type: "DISMISS_POST_SESSION_NUDGE" }
+  | { type: "RESET_BALANCE" };

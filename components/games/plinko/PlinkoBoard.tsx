@@ -35,7 +35,7 @@ const PlinkoBoard = forwardRef<PlinkoBoardRef, PlinkoBoardProps>(
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animatorRef = useRef<PlinkoAnimator | null>(null);
 
-    // Track latest props in refs so the resize callback always sees current values
+    // Track latest props in refs so callbacks always see current values
     const rowsRef = useRef(rows);
     const riskRef = useRef(risk);
     const slotHeightRef = useRef(slotHeight);
@@ -45,44 +45,8 @@ const PlinkoBoard = forwardRef<PlinkoBoardRef, PlinkoBoardProps>(
     slotHeightRef.current = slotHeight;
 
     // -----------------------------------------------------------------------
-    // Animator lifecycle
-    // -----------------------------------------------------------------------
-
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      const container = containerRef.current;
-      const rect = container?.getBoundingClientRect();
-      const w = rect?.width ?? canvas.clientWidth;
-      const h = w * 1.25;
-
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-
-      const animator = new PlinkoAnimator(canvas, {
-        rows: rowsRef.current,
-        risk: riskRef.current,
-        slotHeight: slotHeightRef.current * dpr,
-        onPegHit: undefined,
-        onBallLand: undefined,
-      });
-
-      animatorRef.current = animator;
-
-      return () => {
-        animator.destroy();
-        animatorRef.current = null;
-      };
-      // Only mount/unmount once
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // -----------------------------------------------------------------------
-    // Resize handling
+    // Animator lifecycle + Resize handling (combined)
+    // Defer animator creation until ResizeObserver provides real dimensions.
     // -----------------------------------------------------------------------
 
     useEffect(() => {
@@ -91,28 +55,63 @@ const PlinkoBoard = forwardRef<PlinkoBoardRef, PlinkoBoardProps>(
       if (!container || !canvas) return;
 
       let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+      const applySize = (w: number) => {
+        const h = w * 1.25;
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+
+        if (!animatorRef.current) {
+          // First time: create the animator with valid dimensions
+          const animator = new PlinkoAnimator(canvas, {
+            rows: rowsRef.current,
+            risk: riskRef.current,
+            slotHeight: slotHeightRef.current * dpr,
+            onPegHit: undefined,
+            onBallLand: undefined,
+          });
+          animatorRef.current = animator;
+        } else {
+          animatorRef.current.resize(w * dpr, h * dpr);
+        }
+      };
+
+      // Eagerly draw pegs using current layout dimensions so the board
+      // is visible immediately, without waiting for the async ResizeObserver.
+      const initialWidth = container.getBoundingClientRect().width;
+      if (initialWidth > 0) {
+        applySize(initialWidth);
+      }
+
+      // ResizeObserver handles subsequent dimension changes (window resize, etc.)
       const observer = new ResizeObserver((entries) => {
         const entry = entries[0];
         if (!entry) return;
+        const w = entry.contentRect.width;
+        if (w <= 0) return;
 
-        // Debounce resize by 200ms per spec
+        // Debounce all observer callbacks — the eager draw above already
+        // handled the initial render.
         if (resizeTimeout) clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          const w = entry.contentRect.width;
-          const h = w * 1.25;
-          const dpr = window.devicePixelRatio || 1;
-
-          canvas.width = w * dpr;
-          canvas.height = h * dpr;
-          canvas.style.width = `${w}px`;
-          canvas.style.height = `${h}px`;
-
-          animatorRef.current?.resize(w * dpr, h * dpr);
-        }, 200);
+        resizeTimeout = setTimeout(() => applySize(w), 200);
       });
 
       observer.observe(container);
-      return () => observer.disconnect();
+
+      return () => {
+        observer.disconnect();
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        if (animatorRef.current) {
+          animatorRef.current.destroy();
+          animatorRef.current = null;
+        }
+      };
+      // Only mount/unmount once
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // -----------------------------------------------------------------------
@@ -137,6 +136,20 @@ const PlinkoBoard = forwardRef<PlinkoBoardRef, PlinkoBoardProps>(
       update();
       mq.addEventListener("change", update);
       return () => mq.removeEventListener("change", update);
+    }, []);
+
+    // -----------------------------------------------------------------------
+    // Background tab support — fast-forward active balls when hidden
+    // -----------------------------------------------------------------------
+
+    useEffect(() => {
+      const handler = () => {
+        if (document.hidden) {
+          animatorRef.current?.fastForwardAll();
+        }
+      };
+      document.addEventListener("visibilitychange", handler);
+      return () => document.removeEventListener("visibilitychange", handler);
     }, []);
 
     // -----------------------------------------------------------------------

@@ -121,6 +121,14 @@ export default function DealWheel({
       dpr,
     });
 
+    // Draw initial idle frame so the wheel is visible immediately
+    rendererRef.current.drawWheel(
+      segmentsRef.current,
+      angleRef.current,
+      phaseRef.current,
+      performance.now()
+    );
+
     // ResizeObserver with debounce
     let resizeTimeout: ReturnType<typeof setTimeout>;
     const observer = new ResizeObserver((entries) => {

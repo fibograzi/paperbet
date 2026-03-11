@@ -7,6 +7,11 @@ const footerLinks = {
     { label: "Plinko Simulator", href: "/plinko" },
     { label: "Crash Simulator", href: "/crash" },
     { label: "Mines Simulator", href: "/mines" },
+    { label: "HiLo Simulator", href: "/hilo" },
+    { label: "Dice Simulator", href: "/dice" },
+    { label: "Limbo Simulator", href: "/limbo" },
+    { label: "Keno Simulator", href: "/keno" },
+    { label: "Flip Simulator", href: "/flip" },
   ],
   learn: [
     { label: "Plinko Strategy Guide", href: "/blog/plinko-strategy-guide" },
@@ -154,9 +159,6 @@ export default function Footer() {
           </div>
           <p className="text-pb-text-muted text-xs mt-4">
             {SITE.disclaimer}
-          </p>
-          <p className="text-pb-text-muted text-xs mt-2">
-            Links to third-party casinos are affiliate links — we may earn a commission at no extra cost to you.
           </p>
           <p className="text-pb-text-muted text-xs mt-2">
             Game names may be trademarks of their respective owners.

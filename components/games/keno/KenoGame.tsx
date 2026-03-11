@@ -92,6 +92,17 @@ export default function KenoGame() {
 
         {/* Center: Game Area */}
         <div className="flex-1 min-w-0">
+          {/* Mobile/Tablet: Controls above game area */}
+          <div className="lg:hidden mb-4">
+            <KenoControls
+              state={state}
+              dispatch={dispatch}
+              onBet={bet}
+              onStartAutoPlay={startAutoPlay}
+              onStopAutoPlay={stopAutoPlay}
+            />
+          </div>
+
           <div className="max-w-[720px] mx-auto">
             <KenoBoard state={state} dispatch={dispatch} />
             <KenoMultiplierRow
@@ -102,36 +113,16 @@ export default function KenoGame() {
               isResult={state.phase === "result"}
             />
           </div>
-
-          {/* Mobile/Tablet: Controls below board */}
-          <div className="lg:hidden mt-4">
-            <KenoControls
-              state={state}
-              dispatch={dispatch}
-              onBet={bet}
-              onStartAutoPlay={startAutoPlay}
-              onStopAutoPlay={stopAutoPlay}
-            />
-          </div>
         </div>
 
-        {/* Right: Sidebar (desktop) */}
-        <div className="hidden lg:block w-[320px] shrink-0">
+        {/* Right: Sidebar */}
+        <div className="w-full lg:w-[320px] shrink-0">
           <KenoSidebar
             state={state}
             onDismissNudge={() => dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })}
             onDismissReminder={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
           />
         </div>
-      </div>
-
-      {/* Mobile/Tablet: Sidebar content below */}
-      <div className="lg:hidden mt-6">
-        <KenoSidebar
-          state={state}
-          onDismissNudge={() => dispatch({ type: "DISMISS_POST_SESSION_NUDGE" })}
-          onDismissReminder={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-        />
       </div>
     </div>
   );

@@ -155,4 +155,5 @@ export type KenoAction =
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }
   | { type: "SHOW_AUTO_PLAY_WARNING" }
-  | { type: "DISMISS_AUTO_PLAY_WARNING" };
+  | { type: "DISMISS_AUTO_PLAY_WARNING" }
+  | { type: "RESET_BALANCE" };

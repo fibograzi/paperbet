@@ -9,7 +9,7 @@ export const CASINOS: Casino[] = [
     color: "#1475E1",
     offer: "200% deposit match up to $2,000",
     offerShort: "200% up to $2K",
-    games: ["plinko", "crash", "mines", "dice", "limbo", "keno"],
+    games: ["plinko", "crash", "mines", "dice", "limbo", "hilo", "keno", "flip"],
     features: ["Provably Fair", "Instant Crypto Payouts", "25M+ Users"],
     termsUrl: "https://stake.com/policies/terms",
     regionNote: "Not available in the UK",
@@ -22,7 +22,7 @@ export const CASINOS: Casino[] = [
     color: "#FFD700",
     offer: "15% rakeback on all bets",
     offerShort: "15% Rakeback",
-    games: ["plinko", "crash", "mines", "roulette"],
+    games: ["plinko", "crash", "mines", "dice", "hilo"],
     features: ["Fast Payouts", "Crypto Trading", "NFT Integration"],
     termsUrl: "https://rollbit.com/terms",
   },
@@ -46,7 +46,7 @@ export const CASINOS: Casino[] = [
     color: "#8B5CF6",
     offer: "350% up to $10,000 + 200 free spins",
     offerShort: "350% + 200 Spins",
-    games: ["plinko", "crash", "mines"],
+    games: ["plinko", "crash", "mines", "dice", "limbo"],
     features: ["VIP Program", "4000+ Slots", "Weekly Reload"],
     termsUrl: "https://wild.io/terms",
   },
@@ -58,7 +58,7 @@ export const CASINOS: Casino[] = [
     color: "#F97316",
     offer: "100 wager-free spins",
     offerShort: "100 Free Spins",
-    games: ["plinko", "crash", "mines", "dice", "keno"],
+    games: ["plinko", "crash", "mines", "dice", "keno", "flip"],
     features: ["Wager-Free Bonuses", "Fast Payouts", "9000+ Games"],
     termsUrl: "https://jackbit.com/terms",
   },
@@ -73,6 +73,18 @@ export const CASINOS: Casino[] = [
     games: ["plinko", "crash", "mines"],
     features: ["Since 2017", "21+ Cryptos", "Provably Fair"],
     termsUrl: "https://coincasino.com/terms",
+  },
+  {
+    id: "rainbet",
+    name: "Rainbet",
+    url: "https://rainbet.com/?ref=paperbet&utm_source=paperbet&utm_medium=affiliate",
+    logo: "/casinos/rainbet.svg",
+    color: "#38BDF8",
+    offer: "15% rakeback + rain rewards",
+    offerShort: "15% Rakeback",
+    games: ["plinko", "crash", "mines", "dice", "limbo", "keno"],
+    features: ["Instant Payouts", "Rakeback Rewards", "Community Rain"],
+    termsUrl: "https://rainbet.com/terms",
   },
 ];
 
@@ -161,7 +173,44 @@ export const GAMES: Game[] = [
     available: true,
     rtp: 99,
   },
+  {
+    id: "flip",
+    name: "Flip",
+    slug: "flip",
+    description:
+      "Pick Heads or Tails and flip the coin. Win 1.96x, then double or nothing — chain up to 20 flips for a maximum of 1,027,604x.",
+    shortDesc: "Pick. Flip. Double.",
+    icon: "Coins",
+    color: "#F59E0B",
+    available: true,
+    rtp: 98,
+  },
 ];
+
+// ---------------------------------------------------------------------------
+// Casino → Game RTP mapping (official published RTPs per casino)
+// ---------------------------------------------------------------------------
+
+export const CASINO_GAME_RTP: Record<string, Record<string, number>> = {
+  stake: {
+    plinko: 99, crash: 99, mines: 99, dice: 99, limbo: 99, hilo: 99, keno: 99, flip: 98,
+  },
+  bcgame: {
+    plinko: 99, crash: 99, mines: 99, dice: 99, limbo: 99, hilo: 99, keno: 99,
+  },
+  rainbet: {
+    plinko: 99, crash: 99, mines: 99, dice: 99, limbo: 99, keno: 99,
+  },
+  rollbit: {
+    plinko: 99, crash: 95, mines: 99, dice: 99, hilo: 99,
+  },
+  wildio: {
+    plinko: 97, crash: 97, dice: 97, mines: 97, limbo: 97,
+  },
+  coincasino: {
+    plinko: 99, crash: 99, mines: 99,
+  },
+};
 
 export const SITE = {
   name: "PaperBet.io",

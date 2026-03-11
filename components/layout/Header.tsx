@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Menu, Triangle, TrendingUp, Grid3x3 } from "lucide-react";
+import { ChevronDown, Menu, Triangle, TrendingUp, Grid3x3, Coins, ArrowUpDown, Dices, Zap } from "lucide-react";
 import { GAMES } from "@/lib/constants";
 import { Game } from "@/lib/types";
 import Badge from "@/components/ui/Badge";
@@ -16,6 +16,10 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Triangle,
   TrendingUp,
   Grid3x3,
+  Coins,
+  ArrowUpDown,
+  Dices,
+  Zap,
 };
 
 export default function Header() {
@@ -58,7 +62,8 @@ export default function Header() {
             alt="PaperBet.io"
             width={180}
             height={40}
-            className="h-10 w-auto"
+            className="h-10"
+            style={{ width: "auto" }}
             priority
           />
         </Link>

@@ -204,4 +204,5 @@ export type HiLoAction =
   | { type: "AUTO_PLAY_ADJUST_BET"; amount: number }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
-  | { type: "DISMISS_POST_SESSION_NUDGE" };
+  | { type: "DISMISS_POST_SESSION_NUDGE" }
+  | { type: "RESET_BALANCE" };

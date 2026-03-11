@@ -439,6 +439,9 @@ function kenoReducer(state: KenoGameState, action: KenoAction): KenoGameState {
       return { ...state, autoPlayPausedForWarning: false };
     }
 
+    case "RESET_BALANCE":
+      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+
     default:
       return state;
   }
