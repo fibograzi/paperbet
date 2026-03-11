@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown, Zap } from "lucide-react";
 import type {
   CrashGameState,
   CrashAction,
@@ -17,6 +17,8 @@ interface CrashControlsProps {
   dispatch: React.Dispatch<CrashAction>;
   onPlaceBet: () => void;
   onCancelBet: () => void;
+  onQueueBet: () => void;
+  onCancelQueue: () => void;
   onCashOut: () => void;
   onStartAutoPlay: (config: {
     totalCount: number | null;
@@ -41,11 +43,13 @@ export default function CrashControls({
   dispatch,
   onPlaceBet,
   onCancelBet,
+  onQueueBet,
+  onCancelQueue,
   onCashOut,
   onStartAutoPlay,
   onStopAutoPlay,
 }: CrashControlsProps) {
-  const { config, balance, autoPlay, phase, hasBet, cashedOut, cashoutMultiplier, currentMultiplier } = state;
+  const { config, balance, autoPlay, phase, hasBet, betQueued, cashedOut, cashoutMultiplier, currentMultiplier, instantMode } = state;
 
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -81,12 +85,19 @@ export default function CrashControls({
           }
         } else if (phase === "running" && hasBet && !cashedOut) {
           onCashOut();
+        } else if ((phase === "running" || phase === "crashed") && !autoPlay.active) {
+          // Queue/cancel bet for next round
+          if (betQueued) {
+            onCancelQueue();
+          } else if (!hasBet || cashedOut) {
+            onQueueBet();
+          }
         }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [phase, hasBet, cashedOut, onPlaceBet, onCancelBet, onCashOut]);
+  }, [phase, hasBet, cashedOut, betQueued, autoPlay.active, onPlaceBet, onCancelBet, onCashOut, onQueueBet, onCancelQueue]);
 
   // ---------------------------------------------------------------------------
   // Bet amount helpers
@@ -169,7 +180,11 @@ export default function CrashControls({
   // Computed values
   // ---------------------------------------------------------------------------
 
-  const controlsDisabled = phase === "running" || phase === "crashed";
+  // Bet amount input: disabled during autoplay or when a bet is queued (amount locked)
+  const betAmountDisabled = autoPlay.active || betQueued;
+
+  // Cashout input: disabled during autoplay only (can change target anytime else)
+  const cashoutDisabled = autoPlay.active;
 
   const potentialProfit =
     hasBet && !cashedOut
@@ -212,9 +227,9 @@ export default function CrashControls({
               onFocus={betInput.onFocus}
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
-              disabled={autoPlay.active || controlsDisabled}
+              disabled={betAmountDisabled}
               className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
-              style={{ color: "#F9FAFB", opacity: (autoPlay.active || controlsDisabled) ? 0.5 : 1 }}
+              style={{ color: "#F9FAFB", opacity: betAmountDisabled ? 0.5 : 1 }}
               aria-label="Bet amount"
             />
           </div>
@@ -222,7 +237,7 @@ export default function CrashControls({
           <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
             <button
               type="button"
-              disabled={autoPlay.active || controlsDisabled}
+              disabled={betAmountDisabled}
               onClick={() => setBetQuick("half")}
               className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
@@ -232,7 +247,7 @@ export default function CrashControls({
             <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
             <button
               type="button"
-              disabled={autoPlay.active || controlsDisabled}
+              disabled={betAmountDisabled}
               onClick={() => setBetQuick("double")}
               className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
@@ -257,7 +272,7 @@ export default function CrashControls({
             inputMode="decimal"
             value={(config.autoCashout ?? 2.0).toFixed(2)}
             onChange={handleCashoutInput}
-            disabled={autoPlay.active || controlsDisabled}
+            disabled={cashoutDisabled}
             className="w-full bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md text-right font-mono-stats text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 pr-14"
             aria-label="Cashout multiplier"
           />
@@ -266,7 +281,7 @@ export default function CrashControls({
             <button
               type="button"
               onClick={() => adjustCashout(0.1)}
-              disabled={(config.autoCashout ?? 2.0) >= 10000 || autoPlay.active || controlsDisabled}
+              disabled={(config.autoCashout ?? 2.0) >= 10000 || cashoutDisabled}
               className="text-pb-text-muted hover:text-pb-text-primary transition-colors disabled:opacity-30"
               aria-label="Increase cashout"
             >
@@ -275,7 +290,7 @@ export default function CrashControls({
             <button
               type="button"
               onClick={() => adjustCashout(-0.1)}
-              disabled={(config.autoCashout ?? 2.0) <= 1.01 || autoPlay.active || controlsDisabled}
+              disabled={(config.autoCashout ?? 2.0) <= 1.01 || cashoutDisabled}
               className="text-pb-text-muted hover:text-pb-text-primary transition-colors disabled:opacity-30"
               aria-label="Decrease cashout"
             >
@@ -395,6 +410,50 @@ export default function CrashControls({
                 ∞
               </button>
             </div>
+          </div>
+
+          {/* Instant Mode toggle */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg px-2.5 py-2">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "TOGGLE_INSTANT_MODE" })}
+              className="flex items-center justify-between w-full"
+            >
+              <div className="flex items-center gap-2">
+                <Zap
+                  size={14}
+                  className={cn(
+                    "transition-colors",
+                    instantMode ? "text-pb-warning fill-pb-warning" : "text-pb-text-muted"
+                  )}
+                />
+                <span className={cn(
+                  "text-xs font-heading font-semibold transition-colors",
+                  instantMode ? "text-pb-warning" : "text-pb-text-secondary"
+                )}>
+                  Instant Mode
+                </span>
+              </div>
+              {/* Toggle switch */}
+              <div
+                className={cn(
+                  "w-8 h-[18px] rounded-full relative transition-colors",
+                  instantMode ? "bg-pb-warning" : "bg-pb-border"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-3.5 h-3.5 rounded-full bg-white absolute top-[2px] transition-all",
+                    instantMode ? "left-[14px]" : "left-[2px]"
+                  )}
+                />
+              </div>
+            </button>
+            {instantMode && (
+              <p className="text-[10px] text-pb-text-muted mt-1 pl-[22px]">
+                Skip animations — resolve rounds instantly
+              </p>
+            )}
           </div>
 
           {/* Advanced toggle */}
@@ -664,6 +723,14 @@ export default function CrashControls({
                     {formatCurrency(config.betAmount)}
                   </span>
                 </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-pb-text-muted">Rounds</span>
+                  <span className="text-pb-text-primary font-mono-stats">
+                    {autoPlay.totalCount
+                      ? `${autoPlay.currentCount}/${autoPlay.totalCount}`
+                      : `${autoPlay.currentCount}`}
+                  </span>
+                </div>
                 {(autoPlay.stopOnProfit !== null || autoPlay.stopOnLoss !== null) && (
                   <div className="border-t border-pb-border/50 pt-1.5 mt-1.5">
                     {autoPlay.stopOnProfit !== null && (
@@ -762,64 +829,7 @@ export default function CrashControls({
   // ---------------------------------------------------------------------------
 
   function renderActionButton() {
-    // AUTO-PLAY: show status during non-running phases (keep Cash Out available during running)
-    if (autoPlay.active && phase !== "running") {
-      const countLabel = autoPlay.totalCount
-        ? `${autoPlay.currentCount}/${autoPlay.totalCount}`
-        : `${autoPlay.currentCount}`;
-      return (
-        <button
-          key="auto-playing"
-          type="button"
-          disabled
-          className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm cursor-default border border-pb-accent/30"
-        >
-          <span className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-pb-accent animate-pulse" />
-            Auto-Playing ({countLabel})
-          </span>
-        </button>
-      );
-    }
-
-    // BETTING + no bet: Green "Bet (Next Round)"
-    if (phase === "betting" && !hasBet) {
-      const canBet = config.betAmount <= balance;
-      return (
-        <button
-          key="bet-next"
-          type="button"
-          onClick={onPlaceBet}
-          disabled={!canBet}
-          className="w-full h-9 rounded-lg font-heading font-bold text-sm hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed"
-          style={{
-            backgroundColor: canBet ? "#00E5A0" : "#374151",
-            color: canBet ? "#0B0F1A" : "#6B7280",
-            boxShadow: canBet
-              ? "0 0 20px rgba(0, 229, 160, 0.2)"
-              : "none",
-          }}
-        >
-          Bet (Next Round)
-        </button>
-      );
-    }
-
-    // BETTING + has bet: Red "Cancel Bet"
-    if (phase === "betting" && hasBet) {
-      return (
-        <button
-          key="cancel-bet"
-          type="button"
-          onClick={onCancelBet}
-          className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98]"
-        >
-          Cancel Bet
-        </button>
-      );
-    }
-
-    // RUNNING + has bet + not cashed out: Amber pulsing "Cash Out"
+    // 1. CASH OUT: highest priority during running phase with active bet
     if (phase === "running" && hasBet && !cashedOut) {
       return (
         <motion.button
@@ -842,43 +852,129 @@ export default function CrashControls({
       );
     }
 
-    // RUNNING + no bet: Disabled gray "Watching..."
-    if (phase === "running" && !hasBet) {
+    // 2. AUTOPLAY STATUS: when autoplay active and no cashout needed
+    if (autoPlay.active && !(phase === "running" && cashedOut)) {
+      const countLabel = autoPlay.totalCount
+        ? `${autoPlay.currentCount}/${autoPlay.totalCount}`
+        : `${autoPlay.currentCount}`;
       return (
         <button
-          key="watching"
+          key="auto-playing"
           type="button"
           disabled
-          className="w-full h-9 rounded-lg bg-pb-border text-pb-text-muted font-heading font-bold text-sm cursor-not-allowed"
+          className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm cursor-default border border-pb-accent/30"
         >
-          Watching...
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-pb-accent animate-pulse" />
+            Auto-Playing ({countLabel})
+          </span>
         </button>
       );
     }
 
-    // RUNNING + cashed out: Green disabled "Cashed Out"
+    // 3. BETTING PHASE: place or cancel bet
+    if (phase === "betting" && !hasBet) {
+      const canBet = config.betAmount <= balance;
+      return (
+        <button
+          key="bet-next"
+          type="button"
+          onClick={onPlaceBet}
+          disabled={!canBet}
+          className="w-full h-9 rounded-lg font-heading font-bold text-sm hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: canBet ? "#00E5A0" : "#374151",
+            color: canBet ? "#0B0F1A" : "#6B7280",
+            boxShadow: canBet
+              ? "0 0 20px rgba(0, 229, 160, 0.2)"
+              : "none",
+          }}
+        >
+          Place Bet
+        </button>
+      );
+    }
+
+    if (phase === "betting" && hasBet) {
+      return (
+        <button
+          key="cancel-bet"
+          type="button"
+          onClick={onCancelBet}
+          className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98]"
+        >
+          Cancel Bet
+        </button>
+      );
+    }
+
+    // 4. CASHED OUT: show result + allow queueing next bet
     if (phase === "running" && cashedOut && cashoutMultiplier !== null) {
+      const canQueue = !betQueued && config.betAmount <= balance;
+      return (
+        <div className="space-y-1.5">
+          <div className="text-center text-xs font-mono-stats text-pb-accent">
+            Cashed Out @ {formatCrashMultiplier(cashoutMultiplier)}!
+          </div>
+          {betQueued ? (
+            <button
+              key="cancel-queue-cashed"
+              type="button"
+              onClick={onCancelQueue}
+              className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98]"
+            >
+              Cancel Bet (Next Round)
+            </button>
+          ) : (
+            <button
+              key="queue-after-cashout"
+              type="button"
+              onClick={onQueueBet}
+              disabled={!canQueue}
+              className="w-full h-9 rounded-lg font-heading font-bold text-sm hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed"
+              style={{
+                backgroundColor: canQueue ? "#00E5A0" : "#374151",
+                color: canQueue ? "#0B0F1A" : "#6B7280",
+                boxShadow: canQueue ? "0 0 20px rgba(0, 229, 160, 0.2)" : "none",
+              }}
+            >
+              Bet (Next Round)
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    // 5. RUNNING/CRASHED without bet: queue for next round
+    if (betQueued) {
       return (
         <button
-          key="cashed-out"
+          key="cancel-queue"
           type="button"
-          disabled
-          className="w-full h-9 rounded-lg bg-pb-accent text-pb-bg-primary font-heading font-bold text-sm cursor-not-allowed opacity-80"
+          onClick={onCancelQueue}
+          className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98]"
         >
-          Cashed Out @ {formatCrashMultiplier(cashoutMultiplier)}!
+          Cancel Bet (Next Round)
         </button>
       );
     }
 
-    // CRASHED: Gray disabled "Next round in..."
+    // 6. DEFAULT: Bet for next round (running without bet, or crashed)
+    const canQueue = config.betAmount <= balance;
     return (
       <button
-        key="next-round"
+        key="bet-next-round"
         type="button"
-        disabled
-        className="w-full h-9 rounded-lg bg-pb-border text-pb-text-muted font-heading font-bold text-sm cursor-not-allowed"
+        onClick={onQueueBet}
+        disabled={!canQueue}
+        className="w-full h-9 rounded-lg font-heading font-bold text-sm hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed"
+        style={{
+          backgroundColor: canQueue ? "#00E5A0" : "#374151",
+          color: canQueue ? "#0B0F1A" : "#6B7280",
+          boxShadow: canQueue ? "0 0 20px rgba(0, 229, 160, 0.2)" : "none",
+        }}
       >
-        Next round in...
+        Bet (Next Round)
       </button>
     );
   }

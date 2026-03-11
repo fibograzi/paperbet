@@ -69,6 +69,7 @@ const initialState: CrashGameState = {
   crashPoint: null,
   countdown: COUNTDOWN_SECONDS,
   hasBet: false,
+  betQueued: false,
   cashedOut: false,
   cashoutMultiplier: null,
   previousCrashPoints: [],
@@ -79,6 +80,7 @@ const initialState: CrashGameState = {
   showPostSessionNudge: false,
   postSessionNudgeDismissed: false,
   autoPlay: initialAutoPlay,
+  instantMode: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -128,18 +130,62 @@ function crashReducer(
       };
     }
 
-    // -- Countdown / Round lifecycle -------------------------------------------
+    // -- Queue bet for next round (during running/crashed) --------------------
 
-    case "START_COUNTDOWN":
+    case "QUEUE_BET": {
+      if (
+        state.betQueued ||
+        state.phase === "betting" ||
+        state.balance < state.config.betAmount
+      ) {
+        return state;
+      }
+      // Allow queuing if no active bet, or if current bet is already cashed out
+      if (state.hasBet && !state.cashedOut) {
+        return state;
+      }
       return {
         ...state,
-        phase: "betting",
+        balance: state.balance - state.config.betAmount,
+        betQueued: true,
+      };
+    }
+
+    case "CANCEL_QUEUE": {
+      if (!state.betQueued) return state;
+      return {
+        ...state,
+        balance: state.balance + state.config.betAmount,
+        betQueued: false,
+      };
+    }
+
+    // -- Instant mode toggle --------------------------------------------------
+
+    case "TOGGLE_INSTANT_MODE":
+      return {
+        ...state,
+        instantMode: !state.instantMode,
+      };
+
+    // -- Countdown / Round lifecycle -------------------------------------------
+
+    case "START_COUNTDOWN": {
+      const base = {
+        ...state,
+        phase: "betting" as const,
         countdown: COUNTDOWN_SECONDS,
         crashPoint: action.crashPoint,
         currentMultiplier: 1.0,
         cashedOut: false,
         cashoutMultiplier: null,
       };
+      // Convert queued bet to active bet
+      if (state.betQueued) {
+        return { ...base, betQueued: false, hasBet: true };
+      }
+      return base;
+    }
 
     case "COUNTDOWN_TICK":
       return {
@@ -326,7 +372,17 @@ function crashReducer(
       };
 
     case "RESET_BALANCE":
-      return { ...state, balance: 1000, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: 1000,
+        betQueued: false,
+        stats: { ...initialStats },
+        history: [],
+        sessionRoundCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+      };
 
     default:
       return state;
@@ -514,6 +570,7 @@ export function useCrashGame() {
         handleAutoPlayPostRound(didCashOut);
       }
 
+      const delay = stateRef.current.instantMode ? 50 : POST_CRASH_DELAY;
       postCrashTimeoutRef.current = setTimeout(() => {
         postCrashTimeoutRef.current = null;
         if (!gameActiveRef.current) return;
@@ -521,7 +578,7 @@ export function useCrashGame() {
           dispatch({ type: "AUTO_PLAY_STOP" });
         }
         startNewRoundRef.current();
-      }, POST_CRASH_DELAY);
+      }, delay);
     },
     [stopAnimationLoop, dispatch, handleAutoPlayPostRound, shouldAutoPlayStop]
   );
@@ -554,7 +611,40 @@ export function useCrashGame() {
     const cp = generateCrashPoint();
     crashPointRef.current = cp;
 
+    // Check if a bet is queued (before START_COUNTDOWN converts it)
+    const hadQueuedBet = stateRef.current.betQueued;
+
     dispatch({ type: "START_COUNTDOWN", crashPoint: cp });
+
+    const isInstant = stateRef.current.instantMode;
+
+    // ----------------------------------------------------------------
+    // INSTANT MODE: skip countdown & animation, resolve immediately
+    // ----------------------------------------------------------------
+    if (isInstant) {
+      let hasBetForRound = hadQueuedBet;
+
+      // Auto-play: place bet immediately (no timeout)
+      if (
+        !hasBetForRound &&
+        stateRef.current.autoPlay.active &&
+        !shouldAutoPlayStop()
+      ) {
+        if (stateRef.current.balance >= stateRef.current.config.betAmount) {
+          dispatch({ type: "PLACE_BET" });
+          dispatch({ type: "AUTO_PLAY_TICK" });
+          hasBetForRound = true;
+        }
+      }
+
+      dispatch({ type: "START_ROUND" });
+      fastForwardCrash(hasBetForRound);
+      return;
+    }
+
+    // ----------------------------------------------------------------
+    // NORMAL MODE: countdown → animation
+    // ----------------------------------------------------------------
 
     // Auto-play: automatically place bet during countdown
     if (stateRef.current.autoPlay.active && !shouldAutoPlayStop()) {
@@ -683,7 +773,8 @@ export function useCrashGame() {
               handleAutoPlayPostRound(didCashOut);
             }
 
-            // After POST_CRASH_DELAY, start next round
+            // After crash delay, start next round
+            const crashDelay = stateRef.current.instantMode ? 50 : POST_CRASH_DELAY;
             postCrashTimeoutRef.current = setTimeout(() => {
               postCrashTimeoutRef.current = null;
 
@@ -695,7 +786,7 @@ export function useCrashGame() {
               }
 
               startNewRoundRef.current();
-            }, POST_CRASH_DELAY);
+            }, crashDelay);
 
             return;
           }
@@ -727,6 +818,25 @@ export function useCrashGame() {
     dispatch({ type: "CANCEL_BET" });
   }, [dispatch]);
 
+  const queueBet = useCallback(() => {
+    const s = stateRef.current;
+    if (
+      s.betQueued ||
+      s.phase === "betting" ||
+      s.autoPlay.active ||
+      s.balance < s.config.betAmount
+    ) return;
+    // Block if bet is still active (not yet cashed out)
+    if (s.hasBet && !s.cashedOut) return;
+    dispatch({ type: "QUEUE_BET" });
+  }, [dispatch]);
+
+  const cancelQueue = useCallback(() => {
+    const s = stateRef.current;
+    if (!s.betQueued) return;
+    dispatch({ type: "CANCEL_QUEUE" });
+  }, [dispatch]);
+
   const cashOut = useCallback(() => {
     const s = stateRef.current;
     if (s.phase !== "running" || !s.hasBet || s.cashedOut) return;
@@ -739,5 +849,5 @@ export function useCrashGame() {
     startNewRound();
   }, [startNewRound]);
 
-  return { state, dispatch, placeBet, cancelBet, cashOut, startGame };
+  return { state, dispatch, placeBet, cancelBet, queueBet, cancelQueue, cashOut, startGame };
 }

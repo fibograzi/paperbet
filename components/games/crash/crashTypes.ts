@@ -74,6 +74,7 @@ export interface CrashGameState {
   crashPoint: number | null;
   countdown: number; // seconds remaining in betting phase
   hasBet: boolean;
+  betQueued: boolean; // bet queued for next round (during running/crashed)
   cashedOut: boolean;
   cashoutMultiplier: number | null;
   previousCrashPoints: number[]; // last 20 for badge display
@@ -84,6 +85,7 @@ export interface CrashGameState {
   showPostSessionNudge: boolean;
   postSessionNudgeDismissed: boolean;
   autoPlay: CrashAutoPlayState;
+  instantMode: boolean; // skip countdown/animation for fast autobet testing
 }
 
 // ---------------------------------------------------------------------------
@@ -95,6 +97,9 @@ export type CrashAction =
   | { type: "SET_AUTO_CASHOUT"; value: number | null }
   | { type: "PLACE_BET" }
   | { type: "CANCEL_BET" }
+  | { type: "QUEUE_BET" }
+  | { type: "CANCEL_QUEUE" }
+  | { type: "TOGGLE_INSTANT_MODE" }
   | { type: "START_COUNTDOWN"; crashPoint: number }
   | { type: "COUNTDOWN_TICK" }
   | { type: "START_ROUND" }

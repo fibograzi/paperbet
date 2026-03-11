@@ -10,7 +10,7 @@ import CrashPreviousRounds from "./CrashPreviousRounds";
 import CrashSidebar from "./CrashSidebar";
 
 export default function CrashGame() {
-  const { state, dispatch, placeBet, cancelBet, cashOut, startGame } =
+  const { state, dispatch, placeBet, cancelBet, queueBet, cancelQueue, cashOut, startGame } =
     useCrashGame();
 
   // Start the game loop on mount. The hook's internal gameActiveRef
@@ -66,6 +66,8 @@ export default function CrashGame() {
             dispatch={dispatch}
             onPlaceBet={placeBet}
             onCancelBet={cancelBet}
+            onQueueBet={queueBet}
+            onCancelQueue={cancelQueue}
             onCashOut={cashOut}
             onStartAutoPlay={handleStartAutoPlay}
             onStopAutoPlay={handleStopAutoPlay}
@@ -103,6 +105,8 @@ export default function CrashGame() {
               dispatch={dispatch}
               onPlaceBet={placeBet}
               onCancelBet={cancelBet}
+              onQueueBet={queueBet}
+              onCancelQueue={cancelQueue}
               onCashOut={cashOut}
               onStartAutoPlay={handleStartAutoPlay}
               onStopAutoPlay={handleStopAutoPlay}
