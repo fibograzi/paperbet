@@ -3,9 +3,16 @@ import Link from "next/link";
 import { BookOpen, Calculator, BarChart2, Play, RefreshCw, GitBranch } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Learn Roulette — Rules, Odds & Strategy Guide | PaperBet.io",
+  title: "Learn Roulette — Rules, Odds & Strategy Guide | PaperBet",
   description:
     "Complete roulette guide: how roulette works, European vs American differences, inside/outside bets, house edge math, betting strategies, and why no system beats the wheel.",
+  keywords: [
+    "learn roulette",
+    "roulette rules",
+    "roulette strategy guide",
+    "roulette house edge",
+    "roulette for beginners",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/learn",
   },

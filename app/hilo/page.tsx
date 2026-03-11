@@ -3,37 +3,43 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import HiLoGame from "@/components/games/hilo/HiLoGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
+import GameHero from "@/components/shared/GameHero";
+import GameSEOContent from "@/components/shared/GameSEOContent";
+import GameFAQ from "@/components/shared/GameFAQ";
+import CrossGameLinks from "@/components/shared/CrossGameLinks";
 import { blogPosts } from "@/lib/blog-data";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title:
-    "Free HiLo Card Game Simulator — Predict Higher or Lower | PaperBet.io",
+  title: "Free HiLo Card Game — Predict Higher or Lower | PaperBet",
   description:
-    "Play HiLo for free with casino-accurate probabilities. Predict higher or lower, build multiplier chains, and practice strategies before playing for real at top crypto casinos.",
+    "Play HiLo free. A card is shown — predict if the next is higher or lower. Build multiplier chains with correct guesses. 99% RTP crypto casino simulator.",
   alternates: {
     canonical: "https://paperbet.io/hilo",
   },
   openGraph: {
-    title:
-      "Free HiLo Card Game Simulator — Predict Higher or Lower | PaperBet.io",
+    title: "Free HiLo Card Game — Predict Higher or Lower | PaperBet",
     description:
-      "Play HiLo for free with casino-accurate probabilities. Build multiplier chains and test strategies risk-free.",
+      "Play HiLo free. Predict higher or lower, build multiplier chains with correct guesses.",
     url: "https://paperbet.io/hilo",
     siteName: "PaperBet.io",
     type: "website",
-    images: [
-      { url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 },
-    ],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title:
-      "Free HiLo Card Game Simulator — Predict Higher or Lower | PaperBet.io",
+    title: "Free HiLo Card Game — Predict Higher or Lower | PaperBet",
     description:
-      "Play HiLo for free with casino-accurate probabilities. Build multiplier chains and test strategies.",
+      "Play HiLo free. Build multiplier chains and test strategies risk-free.",
     images: ["https://paperbet.io/opengraph-image"],
   },
+  keywords: [
+    "hilo simulator",
+    "hilo casino game",
+    "higher or lower game",
+    "hilo card game",
+    "hilo crypto",
+  ],
 };
 
 const structuredData = {
@@ -48,8 +54,36 @@ const structuredData = {
     priceCurrency: "USD",
   },
   description:
-    "Free HiLo card game simulator with casino-accurate probabilities. Predict higher or lower, build multiplier chains with $1,000 in paper money. 99% RTP, cryptographically random outcomes.",
+    "Free HiLo card game simulator with casino-accurate probabilities. Predict higher or lower, build multiplier chains with $1,000 in paper money.",
 };
+
+const hiloFAQ = [
+  {
+    question: "What is HiLo and how does it work?",
+    answer:
+      "HiLo is a casino card game. A card is shown face-up, and you predict whether the next card will be higher or lower. Each correct prediction multiplies your bet. You can cash out after any correct guess, or continue the chain for bigger multipliers. An incorrect prediction loses your bet.",
+  },
+  {
+    question: "What is the RTP of HiLo?",
+    answer:
+      "HiLo has a 99% RTP. The house edge is 1%, applied per prediction in the chain. The payout for each prediction depends on the current card — predicting \"higher\" on a 2 pays less than predicting \"higher\" on a King, because a 2 has more cards above it.",
+  },
+  {
+    question: "Is there a strategy for HiLo?",
+    answer:
+      "The optimal strategy is straightforward: always predict \"higher\" when the current card is low (2-7) and \"lower\" when it is high (8-King). Middle cards (7-8) are the riskiest since the probability is close to 50/50. No strategy changes the 99% RTP.",
+  },
+  {
+    question: "Is this HiLo simulator provably fair?",
+    answer:
+      "This simulator uses a cryptographically secure random number generator to draw cards. Each card is independent and random. The probabilities match a standard 52-card deck, making this an accurate practice environment.",
+  },
+  {
+    question: "Where can I play HiLo for real money?",
+    answer:
+      "HiLo is available at crypto casinos including Stake and BC.Game. It is less widely available than games like Crash or Plinko but offers a unique card-based experience. Practice building chains here first, and always set loss limits when playing for real.",
+  },
+];
 
 const hiloGuides = blogPosts.filter((p) => p.game === "hilo");
 
@@ -60,15 +94,54 @@ export default function HiLoPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
-      <section className="min-h-screen">
+
+      <GameHero
+        h1="Free HiLo Card Game Simulator"
+        subtitle="A card is revealed — predict whether the next card will be higher or lower. Each correct guess multiplies your bet. Cash out anytime or keep the chain going."
+        stats={[
+          { value: "99%", label: "RTP" },
+          { value: "Card-Based", label: "Chains" },
+          { value: "Streaks", label: "Multiplier" },
+        ]}
+      />
+
+      <section>
         <GameErrorBoundary gameName="HiLo">
           <HiLoGame />
         </GameErrorBoundary>
       </section>
 
-      {/* Related Guides */}
+      <GameSEOContent title="How HiLo Works">
+        <p>
+          HiLo is a card-based casino game built around sequential predictions.
+          A card from a standard 52-card deck is shown face-up. You predict
+          whether the next card will be higher or lower. Each correct prediction
+          extends your chain and multiplies your running payout. Cash out after
+          any correct guess, or keep the chain going for bigger returns.
+        </p>
+        <p>
+          The payout for each prediction depends on the current card. Predicting
+          &quot;higher&quot; when showing a 2 is very likely (many cards are
+          higher) and pays a small multiplier. Predicting &quot;higher&quot; when
+          showing a King is very unlikely (only Ace is higher) and pays a large
+          multiplier. Middle cards like 7 and 8 offer roughly 50/50 odds with
+          near-2x payouts.
+        </p>
+        <p>
+          HiLo has a 99% RTP with the house edge applied per prediction in the
+          chain. The optimal approach is straightforward — always predict
+          &quot;higher&quot; on low cards and &quot;lower&quot; on high cards.
+          The real decision is when to cash out, as each additional prediction
+          multiplies both your potential win and your risk.
+        </p>
+      </GameSEOContent>
+
+      <GameFAQ items={hiloFAQ} gameName="HiLo" />
+
+      <CrossGameLinks currentGame="hilo" />
+
       {hiloGuides.length > 0 && (
-        <section className="px-4 py-12 md:py-16">
+        <section className="px-4 py-12 md:py-16 border-t border-pb-border">
           <div className="max-w-5xl mx-auto">
             <h2 className="font-heading text-2xl font-bold text-pb-text-primary mb-6">
               HiLo Strategy Guides
@@ -92,18 +165,21 @@ export default function HiLoPage() {
                 </Link>
               ))}
             </div>
-            <p className="text-xs text-pb-text-muted mt-4 text-center">
-              18+ only. Gambling involves risk.{" "}
-              <Link
-                href="/responsible-gambling"
-                className="underline hover:text-pb-accent"
-              >
-                Play responsibly.
-              </Link>
-            </p>
           </div>
         </section>
       )}
+
+      <div className="px-4 pb-8">
+        <p className="text-xs text-pb-text-muted text-center max-w-5xl mx-auto">
+          18+ only. Gambling involves risk.{" "}
+          <Link
+            href="/responsible-gambling"
+            className="underline hover:text-pb-accent"
+          >
+            Play responsibly.
+          </Link>
+        </p>
+      </div>
     </>
   );
 }

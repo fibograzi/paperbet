@@ -5,9 +5,16 @@ import RiskOfRuinCalculator from "@/components/roulette/RiskOfRuinCalculator";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Risk of Ruin Calculator — Martingale & Roulette Strategy Risk | PaperBet.io",
+  title: "Risk of Ruin Calculator — Roulette Strategy Risk",
   description:
-    "Calculate your exact risk of losing your entire roulette bankroll. Model Martingale progression danger, compare bankroll sizes, and visualize sample session paths.",
+    "Calculate the probability of losing your entire bankroll using Martingale, Fibonacci, or flat betting on roulette. Understand the math behind strategy risk.",
+  keywords: [
+    "roulette risk of ruin calculator",
+    "risk of ruin calculator",
+    "martingale risk calculator",
+    "roulette bankroll calculator",
+    "gambling risk of ruin",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/risk-of-ruin",
   },

@@ -4,9 +4,16 @@ import StrategyTester from "@/components/roulette/StrategyTester";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Roulette Strategy Tester — Monte Carlo Simulator | PaperBet.io",
+  title: "Roulette Strategy Tester — Monte Carlo Sim | PaperBet",
   description:
-    "Test any roulette betting strategy with Monte Carlo simulation. Run thousands of sessions to see real statistical outcomes for Martingale, Fibonacci, D'Alembert and more.",
+    "Test any roulette strategy with Monte Carlo simulation. Compare Martingale, Fibonacci, D'Alembert, and flat betting over thousands of simulated spins.",
+  keywords: [
+    "roulette strategy tester",
+    "roulette strategy simulator",
+    "roulette monte carlo",
+    "test roulette strategy",
+    "roulette betting system tester",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/strategy-tester",
   },
@@ -50,6 +57,16 @@ export default function StrategyTesterPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
+      <section className="pt-8 pb-4 md:pt-12 md:pb-6 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-pb-text-primary">
+            Roulette Strategy Tester
+          </h1>
+          <p className="text-pb-text-secondary text-base md:text-lg mt-3 max-w-2xl mx-auto leading-relaxed">
+            Run thousands of simulated roulette spins with any betting strategy. See how Martingale, Fibonacci, and D&apos;Alembert perform over time with real probability math.
+          </p>
+        </div>
+      </section>
       <section className="min-h-screen pb-16">
         <GameErrorBoundary gameName="Strategy Tester">
           <StrategyTester />

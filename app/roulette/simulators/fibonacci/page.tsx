@@ -4,9 +4,15 @@ import FibonacciSimulator from "@/components/roulette/FibonacciSimulator";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Fibonacci Roulette Simulator — Test the Fibonacci Strategy | PaperBet.io",
+  title: "Fibonacci Roulette Simulator — Strategy Test | PaperBet",
   description:
-    "Simulate the Fibonacci roulette betting strategy with interactive progression tables, growth charts, and Monte Carlo analysis. Compare it to Martingale and see the real math.",
+    "Test the Fibonacci betting system on roulette. See how the 1-1-2-3-5-8 sequence performs compared to Martingale over hundreds of simulated spins.",
+  keywords: [
+    "fibonacci roulette simulator",
+    "fibonacci strategy roulette",
+    "fibonacci betting system",
+    "fibonacci casino strategy",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/simulators/fibonacci",
   },
@@ -50,6 +56,16 @@ export default function FibonacciPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
+      <section className="pt-8 pb-4 md:pt-12 md:pb-6 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-pb-text-primary">
+            Fibonacci Roulette Simulator
+          </h1>
+          <p className="text-pb-text-secondary text-base md:text-lg mt-3 max-w-2xl mx-auto leading-relaxed">
+            The Fibonacci system increases bets following the 1-1-2-3-5-8 sequence after losses. It is slower than Martingale but carries similar long-term risk. Simulate hundreds of spins to see the pattern.
+          </p>
+        </div>
+      </section>
       <section className="min-h-screen pb-16">
         <GameErrorBoundary gameName="Fibonacci Simulator">
           <FibonacciSimulator />

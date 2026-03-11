@@ -17,16 +17,16 @@ import {
 } from "@/components/home/HomeClient";
 
 export const metadata: Metadata = {
-  title: "PaperBet.io — Test Your Edge | Free Crypto Casino Simulators",
+  title: "PaperBet — Free Crypto Casino Simulators",
   description:
-    "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free, then discover featured deals at top crypto casinos.",
+    "9 free crypto casino simulators. Practice Plinko, Crash, Mines, Roulette, Dice, HiLo, Keno, Limbo, and Coin Flip risk-free before playing for real.",
   alternates: {
     canonical: "https://paperbet.io",
   },
   openGraph: {
-    title: "PaperBet.io — Test Your Edge",
+    title: "PaperBet — Free Crypto Casino Simulators",
     description:
-      "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free, then discover featured deals at top crypto casinos.",
+      "9 free crypto casino simulators. Practice Plinko, Crash, Mines, Roulette, Dice, HiLo, Keno, Limbo, and Coin Flip risk-free.",
     url: "https://paperbet.io",
     siteName: "PaperBet.io",
     type: "website",
@@ -34,17 +34,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "PaperBet.io — Test Your Edge",
+    title: "PaperBet — Free Crypto Casino Simulators",
     description:
-      "Free crypto casino simulators. Practice Plinko, Crash, Mines strategies risk-free.",
+      "9 free crypto casino simulators. Practice Plinko, Crash, Mines, Roulette, Dice, and more risk-free.",
     images: ["https://paperbet.io/opengraph-image"],
   },
   keywords: [
     "crypto casino simulator",
-    "plinko free",
-    "crash game practice",
-    "mines strategy",
-    "crypto gambling simulator",
+    "free casino games",
+    "crypto casino free play",
+    "casino simulator online",
+    "plinko simulator",
+    "crash game simulator",
+    "mines simulator",
+    "roulette simulator",
   ],
 };
 
@@ -72,20 +75,22 @@ export default function Home() {
           {/* Badge */}
           <div className="hero-animate">
             <span className="inline-flex items-center gap-2 rounded-full border border-pb-border bg-pb-bg-secondary/50 px-4 py-2 text-sm text-pb-text-secondary backdrop-blur-sm">
-              <span>🎰</span> Free Casino Simulators
+              <span>🎰</span> Test Your Edge
             </span>
           </div>
 
           {/* Headline */}
           <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold mt-8 leading-tight hero-animate-delay-1">
-            Test{" "}
-            <span className="text-pb-accent">Your Edge</span>
+            Free Crypto Casino{" "}
+            <span className="text-pb-accent">Simulators</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-pb-text-secondary text-lg md:text-xl mt-6 max-w-2xl mx-auto leading-relaxed hero-animate-delay-2">
-            Practice Plinko, Crash &amp; Mines with zero risk. Sharpen your
-            strategy, then discover featured deals at top crypto casinos.
+            Practice with $1,000 in paper money across 9 casino
+            games&mdash;Plinko, Crash, Mines, Roulette, Dice, HiLo, Keno,
+            Limbo, and Coin Flip. Sharpen your strategy, then discover
+            featured deals at top crypto casinos.
           </p>
 
           {/* CTAs */}

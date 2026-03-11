@@ -5,35 +5,35 @@ import RouletteToolCard from "@/components/roulette/RouletteToolCard";
 import RouletteFAQ from "@/components/roulette/RouletteFAQ";
 
 export const metadata: Metadata = {
-  title: "Roulette Lab — Free Roulette Tools, Simulators & Calculators | PaperBet.io",
+  title: "Free Roulette Simulator & Tools | PaperBet",
   description:
-    "Explore 7 free roulette tools: play free roulette, test betting strategies with Monte Carlo simulation, calculate odds, and understand risk of ruin. No real money required.",
+    "7 free roulette tools: simulator, strategy tester, odds calculator, risk of ruin calculator, Martingale and Fibonacci simulators, and a learning guide. No signup.",
   alternates: {
     canonical: "https://paperbet.io/roulette",
   },
   openGraph: {
-    title: "Roulette Lab — 7 Free Roulette Tools | PaperBet.io",
+    title: "Free Roulette Simulator & Tools | PaperBet",
     description:
-      "Free roulette simulators and calculators. Play free roulette, test Martingale & Fibonacci strategies, calculate exact odds, and model risk of ruin.",
+      "7 free roulette tools: play free, test strategies, calculate odds, and model risk of ruin.",
     url: "https://paperbet.io/roulette",
     siteName: "PaperBet.io",
     type: "website",
-    images: [
-      {
-        url: "https://paperbet.io/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Roulette Lab — PaperBet.io",
-      },
-    ],
+    images: [{ url: "https://paperbet.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Roulette Lab — 7 Free Roulette Tools | PaperBet.io",
+    title: "Free Roulette Simulator & Tools | PaperBet",
     description:
-      "Play free roulette, test strategies, calculate odds — all free, no real money needed.",
-    images: ["https://paperbet.io/og-image.png"],
+      "7 free roulette tools. Play free, test strategies, calculate odds — no real money needed.",
+    images: ["https://paperbet.io/opengraph-image"],
   },
+  keywords: [
+    "roulette simulator",
+    "free roulette",
+    "roulette tools",
+    "roulette strategy tester",
+    "roulette calculator",
+  ],
 };
 
 const tools = [

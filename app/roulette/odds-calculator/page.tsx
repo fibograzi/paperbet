@@ -5,9 +5,16 @@ import OddsCalculator from "@/components/roulette/OddsCalculator";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Roulette Odds Calculator — Probabilities, Payouts & House Edge | PaperBet.io",
+  title: "Roulette Odds Calculator — Probabilities & Payouts",
   description:
-    "Calculate exact probabilities, expected values, and house edge for every roulette bet type. Compare European vs American wheels side by side.",
+    "Calculate exact probabilities, expected values, and house edge for all 10 roulette bet types. European and American wheel comparison.",
+  keywords: [
+    "roulette odds calculator",
+    "roulette probability calculator",
+    "roulette payout calculator",
+    "roulette odds chart",
+    "roulette bet odds",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/odds-calculator",
   },

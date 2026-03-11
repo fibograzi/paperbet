@@ -44,9 +44,9 @@ export default function RouletteHubHero() {
           transition={{ duration: 0.45, delay: 0.05 }}
           className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl text-pb-text-primary leading-tight mb-5"
         >
-          Roulette{" "}
+          Free Roulette{" "}
           <span className="bg-gradient-to-r from-pb-accent to-pb-accent-secondary bg-clip-text text-transparent">
-            Lab
+            Simulator & Tools
           </span>
         </motion.h1>
 

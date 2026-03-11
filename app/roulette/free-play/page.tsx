@@ -5,9 +5,16 @@ import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Free Roulette Game — European & American Wheels | PaperBet.io",
+  title: "Free Roulette Game — European & American Wheels | PaperBet",
   description:
-    "Play roulette for free with $1,000 in paper money. Place inside and outside bets on European or American wheels with casino-accurate odds and probabilities.",
+    "Play free roulette with European and American wheel options. Place inside and outside bets with casino-accurate odds. No signup, no download needed.",
+  keywords: [
+    "free roulette simulator game",
+    "free roulette",
+    "play roulette online",
+    "roulette game free",
+    "european roulette free",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/free-play",
   },
@@ -53,6 +60,16 @@ export default function FreePlayPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
+      <section className="pt-8 pb-4 md:pt-12 md:pb-6 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-pb-text-primary">
+            Free Roulette Game
+          </h1>
+          <p className="text-pb-text-secondary text-base md:text-lg mt-3 max-w-2xl mx-auto leading-relaxed">
+            Spin the wheel on European or American roulette with real casino odds. Place inside bets, outside bets, or neighbor bets — all with $1,000 in paper money.
+          </p>
+        </div>
+      </section>
       <section className="min-h-screen">
         <GameErrorBoundary gameName="Roulette">
           <RouletteGame />

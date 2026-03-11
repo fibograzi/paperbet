@@ -4,9 +4,16 @@ import MartingaleSimulator from "@/components/roulette/MartingaleSimulator";
 import { safeJsonLd } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Martingale Roulette Simulator — Test the Double-Up Strategy | PaperBet.io",
+  title: "Martingale Roulette Simulator — Double-Up Test | PaperBet",
   description:
-    "Simulate the Martingale roulette strategy with Monte Carlo analysis. See exactly why doubling up fails against table limits and finite bankrolls, backed by real probability math.",
+    "Test the Martingale strategy on roulette. Watch how doubling after losses plays out over hundreds of spins. See the math behind the risk.",
+  keywords: [
+    "martingale roulette simulator",
+    "martingale strategy",
+    "martingale system roulette",
+    "double up strategy roulette",
+    "martingale betting system",
+  ],
   alternates: {
     canonical: "https://paperbet.io/roulette/simulators/martingale",
   },
@@ -49,6 +56,16 @@ export default function MartingalePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
+      <section className="pt-8 pb-4 md:pt-12 md:pb-6 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-pb-text-primary">
+            Martingale Roulette Simulator
+          </h1>
+          <p className="text-pb-text-secondary text-base md:text-lg mt-3 max-w-2xl mx-auto leading-relaxed">
+            The Martingale system doubles your bet after every loss. It sounds foolproof — until a losing streak wipes out your bankroll. Run this simulator to see exactly when and how it fails.
+          </p>
+        </div>
+      </section>
       <section className="min-h-screen pb-16">
         <GameErrorBoundary gameName="Martingale Simulator">
           <MartingaleSimulator />
