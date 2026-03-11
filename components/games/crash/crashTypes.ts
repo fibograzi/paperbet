@@ -85,7 +85,7 @@ export interface CrashGameState {
   showPostSessionNudge: boolean;
   postSessionNudgeDismissed: boolean;
   autoPlay: CrashAutoPlayState;
-  instantMode: boolean; // skip countdown/animation for fast autobet testing
+  speedMode: "normal" | "quick" | "instant"; // normal=full animation, quick=750ms, instant=150ms
 }
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ export type CrashAction =
   | { type: "CANCEL_BET" }
   | { type: "QUEUE_BET" }
   | { type: "CANCEL_QUEUE" }
-  | { type: "TOGGLE_INSTANT_MODE" }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "START_COUNTDOWN"; crashPoint: number }
   | { type: "COUNTDOWN_TICK" }
   | { type: "START_ROUND" }

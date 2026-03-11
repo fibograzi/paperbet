@@ -49,7 +49,7 @@ export default function CrashControls({
   onStartAutoPlay,
   onStopAutoPlay,
 }: CrashControlsProps) {
-  const { config, balance, autoPlay, phase, hasBet, betQueued, cashedOut, cashoutMultiplier, currentMultiplier, instantMode } = state;
+  const { config, balance, autoPlay, phase, hasBet, betQueued, cashedOut, cashoutMultiplier, currentMultiplier, speedMode } = state;
 
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -412,46 +412,52 @@ export default function CrashControls({
             </div>
           </div>
 
-          {/* Instant Mode toggle */}
-          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg px-2.5 py-2">
-            <button
-              type="button"
-              onClick={() => dispatch({ type: "TOGGLE_INSTANT_MODE" })}
-              className="flex items-center justify-between w-full"
-            >
-              <div className="flex items-center gap-2">
-                <Zap
-                  size={14}
-                  className={cn(
-                    "transition-colors",
-                    instantMode ? "text-pb-warning fill-pb-warning" : "text-pb-text-muted"
-                  )}
-                />
-                <span className={cn(
-                  "text-xs font-heading font-semibold transition-colors",
-                  instantMode ? "text-pb-warning" : "text-pb-text-secondary"
-                )}>
-                  Instant Mode
-                </span>
-              </div>
-              {/* Toggle switch */}
-              <div
-                className={cn(
-                  "w-8 h-[18px] rounded-full relative transition-colors",
-                  instantMode ? "bg-pb-warning" : "bg-pb-border"
-                )}
-              >
-                <div
-                  className={cn(
-                    "w-3.5 h-3.5 rounded-full bg-white absolute top-[2px] transition-all",
-                    instantMode ? "left-[14px]" : "left-[2px]"
-                  )}
-                />
-              </div>
-            </button>
-            {instantMode && (
-              <p className="text-[10px] text-pb-text-muted mt-1 pl-[22px]">
-                Skip animations — resolve rounds instantly
+          {/* Speed mode selector */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
+            </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "750ms rounds — skip animations" : "150ms rounds — maximum speed"}
               </p>
             )}
           </div>

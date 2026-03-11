@@ -80,7 +80,7 @@ const initialState: CrashGameState = {
   showPostSessionNudge: false,
   postSessionNudgeDismissed: false,
   autoPlay: initialAutoPlay,
-  instantMode: false,
+  speedMode: "normal",
 };
 
 // ---------------------------------------------------------------------------
@@ -162,10 +162,10 @@ function crashReducer(
 
     // -- Instant mode toggle --------------------------------------------------
 
-    case "TOGGLE_INSTANT_MODE":
+    case "SET_SPEED_MODE":
       return {
         ...state,
-        instantMode: !state.instantMode,
+        speedMode: action.mode,
       };
 
     // -- Countdown / Round lifecycle -------------------------------------------
@@ -570,7 +570,9 @@ export function useCrashGame() {
         handleAutoPlayPostRound(didCashOut);
       }
 
-      const delay = stateRef.current.instantMode ? 750 : POST_CRASH_DELAY;
+      const delay = stateRef.current.speedMode === "instant" ? 150
+        : stateRef.current.speedMode === "quick" ? 750
+        : POST_CRASH_DELAY;
       postCrashTimeoutRef.current = setTimeout(() => {
         postCrashTimeoutRef.current = null;
         if (!gameActiveRef.current) return;
@@ -616,7 +618,7 @@ export function useCrashGame() {
 
     dispatch({ type: "START_COUNTDOWN", crashPoint: cp });
 
-    const isInstant = stateRef.current.instantMode;
+    const isInstant = stateRef.current.speedMode !== "normal";
 
     // ----------------------------------------------------------------
     // INSTANT MODE: skip countdown & animation, resolve immediately
@@ -774,7 +776,9 @@ export function useCrashGame() {
             }
 
             // After crash delay, start next round
-            const crashDelay = stateRef.current.instantMode ? 750 : POST_CRASH_DELAY;
+            const crashDelay = stateRef.current.speedMode === "instant" ? 150
+              : stateRef.current.speedMode === "quick" ? 750
+              : POST_CRASH_DELAY;
             postCrashTimeoutRef.current = setTimeout(() => {
               postCrashTimeoutRef.current = null;
 
