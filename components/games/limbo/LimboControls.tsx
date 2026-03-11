@@ -280,24 +280,26 @@ export default function LimboControls({
       {/* ===== MANUAL TAB ===== */}
       {activeTab === "manual" && (
         <>
-          {/* Bet button */}
-          <motion.button
-            type="button"
-            disabled={isAnimating || balance < betAmount || isAutoRunning}
-            onClick={onBet}
-            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
-            style={{
-              backgroundColor: isAnimating || isAutoRunning ? "#374151" : "#00E5A0",
-              color: isAnimating || isAutoRunning ? "#9CA3AF" : "#0B0F1A",
-              boxShadow: isAnimating || isAutoRunning ? "none" : "0 0 20px rgba(0,229,160,0.2)",
-              cursor: isAnimating || balance < betAmount || isAutoRunning ? "not-allowed" : "pointer",
-            }}
-            whileHover={!isAnimating && !isAutoRunning ? { backgroundColor: "#1AFFA8", boxShadow: "0 0 30px rgba(0,229,160,0.3)" } : {}}
-            whileTap={!isAnimating && !isAutoRunning ? { scale: 0.98 } : {}}
-            aria-label="Place bet"
-          >
-            {isAnimating ? "..." : "Bet"}
-          </motion.button>
+          {/* Bet button — desktop only */}
+          <div className="hidden lg:block">
+            <motion.button
+              type="button"
+              disabled={isAnimating || balance < betAmount || isAutoRunning}
+              onClick={onBet}
+              className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
+              style={{
+                backgroundColor: isAnimating || isAutoRunning ? "#374151" : "#00E5A0",
+                color: isAnimating || isAutoRunning ? "#9CA3AF" : "#0B0F1A",
+                boxShadow: isAnimating || isAutoRunning ? "none" : "0 0 20px rgba(0,229,160,0.2)",
+                cursor: isAnimating || balance < betAmount || isAutoRunning ? "not-allowed" : "pointer",
+              }}
+              whileHover={!isAnimating && !isAutoRunning ? { backgroundColor: "#1AFFA8", boxShadow: "0 0 30px rgba(0,229,160,0.3)" } : {}}
+              whileTap={!isAnimating && !isAutoRunning ? { scale: 0.98 } : {}}
+              aria-label="Place bet"
+            >
+              {isAnimating ? "..." : "Bet"}
+            </motion.button>
+          </div>
 
           {/* Profit on Win */}
           <div className="rounded-xl p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
@@ -521,35 +523,37 @@ export default function LimboControls({
             </div>
           </CollapsibleSection>
 
-          {/* Start/Stop Autobet button */}
-          <motion.button
-            type="button"
-            disabled={!isAutoRunning && (balance < betAmount)}
-            onClick={() => {
-              if (isAutoRunning) {
-                onStopAutoPlay();
-              } else {
-                onStartAutoPlay(buildAutoConfig());
-              }
-            }}
-            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
-            style={{
-              backgroundColor: isAutoRunning ? "#EF4444" : "#00E5A0",
-              color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
-              cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
-              opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
-            }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {isAutoRunning ? (
-              <>
-                <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
-                Stop Autobet
-              </>
-            ) : (
-              "Start Autobet"
-            )}
-          </motion.button>
+          {/* Start/Stop Autobet button — desktop only */}
+          <div className="hidden lg:block">
+            <motion.button
+              type="button"
+              disabled={!isAutoRunning && (balance < betAmount)}
+              onClick={() => {
+                if (isAutoRunning) {
+                  onStopAutoPlay();
+                } else {
+                  onStartAutoPlay(buildAutoConfig());
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
+              style={{
+                backgroundColor: isAutoRunning ? "#EF4444" : "#00E5A0",
+                color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
+                cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
+                opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isAutoRunning ? (
+                <>
+                  <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
+                  Stop Autobet
+                </>
+              ) : (
+                "Start Autobet"
+              )}
+            </motion.button>
+          </div>
 
           {/* Auto progress counter */}
           {isAutoRunning && autoPlay.progress && (
@@ -578,6 +582,54 @@ export default function LimboControls({
         </>
       )}
 
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {isAutoRunning ? (
+          <button
+            type="button"
+            onClick={onStopAutoPlay}
+            className="w-full h-11 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all active:scale-[0.98]"
+          >
+            Stop (
+            {autoPlay.progress?.currentBet ?? 0}
+            {autoPlay.progress && isFinite(autoPlay.progress.totalBets)
+              ? ` / ${autoPlay.progress.totalBets}`
+              : ""}
+            )
+          </button>
+        ) : activeTab === "manual" ? (
+          <button
+            type="button"
+            onClick={onBet}
+            disabled={isAnimating || balance < betAmount || isAutoRunning}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm transition-all active:scale-[0.98]"
+            style={{
+              backgroundColor: isAnimating || balance < betAmount ? "#374151" : "#00E5A0",
+              color: isAnimating || balance < betAmount ? "#6B7280" : "#0B0F1A",
+              cursor: isAnimating || balance < betAmount ? "not-allowed" : "pointer",
+            }}
+          >
+            {isAnimating ? "..." : "Bet"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onStartAutoPlay(buildAutoConfig())}
+            disabled={balance < betAmount}
+            className="w-full h-11 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm border border-pb-accent/30 transition-colors disabled:opacity-40"
+          >
+            Start Autobet
+          </button>
+        )}
+      </div>
     </div>
   );
 }

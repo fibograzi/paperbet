@@ -343,8 +343,10 @@ export default function CrashControls({
       {/* ================================================================= */}
       {activeTab === "manual" && (
         <>
-          {/* Action Button */}
-          {renderActionButton()}
+          {/* Action Button (desktop only — mobile uses fixed bar) */}
+          <div className="hidden lg:block">
+            {renderActionButton()}
+          </div>
         </>
       )}
 
@@ -715,6 +717,19 @@ export default function CrashControls({
         </>
       )}
 
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {renderActionButton()}
+      </div>
+
       {/* Session Reminder */}
       {state.showSessionReminder && (
         <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-2.5 py-1.5 text-[10px] text-pb-text-secondary">
@@ -731,8 +746,8 @@ export default function CrashControls({
         </div>
       )}
 
-      {/* Keyboard hint */}
-      <div className="text-center text-xs text-pb-text-muted">
+      {/* Keyboard hint (desktop only) */}
+      <div className="hidden lg:block text-center text-xs text-pb-text-muted">
         Press{" "}
         <kbd className="px-1.5 py-0.5 rounded bg-pb-bg-tertiary border border-pb-border font-mono-stats text-[10px]">
           Space

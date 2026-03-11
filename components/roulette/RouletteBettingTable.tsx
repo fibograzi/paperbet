@@ -410,7 +410,7 @@ function DesktopBettingTable({
         style={{
           display: "grid",
           gridTemplateColumns: `48px repeat(12, ${cellWidth}px) auto`,
-          gridTemplateRows: `${cellHeight}px repeat(12, ${cellHeight}px) auto auto auto`,
+          gridTemplateRows: `repeat(3, ${cellHeight}px) repeat(3, auto)`,
           gap: "2px",
           minWidth: "520px",
         }}
@@ -419,7 +419,7 @@ function DesktopBettingTable({
         <div
           style={{
             gridColumn: "1",
-            gridRow: "1 / span 13",
+            gridRow: "1 / span 3",
             display: "flex",
             flexDirection: "column",
             gap: "2px",
@@ -499,13 +499,13 @@ function DesktopBettingTable({
           )),
         )}
 
-        {/* Column bets (right side) */}
-        {([1, 2, 3] as const).map((col, colIdx) => (
+        {/* Column bets (right side) — row 1 is column 3 (top), row 3 is column 1 (bottom) */}
+        {([3, 2, 1] as const).map((col, rowIdx) => (
           <div
             key={`col-bet-${col}`}
             style={{
               gridColumn: "14",
-              gridRow: `${colIdx + 1}`,
+              gridRow: `${rowIdx + 1}`,
               height: cellHeight,
             }}
           >
@@ -520,7 +520,7 @@ function DesktopBettingTable({
           </div>
         ))}
 
-        {/* Street bets — on the right of each row */}
+        {/* Street bets — below each column of 3 numbers */}
         {rows.map((row, rowIdx) => {
           const streetNums = getStreetNumbers(rowIdx + 1);
           return (
@@ -528,7 +528,7 @@ function DesktopBettingTable({
               key={`street-${rowIdx}`}
               style={{
                 gridColumn: `${rowIdx + 2}`,
-                gridRow: "13",
+                gridRow: "4",
                 height: cellHeight,
               }}
             >
@@ -554,7 +554,7 @@ function DesktopBettingTable({
               key={`dozen-${dozen}`}
               style={{
                 gridColumn: `${colStart} / span ${colSpan}`,
-                gridRow: "14",
+                gridRow: "5",
                 height: cellHeight,
               }}
             >
@@ -593,7 +593,7 @@ function DesktopBettingTable({
             key={`evenbet-${idx}`}
             style={{
               gridColumn: `${idx * 2 + 2} / span 2`,
-              gridRow: "15",
+              gridRow: "6",
               height: cellHeight,
             }}
           >

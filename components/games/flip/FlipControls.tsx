@@ -342,36 +342,38 @@ export default function FlipControls({
       {activeTab === "manual" && (
         <>
           {/* Flip button when idle */}
-          {isIdle && !autoPlay.active && (
-            <button
-              type="button"
-              onClick={onFlip}
-              disabled={balance < config.betAmount || !config.sidePick}
-              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flip-btn-glow"
-              style={{
-                backgroundColor: "#00E5A0",
-                color: "#0B0F1A",
-                boxShadow: "0 0 20px rgba(0, 229, 160, 0.2)",
-              }}
-            >
-              Bet
-            </button>
-          )}
+          <div className="hidden lg:block">
+            {isIdle && !autoPlay.active && (
+              <button
+                type="button"
+                onClick={onFlip}
+                disabled={balance < config.betAmount || !config.sidePick}
+                className="w-full h-9 rounded-lg font-body font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flip-btn-glow"
+                style={{
+                  backgroundColor: "#00E5A0",
+                  color: "#0B0F1A",
+                  boxShadow: "0 0 20px rgba(0, 229, 160, 0.2)",
+                }}
+              >
+                Bet
+              </button>
+            )}
 
-          {/* Flipping state */}
-          {isFlipping && (
-            <button
-              type="button"
-              disabled
-              className="w-full h-9 rounded-lg font-body font-bold text-sm cursor-not-allowed"
-              style={{
-                backgroundColor: "#374151",
-                color: "#9CA3AF",
-              }}
-            >
-              <span className="flip-ellipsis">Flipping</span>
-            </button>
-          )}
+            {/* Flipping state */}
+            {isFlipping && (
+              <button
+                type="button"
+                disabled
+                className="w-full h-9 rounded-lg font-body font-bold text-sm cursor-not-allowed"
+                style={{
+                  backgroundColor: "#374151",
+                  color: "#9CA3AF",
+                }}
+              >
+                <span className="flip-ellipsis">Flipping</span>
+              </button>
+            )}
+          </div>
 
           {/* Side Selection */}
           <div
@@ -879,32 +881,34 @@ export default function FlipControls({
           </AnimatePresence>
 
           {/* Start / Stop Auto-Play button */}
-          {autoPlay.active ? (
-            <button
-              type="button"
-              onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
-              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110"
-              style={{
-                backgroundColor: "#EF4444",
-                color: "#F9FAFB",
-              }}
-            >
-              Stop Auto
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAutoPlayStart}
-              disabled={!isIdle}
-              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: "#00E5A0",
-                color: "#0B0F1A",
-              }}
-            >
-              Start Autobet
-            </button>
-          )}
+          <div className="hidden lg:block">
+            {autoPlay.active ? (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
+                className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110"
+                style={{
+                  backgroundColor: "#EF4444",
+                  color: "#F9FAFB",
+                }}
+              >
+                Stop Auto
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAutoPlayStart}
+                disabled={!isIdle}
+                className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: "#00E5A0",
+                  color: "#0B0F1A",
+                }}
+              >
+                Start Autobet
+              </button>
+            )}
+          </div>
 
           {/* Auto-play counter */}
           {autoPlay.active && autoPlay.progress && (
@@ -954,6 +958,55 @@ export default function FlipControls({
         </div>
       )}
 
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {autoPlay.active ? (
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
+            className="w-full h-11 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all active:scale-[0.98]"
+          >
+            Stop Auto
+          </button>
+        ) : activeTab === "manual" ? (
+          <button
+            type="button"
+            onClick={onFlip}
+            disabled={isFlipping || balance < config.betAmount || !config.sidePick}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm transition-all active:scale-[0.98] disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: isFlipping || !config.sidePick ? "#374151" : "#00E5A0",
+              color: isFlipping || !config.sidePick ? "#9CA3AF" : "#0B0F1A",
+              boxShadow: !isFlipping && config.sidePick && balance >= config.betAmount ? "0 0 16px rgba(0, 229, 160, 0.2)" : "none",
+            }}
+          >
+            {isFlipping ? "Flipping..." : "Bet"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAutoPlayStart}
+            disabled={!isIdle}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm border transition-colors disabled:opacity-40"
+            style={{
+              backgroundColor: "rgba(0, 229, 160, 0.15)",
+              color: "#00E5A0",
+              borderColor: "rgba(0, 229, 160, 0.3)",
+            }}
+          >
+            Start Autobet
+          </button>
+        )}
+      </div>
+
       {/* Session Reminder */}
       {state.showSessionReminder && (
         <div
@@ -979,7 +1032,7 @@ export default function FlipControls({
       )}
 
       {/* Keyboard hints */}
-      <div className="text-center text-xs" style={{ color: "#6B7280" }}>
+      <div className="hidden lg:block text-center text-xs" style={{ color: "#6B7280" }}>
         Press{" "}
         <kbd className="px-1.5 py-0.5 rounded bg-pb-bg-tertiary border border-pb-border font-mono-stats text-[10px]">
           Space

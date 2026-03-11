@@ -74,7 +74,7 @@ export default function MinesGame() {
   }, [state.phase, state.gameOverReason, state.profit, state.currentMultiplier, state.dangerPercent, state.revealingTile, state.gemsRevealed]);
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
+    <div className="w-full max-w-[1280px] mx-auto px-3 pt-3 pb-20 lg:pb-3">
       {/* Aria live region for screen readers */}
       <div aria-live="assertive" className="sr-only">
         {ariaLiveText}
@@ -98,20 +98,6 @@ export default function MinesGame() {
 
         {/* Center: Multiplier Bar + Danger Meter + Board */}
         <div className="flex-1 min-w-0">
-          {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-2">
-            <MinesControls
-              state={state}
-              dispatch={dispatch}
-              onStartGame={startGame}
-              onCashOut={cashOut}
-              onNewGame={newGame}
-              onPickRandom={pickRandom}
-              onStartAutoPlay={handleStartAutoPlay}
-              onStopAutoPlay={handleStopAutoPlay}
-            />
-          </div>
-
           <div className="max-w-[500px] mx-auto">
             {/* Multiplier Bar */}
             <MinesMultiplierBar
@@ -141,6 +127,20 @@ export default function MinesGame() {
               minePositions={state.minePositions}
               onTileClick={revealTile}
               shaking={shaking}
+            />
+          </div>
+
+          {/* Mobile/Tablet: Controls below game area */}
+          <div className="lg:hidden mt-2">
+            <MinesControls
+              state={state}
+              dispatch={dispatch}
+              onStartGame={startGame}
+              onCashOut={cashOut}
+              onNewGame={newGame}
+              onPickRandom={pickRandom}
+              onStartAutoPlay={handleStartAutoPlay}
+              onStopAutoPlay={handleStopAutoPlay}
             />
           </div>
         </div>

@@ -271,24 +271,26 @@ export default function DiceControls({
       {activeTab === "manual" && (
         <>
           {/* Bet button */}
-          <motion.button
-            type="button"
-            disabled={isRolling || balance < betAmount || isAutoRunning}
-            onClick={onRoll}
-            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body font-bold text-sm transition-colors"
-            style={{
-              backgroundColor: isRolling || isAutoRunning ? "#374151" : "#14B8A6",
-              color: isRolling || isAutoRunning ? "#9CA3AF" : "#0B0F1A",
-              boxShadow: isRolling || isAutoRunning ? "none" : "0 0 20px rgba(20,184,166,0.2)",
-              cursor: isRolling || balance < betAmount || isAutoRunning ? "not-allowed" : "pointer",
-            }}
-            whileHover={!isRolling && !isAutoRunning ? { backgroundColor: "#2DD4BF", boxShadow: "0 0 30px rgba(20,184,166,0.3)" } : {}}
-            whileTap={!isRolling && !isAutoRunning ? { scale: 0.98 } : {}}
-            aria-label="Roll the dice"
-          >
-            <Dices size={18} />
-            {isRolling ? "Rolling..." : "Bet"}
-          </motion.button>
+          <div className="hidden lg:block">
+            <motion.button
+              type="button"
+              disabled={isRolling || balance < betAmount || isAutoRunning}
+              onClick={onRoll}
+              className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body font-bold text-sm transition-colors"
+              style={{
+                backgroundColor: isRolling || isAutoRunning ? "#374151" : "#14B8A6",
+                color: isRolling || isAutoRunning ? "#9CA3AF" : "#0B0F1A",
+                boxShadow: isRolling || isAutoRunning ? "none" : "0 0 20px rgba(20,184,166,0.2)",
+                cursor: isRolling || balance < betAmount || isAutoRunning ? "not-allowed" : "pointer",
+              }}
+              whileHover={!isRolling && !isAutoRunning ? { backgroundColor: "#2DD4BF", boxShadow: "0 0 30px rgba(20,184,166,0.3)" } : {}}
+              whileTap={!isRolling && !isAutoRunning ? { scale: 0.98 } : {}}
+              aria-label="Roll the dice"
+            >
+              <Dices size={18} />
+              {isRolling ? "Rolling..." : "Bet"}
+            </motion.button>
+          </div>
 
           {/* Profit on Win */}
           <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
@@ -524,37 +526,39 @@ export default function DiceControls({
           </CollapsibleSection>
 
           {/* Start/Stop Autobet button */}
-          <motion.button
-            type="button"
-            disabled={!isAutoRunning && (balance < betAmount)}
-            onClick={() => {
-              if (isAutoRunning) {
-                onStopAutoPlay();
-              } else {
-                onStartAutoPlay(buildAutoConfig());
-              }
-            }}
-            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body font-bold text-sm transition-colors"
-            style={{
-              backgroundColor: isAutoRunning ? "#EF4444" : "#14B8A6",
-              color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
-              cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
-              opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
-            }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {isAutoRunning ? (
-              <>
-                <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
-                Stop Autobet
-              </>
-            ) : (
-              <>
-                <Dices size={18} />
-                Start Autobet
-              </>
-            )}
-          </motion.button>
+          <div className="hidden lg:block">
+            <motion.button
+              type="button"
+              disabled={!isAutoRunning && (balance < betAmount)}
+              onClick={() => {
+                if (isAutoRunning) {
+                  onStopAutoPlay();
+                } else {
+                  onStartAutoPlay(buildAutoConfig());
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body font-bold text-sm transition-colors"
+              style={{
+                backgroundColor: isAutoRunning ? "#EF4444" : "#14B8A6",
+                color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
+                cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
+                opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isAutoRunning ? (
+                <>
+                  <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
+                  Stop Autobet
+                </>
+              ) : (
+                <>
+                  <Dices size={18} />
+                  Start Autobet
+                </>
+              )}
+            </motion.button>
+          </div>
 
           {/* Auto progress counter */}
           {isAutoRunning && autoPlay.progress && (
@@ -582,6 +586,55 @@ export default function DiceControls({
           )}
         </>
       )}
+
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {isAutoRunning ? (
+          <button
+            type="button"
+            onClick={onStopAutoPlay}
+            className="w-full h-11 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all active:scale-[0.98]"
+          >
+            Stop Autobet
+          </button>
+        ) : activeTab === "manual" ? (
+          <button
+            type="button"
+            onClick={onRoll}
+            disabled={isRolling || balance < betAmount}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm transition-all active:scale-[0.98] disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: isRolling || balance < betAmount ? "#374151" : "#14B8A6",
+              color: isRolling || balance < betAmount ? "#9CA3AF" : "#0B0F1A",
+              boxShadow: !isRolling && balance >= betAmount ? "0 0 16px rgba(20, 184, 166, 0.2)" : "none",
+            }}
+          >
+            Bet
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onStartAutoPlay(buildAutoConfig())}
+            disabled={balance < betAmount}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm border transition-colors disabled:opacity-40"
+            style={{
+              backgroundColor: "rgba(20, 184, 166, 0.15)",
+              color: "#14B8A6",
+              borderColor: "rgba(20, 184, 166, 0.3)",
+            }}
+          >
+            Start Autobet
+          </button>
+        )}
+      </div>
 
     </div>
   );

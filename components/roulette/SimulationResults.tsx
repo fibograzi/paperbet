@@ -71,7 +71,7 @@ export default function SimulationResults({ summary }: SimulationResultsProps) {
         <StatCard
           label="Avg Final Bankroll"
           value={`$${fmt(summary.avgFinalBankroll, 2)}`}
-          color={summary.avgFinalBankroll >= summary.avgFinalBankroll ? "neutral" : "negative"}
+          color={summary.avgNetProfit >= 0 ? "positive" : summary.avgNetProfit < -50 ? "negative" : "neutral"}
         />
         <StatCard
           label="Median Net Profit"

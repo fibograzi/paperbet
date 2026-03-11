@@ -278,29 +278,31 @@ export default function PlinkoControls({
       {/* Manual tab content */}
       {activeTab === "manual" && (
         <>
-          {autoPlay.active ? (
-            <button
-              type="button"
-              onClick={onStopAutoPlay}
-              className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98]"
-            >
-              Stop ({autoPlay.currentCount}
-              {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onDrop}
-              disabled={!canDrop}
-              className="w-full h-9 rounded-lg bg-pb-accent text-pb-bg-primary font-heading font-bold text-sm transition-all hover:shadow-[0_0_24px_rgba(0,229,160,0.3)] hover:brightness-105 active:scale-[0.98] disabled:bg-pb-border disabled:text-pb-text-muted disabled:cursor-not-allowed disabled:shadow-none"
-              style={{
-                boxShadow: canDrop ? "0 0 16px rgba(0, 229, 160, 0.2)" : "none",
-              }}
-            >
-              Bet
-            </button>
-          )}
-          <div className="text-center text-[10px] text-pb-text-muted">
+          <div className="hidden lg:block">
+            {autoPlay.active ? (
+              <button
+                type="button"
+                onClick={onStopAutoPlay}
+                className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98]"
+              >
+                Stop ({autoPlay.currentCount}
+                {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onDrop}
+                disabled={!canDrop}
+                className="w-full h-9 rounded-lg bg-pb-accent text-pb-bg-primary font-heading font-bold text-sm transition-all hover:shadow-[0_0_24px_rgba(0,229,160,0.3)] hover:brightness-105 active:scale-[0.98] disabled:bg-pb-border disabled:text-pb-text-muted disabled:cursor-not-allowed disabled:shadow-none"
+                style={{
+                  boxShadow: canDrop ? "0 0 16px rgba(0, 229, 160, 0.2)" : "none",
+                }}
+              >
+                Bet
+              </button>
+            )}
+          </div>
+          <div className="hidden lg:block text-center text-[10px] text-pb-text-muted">
             Press <kbd className="px-1 py-px rounded bg-pb-bg-tertiary border border-pb-border font-mono-stats text-[9px]">Space</kbd> to drop
           </div>
         </>
@@ -524,28 +526,73 @@ export default function PlinkoControls({
             </div>
           )}
 
-          {/* Start / Stop autobet button */}
-          {autoPlay.active ? (
-            <button
-              type="button"
-              onClick={onStopAutoPlay}
-              className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98]"
-            >
-              Stop ({autoPlay.currentCount}
-              {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAutoPlayStart}
-              disabled={!canDrop}
-              className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm border border-pb-accent/30 hover:bg-pb-accent/25 transition-colors disabled:opacity-40"
-            >
-              Start Autobet
-            </button>
-          )}
+          {/* Start / Stop autobet button — desktop only */}
+          <div className="hidden lg:block">
+            {autoPlay.active ? (
+              <button
+                type="button"
+                onClick={onStopAutoPlay}
+                className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98]"
+              >
+                Stop ({autoPlay.currentCount}
+                {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAutoPlayStart}
+                disabled={!canDrop}
+                className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm border border-pb-accent/30 hover:bg-pb-accent/25 transition-colors disabled:opacity-40"
+              >
+                Start Autobet
+              </button>
+            )}
+          </div>
         </>
       )}
+
+      {/* Mobile: Fixed action bar at bottom of viewport */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {autoPlay.active ? (
+          <button
+            type="button"
+            onClick={onStopAutoPlay}
+            className="w-full h-11 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all active:scale-[0.98]"
+          >
+            Stop ({autoPlay.currentCount}
+            {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
+          </button>
+        ) : activeTab === "manual" ? (
+          <button
+            type="button"
+            onClick={onDrop}
+            disabled={!canDrop}
+            className="w-full h-11 rounded-lg bg-pb-accent text-pb-bg-primary font-heading font-bold text-sm transition-all active:scale-[0.98] disabled:bg-pb-border disabled:text-pb-text-muted disabled:cursor-not-allowed disabled:shadow-none"
+            style={{
+              boxShadow: canDrop ? "0 0 16px rgba(0, 229, 160, 0.2)" : "none",
+            }}
+          >
+            Bet
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAutoPlayStart}
+            disabled={!canDrop}
+            className="w-full h-11 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm border border-pb-accent/30 transition-colors disabled:opacity-40"
+          >
+            Start Autobet
+          </button>
+        )}
+      </div>
 
       {/* Session Reminder */}
       {state.showSessionReminder && (

@@ -337,8 +337,10 @@ export default function MinesControls({
       {/* ===== MANUAL TAB ===== */}
       {activeTab === "manual" && (
         <>
-          {/* Action Button */}
-          {renderActionButton()}
+          {/* Action Button (desktop only — mobile uses fixed bar) */}
+          <div className="hidden lg:block">
+            {renderActionButton()}
+          </div>
 
           {/* Pick Random Button */}
           <button
@@ -707,6 +709,19 @@ export default function MinesControls({
           )}
         </>
       )}
+
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {renderActionButton()}
+      </div>
 
     </div>
   );

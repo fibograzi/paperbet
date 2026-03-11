@@ -341,26 +341,28 @@ export default function KenoControls({
         <>
           {renderPickControls()}
 
-          {/* Bet button */}
-          <motion.button
-            type="button"
-            onClick={onBet}
-            disabled={betButtonDisabled}
-            className="w-full h-9 rounded-lg font-body text-sm font-bold transition-all"
-            style={{
-              backgroundColor: betButtonDisabled ? "#374151" : "#00E5A0",
-              color: betButtonDisabled ? "#6B7280" : "#0B0F1A",
-              boxShadow: betButtonDisabled ? "none" : "0 0 20px rgba(0,229,160,0.2)",
-              cursor: betButtonDisabled ? "not-allowed" : "pointer",
-            }}
-            whileHover={!betButtonDisabled ? {
-              backgroundColor: "#1AFFA8",
-              boxShadow: "0 0 30px rgba(0,229,160,0.3)",
-            } : undefined}
-            whileTap={!betButtonDisabled ? { scale: 0.98 } : undefined}
-          >
-            {betButtonText}
-          </motion.button>
+          {/* Bet button — desktop only */}
+          <div className="hidden lg:block">
+            <motion.button
+              type="button"
+              onClick={onBet}
+              disabled={betButtonDisabled}
+              className="w-full h-9 rounded-lg font-body text-sm font-bold transition-all"
+              style={{
+                backgroundColor: betButtonDisabled ? "#374151" : "#00E5A0",
+                color: betButtonDisabled ? "#6B7280" : "#0B0F1A",
+                boxShadow: betButtonDisabled ? "none" : "0 0 20px rgba(0,229,160,0.2)",
+                cursor: betButtonDisabled ? "not-allowed" : "pointer",
+              }}
+              whileHover={!betButtonDisabled ? {
+                backgroundColor: "#1AFFA8",
+                boxShadow: "0 0 30px rgba(0,229,160,0.3)",
+              } : undefined}
+              whileTap={!betButtonDisabled ? { scale: 0.98 } : undefined}
+            >
+              {betButtonText}
+            </motion.button>
+          </div>
         </>
       )}
 
@@ -369,17 +371,19 @@ export default function KenoControls({
         <>
           {isAutoRunning ? (
             <>
-              {/* Auto-play running state */}
-              <motion.button
-                type="button"
-                onClick={onStopAutoPlay}
-                className="w-full h-9 rounded-lg font-body text-sm font-bold"
-                style={{ backgroundColor: "#EF4444", color: "#FFFFFF" }}
-                whileHover={{ backgroundColor: "#DC2626" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                Stop Auto
-              </motion.button>
+              {/* Auto-play running state — Stop button desktop only */}
+              <div className="hidden lg:block">
+                <motion.button
+                  type="button"
+                  onClick={onStopAutoPlay}
+                  className="w-full h-9 rounded-lg font-body text-sm font-bold"
+                  style={{ backgroundColor: "#EF4444", color: "#FFFFFF" }}
+                  whileHover={{ backgroundColor: "#DC2626" }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Stop Auto
+                </motion.button>
+              </div>
 
               {/* Progress counter */}
               {autoPlay.progress && (
@@ -680,30 +684,81 @@ export default function KenoControls({
                 </div>
               )}
 
-              {/* Start Autobet button */}
-              <motion.button
-                type="button"
-                onClick={handleStartAuto}
-                disabled={!isIdle || hasNoPicks || balance < betAmount}
-                className="w-full h-9 rounded-lg font-body text-sm font-bold transition-all"
-                style={{
-                  backgroundColor: !isIdle || hasNoPicks || balance < betAmount ? "#374151" : "#00E5A0",
-                  color: !isIdle || hasNoPicks || balance < betAmount ? "#6B7280" : "#0B0F1A",
-                  boxShadow: !isIdle || hasNoPicks || balance < betAmount ? "none" : "0 0 20px rgba(0,229,160,0.2)",
-                  cursor: !isIdle || hasNoPicks || balance < betAmount ? "not-allowed" : "pointer",
-                }}
-                whileHover={isIdle && !hasNoPicks && balance >= betAmount ? {
-                  backgroundColor: "#1AFFA8",
-                  boxShadow: "0 0 30px rgba(0,229,160,0.3)",
-                } : undefined}
-                whileTap={isIdle && !hasNoPicks && balance >= betAmount ? { scale: 0.98 } : undefined}
-              >
-                Start Autobet
-              </motion.button>
+              {/* Start Autobet button — desktop only */}
+              <div className="hidden lg:block">
+                <motion.button
+                  type="button"
+                  onClick={handleStartAuto}
+                  disabled={!isIdle || hasNoPicks || balance < betAmount}
+                  className="w-full h-9 rounded-lg font-body text-sm font-bold transition-all"
+                  style={{
+                    backgroundColor: !isIdle || hasNoPicks || balance < betAmount ? "#374151" : "#00E5A0",
+                    color: !isIdle || hasNoPicks || balance < betAmount ? "#6B7280" : "#0B0F1A",
+                    boxShadow: !isIdle || hasNoPicks || balance < betAmount ? "none" : "0 0 20px rgba(0,229,160,0.2)",
+                    cursor: !isIdle || hasNoPicks || balance < betAmount ? "not-allowed" : "pointer",
+                  }}
+                  whileHover={isIdle && !hasNoPicks && balance >= betAmount ? {
+                    backgroundColor: "#1AFFA8",
+                    boxShadow: "0 0 30px rgba(0,229,160,0.3)",
+                  } : undefined}
+                  whileTap={isIdle && !hasNoPicks && balance >= betAmount ? { scale: 0.98 } : undefined}
+                >
+                  Start Autobet
+                </motion.button>
+              </div>
             </>
           )}
         </>
       )}
+
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {isAutoRunning ? (
+          <button
+            type="button"
+            onClick={onStopAutoPlay}
+            className="w-full h-11 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all active:scale-[0.98]"
+          >
+            Stop (
+            {autoPlay.progress?.currentBet ?? 0}
+            {autoPlay.progress && isFinite(autoPlay.progress.totalBets)
+              ? ` / ${autoPlay.progress.totalBets}`
+              : ""}
+            )
+          </button>
+        ) : activeTab === "manual" ? (
+          <button
+            type="button"
+            onClick={onBet}
+            disabled={betButtonDisabled}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm transition-all active:scale-[0.98]"
+            style={{
+              backgroundColor: betButtonDisabled ? "#374151" : "#00E5A0",
+              color: betButtonDisabled ? "#6B7280" : "#0B0F1A",
+              cursor: betButtonDisabled ? "not-allowed" : "pointer",
+            }}
+          >
+            {betButtonText}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleStartAuto}
+            disabled={!isIdle || hasNoPicks || balance < betAmount}
+            className="w-full h-11 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm border border-pb-accent/30 transition-colors disabled:opacity-40"
+          >
+            Start Autobet
+          </button>
+        )}
+      </div>
     </div>
   );
 }

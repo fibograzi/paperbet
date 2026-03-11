@@ -79,7 +79,7 @@ export default function DiceGame() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
+    <div className="w-full max-w-[1280px] mx-auto px-3 pt-3 pb-20 lg:pb-3">
       {/* Desktop: 3-column layout | Mobile: stacked */}
       <div className="flex flex-col lg:flex-row gap-3">
         {/* Left: Controls (desktop only) */}
@@ -95,8 +95,12 @@ export default function DiceGame() {
 
         {/* Center: Game Area */}
         <div className="flex-1 min-w-0">
-          {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-2">
+          <div className="max-w-[700px] mx-auto">
+            <DiceGameArea state={state} dispatch={dispatch} />
+          </div>
+
+          {/* Mobile: Controls below game */}
+          <div className="lg:hidden mt-2">
             <DiceControls
               state={state}
               dispatch={dispatch}
@@ -104,10 +108,6 @@ export default function DiceGame() {
               onStartAutoPlay={startAutoPlay}
               onStopAutoPlay={stopAutoPlay}
             />
-          </div>
-
-          <div className="max-w-[700px] mx-auto">
-            <DiceGameArea state={state} dispatch={dispatch} />
           </div>
         </div>
 

@@ -41,9 +41,8 @@ export default function ProgressionTable({
     }
 
     // Probability of reaching this step (consecutive losses)
-    const prob = strategyId === "martingale"
-      ? Math.pow(18 / 37, i) // European roulette red/black probability
-      : Math.pow(18 / 37, i);
+    // Loss probability for even-money bet on European roulette = 19/37
+    const prob = Math.pow(19 / 37, i);
 
     return { step: i + 1, betSize, cumulativeLoss, prob };
   });
@@ -120,7 +119,7 @@ export default function ProgressionTable({
         </tbody>
       </table>
       <p className="text-xs text-pb-text-muted mt-3 px-1">
-        Probability based on European roulette red/black (18/37). Yellow rows indicate when
+        Probability based on European roulette loss rate (19/37). Yellow rows indicate when
         cumulative losses approach common bankroll sizes.
       </p>
     </div>

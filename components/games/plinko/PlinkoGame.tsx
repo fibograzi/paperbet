@@ -160,10 +160,10 @@ export default function PlinkoGame() {
   }, [clearResultTimeout]);
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
+    <div className="w-full max-w-[1280px] mx-auto px-3 pt-3 pb-20 lg:pb-3">
       {/* Desktop: 3-column layout | Tablet: board + side | Mobile: stacked */}
       <div className="flex flex-col lg:flex-row gap-3">
-        {/* Left: Controls (desktop only — mobile shows below board) */}
+        {/* Left: Controls (desktop only) */}
         <div className="hidden lg:block w-[260px] shrink-0">
           <PlinkoControls
             state={state}
@@ -177,18 +177,6 @@ export default function PlinkoGame() {
 
         {/* Center: Board + Slots */}
         <div className="flex-1 min-w-0">
-          {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-2">
-            <PlinkoControls
-              state={state}
-              dispatch={dispatch}
-              onDrop={handleDrop}
-              canDrop={canDrop()}
-              onStartAutoPlay={handleStartAutoPlay}
-              onStopAutoPlay={handleStopAutoPlay}
-            />
-          </div>
-
           <div className="relative max-w-[600px] mx-auto">
             {/* Result Overlay */}
             <PlinkoResultOverlay
@@ -214,6 +202,18 @@ export default function PlinkoGame() {
                 winTier={winTier}
               />
             </div>
+          </div>
+
+          {/* Mobile/Tablet: Controls below game */}
+          <div className="lg:hidden mt-2">
+            <PlinkoControls
+              state={state}
+              dispatch={dispatch}
+              onDrop={handleDrop}
+              canDrop={canDrop()}
+              onStartAutoPlay={handleStartAutoPlay}
+              onStopAutoPlay={handleStopAutoPlay}
+            />
           </div>
         </div>
 

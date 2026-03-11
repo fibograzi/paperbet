@@ -56,7 +56,7 @@ export default function CrashGame() {
   }, [dispatch]);
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
+    <div className="w-full max-w-[1280px] mx-auto px-3 pt-3 pb-20 lg:pb-3">
       {/* Desktop: 3-column layout | Tablet: chart + side | Mobile: stacked */}
       <div className="flex flex-col lg:flex-row gap-3">
         {/* Left: Controls (desktop only — mobile shows below chart) */}
@@ -74,19 +74,6 @@ export default function CrashGame() {
 
         {/* Center: Previous Rounds + Chart */}
         <div className="flex-1 min-w-0">
-          {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-2">
-            <CrashControls
-              state={state}
-              dispatch={dispatch}
-              onPlaceBet={placeBet}
-              onCancelBet={cancelBet}
-              onCashOut={cashOut}
-              onStartAutoPlay={handleStartAutoPlay}
-              onStopAutoPlay={handleStopAutoPlay}
-            />
-          </div>
-
           {/* Previous Rounds */}
           {state.previousCrashPoints.length > 0 && (
             <div className="mb-3">
@@ -106,6 +93,19 @@ export default function CrashGame() {
               countdown={state.countdown}
               cashedOut={state.cashedOut}
               cashoutMultiplier={state.cashoutMultiplier}
+            />
+          </div>
+
+          {/* Mobile/Tablet: Controls below game area */}
+          <div className="lg:hidden mt-2">
+            <CrashControls
+              state={state}
+              dispatch={dispatch}
+              onPlaceBet={placeBet}
+              onCancelBet={cancelBet}
+              onCashOut={cashOut}
+              onStartAutoPlay={handleStartAutoPlay}
+              onStopAutoPlay={handleStopAutoPlay}
             />
           </div>
         </div>

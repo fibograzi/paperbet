@@ -347,7 +347,7 @@ export default function RouletteWheel({
           />
 
           {/* Ball */}
-          {isSpinning && !winningPocketIdx && (
+          {isSpinning && winningPocketIdx === null && (
             <circle
               cx={cx}
               cy={cy - ballR}
@@ -400,7 +400,7 @@ export default function RouletteWheel({
       </div>
 
       {/* Spinning indicator */}
-      {isSpinning && !winningPocketIdx && (
+      {isSpinning && winningPocketIdx === null && (
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs font-mono-stats text-pb-text-muted animate-pulse">
           Spinning...
         </div>

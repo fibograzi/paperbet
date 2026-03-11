@@ -346,16 +346,17 @@ function rouletteReducer(
     // Reset balance
     // -----------------------------------------------------------------------
     case "RESET_BALANCE": {
-      const refund = state.currentBets.reduce((s, b) => s + b.amount, 0);
       return {
         ...createInitialState(),
         wheelType: state.wheelType,
         selectedChipValue: state.selectedChipValue,
-        // keep history and stats — just reset balance
+        // keep history and stats — just reset balance to $1,000
         history: state.history,
         stats: state.stats,
         sessionSpinCount: state.sessionSpinCount,
-        balance: INITIAL_BALANCE + refund, // give back any pending bets
+        // Bets are cleared (createInitialState sets currentBets: []),
+        // balance resets to the standard starting amount
+        balance: INITIAL_BALANCE,
       };
     }
 

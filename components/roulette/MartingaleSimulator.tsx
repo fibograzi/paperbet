@@ -168,7 +168,7 @@ export default function MartingaleSimulator() {
             <p>
               No bankroll is infinite. With ${fmt(baseBet * 100)} and a ${baseBet} base bet, you
               can survive at most {ruinStep ?? "~"} consecutive losses before going bankrupt — a
-              sequence that occurs with probability ~{fmtPct(Math.pow(18 / 37, (ruinStep ?? 10)) * 100)}.
+              sequence that occurs with probability ~{fmtPct(Math.pow(19 / 37, (ruinStep ?? 10)) * 100)}.
             </p>
           </div>
           <div className="bg-pb-bg-tertiary rounded-xl p-4">

@@ -269,37 +269,39 @@ export default function HiLoControls({
       {activeTab === "manual" && (
         <>
           {/* Bet / Action button when idle */}
-          {isIdle && !autoPlay.active && (
-            <button
-              type="button"
-              onClick={onPlaceBet}
-              disabled={balance < config.betAmount}
-              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: "#6366F1",
-                color: "#F9FAFB",
-              }}
-            >
-              Bet
-            </button>
-          )}
-
-          {/* Round Active disabled button */}
-          {isRoundActive &&
-            phase !== "predicting" &&
-            phase !== "lost" && (
+          <div className="hidden lg:block">
+            {isIdle && !autoPlay.active && (
               <button
                 type="button"
-                disabled
-                className="w-full h-9 rounded-lg font-body font-bold text-sm cursor-not-allowed"
+                onClick={onPlaceBet}
+                disabled={balance < config.betAmount}
+                className="w-full h-9 rounded-lg font-body font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
-                  backgroundColor: "#374151",
-                  color: "#9CA3AF",
+                  backgroundColor: "#6366F1",
+                  color: "#F9FAFB",
                 }}
               >
-                Round Active
+                Bet
               </button>
             )}
+
+            {/* Round Active disabled button */}
+            {isRoundActive &&
+              phase !== "predicting" &&
+              phase !== "lost" && (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full h-9 rounded-lg font-body font-bold text-sm cursor-not-allowed"
+                  style={{
+                    backgroundColor: "#374151",
+                    color: "#9CA3AF",
+                  }}
+                >
+                  Round Active
+                </button>
+              )}
+          </div>
 
           {/* Action buttons during predicting phase */}
           {isPredicting && round && predictionInfo && (
@@ -798,32 +800,34 @@ export default function HiLoControls({
           </AnimatePresence>
 
           {/* Start / Stop Auto-Play button */}
-          {autoPlay.active ? (
-            <button
-              type="button"
-              onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
-              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110"
-              style={{
-                backgroundColor: "#EF4444",
-                color: "#F9FAFB",
-              }}
-            >
-              Stop Autobet
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleAutoPlayStart}
-              disabled={!isIdle}
-              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: "#6366F1",
-                color: "#F9FAFB",
-              }}
-            >
-              Start Autobet
-            </button>
-          )}
+          <div className="hidden lg:block">
+            {autoPlay.active ? (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
+                className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110"
+                style={{
+                  backgroundColor: "#EF4444",
+                  color: "#F9FAFB",
+                }}
+              >
+                Stop Autobet
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAutoPlayStart}
+                disabled={!isIdle}
+                className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: "#6366F1",
+                  color: "#F9FAFB",
+                }}
+              >
+                Start Autobet
+              </button>
+            )}
+          </div>
 
           {/* Auto-play counter */}
           {autoPlay.active && autoPlay.progress && (
@@ -872,6 +876,55 @@ export default function HiLoControls({
         </div>
       )}
 
+      {/* Mobile: Fixed action bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pt-3 border-t border-pb-border"
+        style={{
+          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          backgroundColor: "rgba(11, 15, 26, 0.95)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        {autoPlay.active ? (
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
+            className="w-full h-11 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all active:scale-[0.98]"
+          >
+            Stop Autobet
+          </button>
+        ) : activeTab === "manual" ? (
+          <button
+            type="button"
+            onClick={onPlaceBet}
+            disabled={balance < config.betAmount || isRoundActive}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm transition-all active:scale-[0.98] disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: isRoundActive ? "#374151" : "#6366F1",
+              color: isRoundActive ? "#9CA3AF" : "#F9FAFB",
+              boxShadow: !isRoundActive && balance >= config.betAmount ? "0 0 16px rgba(99, 102, 241, 0.2)" : "none",
+            }}
+          >
+            {isRoundActive ? "Round Active" : "Bet"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleAutoPlayStart}
+            disabled={!isIdle}
+            className="w-full h-11 rounded-lg font-heading font-bold text-sm border transition-colors disabled:opacity-40"
+            style={{
+              backgroundColor: "rgba(99, 102, 241, 0.15)",
+              color: "#6366F1",
+              borderColor: "rgba(99, 102, 241, 0.3)",
+            }}
+          >
+            Start Autobet
+          </button>
+        )}
+      </div>
+
       {/* Session Reminder */}
       {state.showSessionReminder && (
         <div
@@ -898,7 +951,7 @@ export default function HiLoControls({
 
       {/* Keyboard hints */}
       <div
-        className="text-center text-xs"
+        className="hidden lg:block text-center text-xs"
         style={{ color: "#6B7280" }}
       >
         Press{" "}

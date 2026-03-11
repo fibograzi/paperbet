@@ -112,7 +112,7 @@ export default function FlipGame() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
+    <div className="w-full max-w-[1280px] mx-auto px-3 pt-3 pb-20 lg:pb-3">
       {/* Desktop: 3-column layout | Tablet: arena + side | Mobile: stacked */}
       <div className="flex flex-col lg:flex-row gap-3">
         {/* Left: Controls (desktop only — mobile shows below arena) */}
@@ -128,20 +128,20 @@ export default function FlipGame() {
 
         {/* Center: Flip Arena */}
         <div className="flex-1 min-w-0">
-          {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-2">
-            <FlipControls
+          <div className="max-w-[700px] mx-auto">
+            <FlipArena
               state={state}
-              dispatch={dispatch}
-              onFlip={flip}
               onCashOut={cashOut}
               onFlipAgain={flipAgain}
             />
           </div>
 
-          <div className="max-w-[700px] mx-auto">
-            <FlipArena
+          {/* Mobile: Controls below game */}
+          <div className="lg:hidden mt-2">
+            <FlipControls
               state={state}
+              dispatch={dispatch}
+              onFlip={flip}
               onCashOut={cashOut}
               onFlipAgain={flipAgain}
             />
