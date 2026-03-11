@@ -177,13 +177,13 @@ export default function DiceControls({
   // -------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Tab toggle */}
       <div
-        className="flex rounded-lg p-1"
+        className="flex rounded-md p-0.5"
         style={{ backgroundColor: "#1F2937" }}
       >
         {(["manual", "auto"] as const).map((tab) => (
@@ -191,7 +191,7 @@ export default function DiceControls({
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-center font-body text-sm font-semibold transition-all"
+            className="flex-1 py-1.5 rounded-md text-center font-body text-xs font-semibold transition-all"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -204,8 +204,8 @@ export default function DiceControls({
 
       {/* Bet amount — Stake-style inline */}
       <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>Bet Amount</span>
+        <div className="flex items-center justify-between mb-1">
+          <span className="font-body text-[10px] uppercase tracking-wider" style={{ color: "#9CA3AF" }}>Bet Amount</span>
           {isAutoRunning && isMartingaleType && (
             <span className="text-xs font-body px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(20,184,166,0.15)", color: "#14B8A6" }}>
               {STRATEGY_PRESETS.find((s) => s.id === selectedStrategy)?.name}
@@ -218,10 +218,10 @@ export default function DiceControls({
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <span className="font-mono-stats shrink-0 text-sm" style={{ color: "#6B7280" }}>$</span>
             <input suppressHydrationWarning
               type="text"
               inputMode="decimal"
@@ -231,8 +231,8 @@ export default function DiceControls({
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
               disabled={!isIdle}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB" }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB" }}
               aria-label="Bet amount"
             />
           </div>
@@ -242,7 +242,7 @@ export default function DiceControls({
               type="button"
               disabled={!isIdle}
               onClick={() => setBet(betAmount / 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
@@ -252,7 +252,7 @@ export default function DiceControls({
               type="button"
               disabled={!isIdle}
               onClick={() => setBet(betAmount * 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
@@ -275,14 +275,12 @@ export default function DiceControls({
             type="button"
             disabled={isRolling || balance < betAmount || isAutoRunning}
             onClick={onRoll}
-            className="w-full flex items-center justify-center gap-2 rounded-xl font-body font-bold transition-colors"
+            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body font-bold text-sm transition-colors"
             style={{
-              height: 48,
               backgroundColor: isRolling || isAutoRunning ? "#374151" : "#14B8A6",
               color: isRolling || isAutoRunning ? "#9CA3AF" : "#0B0F1A",
               boxShadow: isRolling || isAutoRunning ? "none" : "0 0 20px rgba(20,184,166,0.2)",
               cursor: isRolling || balance < betAmount || isAutoRunning ? "not-allowed" : "pointer",
-              fontSize: 16,
             }}
             whileHover={!isRolling && !isAutoRunning ? { backgroundColor: "#2DD4BF", boxShadow: "0 0 30px rgba(20,184,166,0.3)" } : {}}
             whileTap={!isRolling && !isAutoRunning ? { scale: 0.98 } : {}}
@@ -293,8 +291,8 @@ export default function DiceControls({
           </motion.button>
 
           {/* Profit on Win */}
-          <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-            <span className="font-body text-sm block mb-1" style={{ color: "#9CA3AF" }}>Profit on Win</span>
+          <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+            <span className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>Profit on Win</span>
             <span className="font-mono-stats font-medium" style={{ fontSize: 16, color: "#9CA3AF" }}>
               {formatCurrency(state.params.profitOnWin)}
             </span>
@@ -328,7 +326,7 @@ export default function DiceControls({
         <>
           {/* Number of Bets */}
           <div>
-            <label className="font-body text-sm block mb-1.5" style={{ color: "#9CA3AF" }}>
+            <label className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>
               Number of Bets
             </label>
             <div className="flex items-center gap-1.5">
@@ -345,7 +343,7 @@ export default function DiceControls({
                   }}
                   disabled={isInfinite || isAutoRunning}
                   placeholder={isInfinite ? "∞" : undefined}
-                  className="w-full rounded-lg py-1.5 pl-3 pr-3 text-right font-mono-stats text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(20,184,166,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-md py-1.5 px-2.5 text-right font-mono-stats text-xs focus:outline-none focus:ring-2 focus:ring-[rgba(20,184,166,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     backgroundColor: "#1F2937",
                     border: "1px solid #374151",
@@ -358,7 +356,7 @@ export default function DiceControls({
                 type="button"
                 disabled={isAutoRunning}
                 onClick={() => setIsInfinite(!isInfinite)}
-                className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: isInfinite ? "rgba(20,184,166,0.15)" : "#1F2937",
                   border: isInfinite ? "1px solid rgba(20,184,166,0.3)" : "1px solid #374151",
@@ -385,7 +383,7 @@ export default function DiceControls({
               )}
               style={{ color: "#6B7280" }}
             />
-            <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>Advanced</span>
+            <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>Advanced</span>
           </button>
 
           <AnimatePresence initial={false}>
@@ -536,12 +534,10 @@ export default function DiceControls({
                 onStartAutoPlay(buildAutoConfig());
               }
             }}
-            className="w-full flex items-center justify-center gap-2 rounded-xl font-body font-bold transition-colors"
+            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body font-bold text-sm transition-colors"
             style={{
-              height: 48,
               backgroundColor: isAutoRunning ? "#EF4444" : "#14B8A6",
               color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
-              fontSize: 16,
               cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
               opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
             }}
@@ -611,9 +607,9 @@ function CollapsibleSection({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2"
+        className="w-full flex items-center justify-between px-2.5 py-2"
       >
-        <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>{title}</span>
+        <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>{title}</span>
         <ChevronDown
           size={14}
           style={{
@@ -623,7 +619,7 @@ function CollapsibleSection({
           }}
         />
       </button>
-      {open && <div className="px-3 pb-3 space-y-2">{children}</div>}
+      {open && <div className="px-2.5 pb-2.5 space-y-2">{children}</div>}
     </div>
   );
 }

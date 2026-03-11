@@ -61,7 +61,7 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
     : "\u2014";
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Session Stats */}
       <SessionStats
         totalBets={stats.totalBets}
@@ -108,38 +108,25 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
       <GameProviders gameId="limbo" gameName="Limbo" />
 
       {/* Spin the Deal Wheel CTA */}
-      <div
-        className={`bg-pb-bg-secondary border rounded-xl p-4 text-center ${sessionBetCount >= 20 ? "limbo-cta-pulse" : ""}`}
+      <a
+        href="/deals"
+        className="flex items-center gap-2.5 bg-pb-bg-secondary border rounded-lg px-3 py-2 hover:border-pb-accent/60 transition-colors"
         style={{
-          borderColor: "#00E5A0",
-          borderWidth: sessionBetCount >= 20 ? "2px" : "1px",
-          boxShadow: sessionBetCount >= 20 ? "0 0 16px rgba(0,229,160,0.15)" : "none",
+          borderColor: sessionBetCount >= 20 ? "rgba(0, 229, 160, 0.4)" : "#374151",
+          boxShadow: sessionBetCount >= 20 ? "0 0 12px rgba(0, 229, 160, 0.1)" : "none",
         }}
       >
-        {sessionBetCount >= 20 && (
-          <style>{`
-            @keyframes limbo-pulse-border {
-              0%, 100% { box-shadow: 0 0 8px rgba(0,229,160,0.15); }
-              50% { box-shadow: 0 0 20px rgba(0,229,160,0.3); }
-            }
-            .limbo-cta-pulse { animation: limbo-pulse-border 2s ease-in-out infinite; }
-          `}</style>
-        )}
-        <div className="text-2xl mb-2">&#127922;</div>
-        <p className="font-heading font-semibold text-pb-text-primary text-sm">
-          Spin the Deal Wheel
-        </p>
-        <p className="text-xs text-pb-text-muted mt-1">
-          Win exclusive Limbo bonuses
-        </p>
-        <a
-          href="/deals"
-          className="inline-block mt-3 text-sm font-semibold hover:underline"
-          style={{ color: "#00E5A0" }}
-        >
-          Spin Now &rarr;
-        </a>
-      </div>
+        <span className="text-lg shrink-0">&#127905;</span>
+        <div className="flex-1 min-w-0">
+          <span className="font-heading font-semibold text-pb-text-primary text-xs">
+            Spin the Deal Wheel
+          </span>
+          <span className="text-[10px] text-pb-text-muted ml-1.5">
+            Limbo bonuses
+          </span>
+        </div>
+        <span className="text-xs text-pb-accent font-semibold shrink-0">&rarr;</span>
+      </a>
 
 
       {/* Session reminder */}
@@ -149,15 +136,15 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -10, opacity: 0 }}
-            className="bg-pb-bg-secondary border border-pb-warning/30 rounded-xl p-3"
+            className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-3 py-1.5"
           >
-            <p className="text-xs text-pb-text-secondary">
-              You&apos;ve played {sessionBetCount} rounds. Remember, this is practice mode.
+            <p className="text-[10px] text-pb-text-secondary">
+              {sessionBetCount} rounds played — practice mode.
             </p>
             <button
               type="button"
               onClick={onDismissReminder}
-              className="text-xs text-pb-text-muted hover:text-pb-text-secondary mt-2"
+              className="text-[10px] text-pb-text-muted hover:text-pb-text-secondary mt-1"
             >
               Dismiss
             </button>
@@ -168,7 +155,7 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
       {/* Bet History */}
       {history.length > 0 && (
         <div>
-          <h3 className="text-sm font-heading font-semibold text-pb-text-secondary mb-2">
+          <h3 className="text-[10px] font-heading font-semibold text-pb-text-muted uppercase tracking-wider mb-1">
             Bet History
           </h3>
           <div className="max-h-[340px] overflow-y-auto rounded-lg border border-pb-border">
@@ -235,19 +222,19 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
       <AnimatePresence>
         {showPostSessionNudge && (
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 20, opacity: 0 }}
-            className="bg-pb-bg-secondary rounded-xl p-4"
+            exit={{ y: 12, opacity: 0 }}
+            className="bg-pb-bg-secondary rounded-lg px-3 py-2"
             style={{ border: "1px solid rgba(0,229,160,0.3)" }}
           >
-            <p className="text-sm text-pb-text-secondary">
+            <p className="text-xs text-pb-text-secondary">
               Ready to play for real? Spin the Deal Wheel to unlock exclusive bonuses at top Limbo casinos.
             </p>
-            <div className="flex items-center gap-3 mt-3">
+            <div className="flex items-center gap-3 mt-2">
               <a
                 href="/deals"
-                className="text-sm font-semibold hover:underline"
+                className="text-xs font-semibold hover:underline"
                 style={{ color: "#00E5A0" }}
               >
                 Spin the Wheel &rarr;
@@ -255,7 +242,7 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
               <button
                 type="button"
                 onClick={onDismissNudge}
-                className="text-xs text-pb-text-muted hover:text-pb-text-secondary"
+                className="text-[10px] text-pb-text-muted hover:text-pb-text-secondary"
               >
                 Dismiss
               </button>
@@ -266,15 +253,14 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
 
       {/* Session Time Reminder */}
       {showTimeReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-xl p-3">
-          <p className="text-xs text-pb-text-secondary">
-            You&apos;ve been playing for 30+ minutes. Remember to take breaks
-            and play responsibly.
+        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-3 py-1.5">
+          <p className="text-[10px] text-pb-text-secondary">
+            30+ min session — take a break.
           </p>
           <button
             type="button"
             onClick={() => setShowTimeReminder(false)}
-            className="text-xs text-pb-text-muted hover:text-pb-text-secondary mt-2"
+            className="text-[10px] text-pb-text-muted hover:text-pb-text-secondary mt-1"
           >
             Dismiss
           </button>
@@ -282,7 +268,7 @@ export default function LimboSidebar({ state, onDismissNudge, onDismissReminder 
       )}
 
       {/* Disclaimer */}
-      <p className="text-xs text-pb-text-muted leading-relaxed">
+      <p className="text-[10px] text-pb-text-muted leading-relaxed">
         {SITE.disclaimer}
       </p>
     </div>

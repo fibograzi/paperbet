@@ -73,11 +73,11 @@ export default function HiLoGame() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-4 py-6">
+    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
       {/* Desktop: 3-column layout | Tablet: arena + side | Mobile: stacked */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-3">
         {/* Left: Controls (desktop only — mobile shows below arena) */}
-        <div className="hidden lg:block w-[300px] shrink-0">
+        <div className="hidden lg:block w-[260px] shrink-0">
           <HiLoControls
             state={state}
             dispatch={dispatch}
@@ -91,7 +91,7 @@ export default function HiLoGame() {
         {/* Center: Card Arena */}
         <div className="flex-1 min-w-0">
           {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-4">
+          <div className="lg:hidden mb-2">
             <HiLoControls
               state={state}
               dispatch={dispatch}
@@ -108,7 +108,7 @@ export default function HiLoGame() {
         </div>
 
         {/* Sidebar — single responsive render */}
-        <div className="w-full lg:w-[320px] shrink-0">
+        <div className="w-full lg:w-[280px] shrink-0">
           <HiLoSidebar
             state={state}
             onDismissNudge={() =>

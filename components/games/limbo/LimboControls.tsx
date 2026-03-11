@@ -186,13 +186,13 @@ export default function LimboControls({
   // -------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Tab toggle */}
       <div
-        className="flex rounded-lg p-1"
+        className="flex rounded-md p-0.5"
         style={{ backgroundColor: "#1F2937" }}
       >
         {(["manual", "auto"] as const).map((tab) => (
@@ -200,7 +200,7 @@ export default function LimboControls({
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-center font-body text-sm font-semibold transition-all"
+            className="flex-1 py-1.5 rounded-md text-center font-body text-xs font-semibold transition-all"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -212,9 +212,9 @@ export default function LimboControls({
       </div>
 
       {/* Bet amount — Stake-style */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>Bet Amount</span>
+      <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+        <div className="flex items-center justify-between mb-1">
+          <span className="font-body text-[10px] uppercase tracking-wider" style={{ color: "#9CA3AF" }}>Bet Amount</span>
           {isAutoRunning && isMartingaleType && (
             <span className="text-xs font-body px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(0,229,160,0.15)", color: "#00E5A0" }}>
               {STRATEGY_PRESETS.find((s) => s.id === selectedStrategy)?.name}
@@ -223,14 +223,14 @@ export default function LimboControls({
         </div>
 
         <div
-          className="flex items-center rounded-lg overflow-hidden"
+          className="flex items-center rounded-md overflow-hidden"
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <span className="font-mono-stats shrink-0 text-sm" style={{ color: "#6B7280" }}>$</span>
             <input
               suppressHydrationWarning
               type="text"
@@ -241,8 +241,8 @@ export default function LimboControls({
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
               disabled={!isIdle}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB" }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB" }}
               aria-label="Bet amount"
             />
           </div>
@@ -252,7 +252,7 @@ export default function LimboControls({
               type="button"
               disabled={!isIdle}
               onClick={() => setBet(betAmount / 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
@@ -262,7 +262,7 @@ export default function LimboControls({
               type="button"
               disabled={!isIdle}
               onClick={() => setBet(betAmount * 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
@@ -285,14 +285,12 @@ export default function LimboControls({
             type="button"
             disabled={isAnimating || balance < betAmount || isAutoRunning}
             onClick={onBet}
-            className="w-full flex items-center justify-center gap-2 rounded-xl font-body font-bold transition-colors"
+            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
             style={{
-              height: 48,
               backgroundColor: isAnimating || isAutoRunning ? "#374151" : "#00E5A0",
               color: isAnimating || isAutoRunning ? "#9CA3AF" : "#0B0F1A",
               boxShadow: isAnimating || isAutoRunning ? "none" : "0 0 20px rgba(0,229,160,0.2)",
               cursor: isAnimating || balance < betAmount || isAutoRunning ? "not-allowed" : "pointer",
-              fontSize: 16,
             }}
             whileHover={!isAnimating && !isAutoRunning ? { backgroundColor: "#1AFFA8", boxShadow: "0 0 30px rgba(0,229,160,0.3)" } : {}}
             whileTap={!isAnimating && !isAutoRunning ? { scale: 0.98 } : {}}
@@ -338,11 +336,11 @@ export default function LimboControls({
       {activeTab === "auto" && (
         <>
           {/* Number of Bets — text input + ∞ toggle */}
-          <div>
-            <span className="font-body text-sm block mb-1.5" style={{ color: "#9CA3AF" }}>Number of Bets</span>
+          <div className="rounded-lg p-2.5" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+            <span className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>Number of Bets</span>
             <div className="flex items-center gap-2">
               <div
-                className="flex-1 rounded-lg px-3 py-2"
+                className="flex-1 rounded-md py-1.5 px-2.5"
                 style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
               >
                 <input
@@ -356,7 +354,7 @@ export default function LimboControls({
                     const val = parseInt(e.target.value, 10);
                     if (!isNaN(val)) setAutoNumberOfBets(Math.min(500, Math.max(1, val)));
                   }}
-                  className="w-full bg-transparent font-mono-stats text-sm outline-none"
+                  className="w-full bg-transparent font-mono-stats text-xs outline-none"
                   style={{ color: autoInfinite ? "#6B7280" : "#F9FAFB" }}
                   max={500}
                   min={1}
@@ -374,7 +372,7 @@ export default function LimboControls({
                     setAutoInfinite(true);
                   }
                 }}
-                className="w-10 h-10 rounded-lg flex items-center justify-center font-mono-stats text-lg font-bold transition-colors"
+                className="w-8 h-8 rounded-md flex items-center justify-center font-mono-stats text-lg font-bold transition-colors"
                 style={{
                   backgroundColor: autoInfinite ? "rgba(0,229,160,0.15)" : "#1F2937",
                   border: autoInfinite ? "1px solid rgba(0,229,160,0.3)" : "1px solid #374151",
@@ -534,12 +532,10 @@ export default function LimboControls({
                 onStartAutoPlay(buildAutoConfig());
               }
             }}
-            className="w-full flex items-center justify-center gap-2 rounded-xl font-body font-bold transition-colors"
+            className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
             style={{
-              height: 48,
               backgroundColor: isAutoRunning ? "#EF4444" : "#00E5A0",
               color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
-              fontSize: 16,
               cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
               opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
             }}
@@ -606,9 +602,9 @@ function CollapsibleSection({
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2"
+        className="w-full flex items-center justify-between px-2.5 py-2"
       >
-        <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>{title}</span>
+        <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>{title}</span>
         <ChevronDown
           size={14}
           style={{
@@ -618,7 +614,7 @@ function CollapsibleSection({
           }}
         />
       </button>
-      {open && <div className="px-3 pb-3 space-y-2">{children}</div>}
+      {open && <div className="px-2.5 pb-2.5 space-y-2">{children}</div>}
     </div>
   );
 }

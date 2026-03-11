@@ -215,13 +215,13 @@ export default function MinesControls({
 
   // --- Render ---
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Tab Switcher */}
       <div
-        className="flex rounded-lg p-1"
+        className="flex rounded-md p-0.5"
         style={{ backgroundColor: "#1F2937" }}
       >
         {(["manual", "auto"] as const).map((tab) => (
@@ -229,7 +229,7 @@ export default function MinesControls({
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-center font-body text-sm font-semibold transition-all"
+            className="flex-1 py-1.5 rounded-md text-center font-body text-xs font-semibold transition-all"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -240,94 +240,97 @@ export default function MinesControls({
         ))}
       </div>
 
-      {/* Bet Amount Card */}
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-sm text-pb-text-secondary font-body block mb-2">
-          Bet Amount
-        </label>
-        <div
-          className="flex items-center rounded-lg overflow-hidden"
-          style={{ border: "1px solid #374151" }}
-        >
+      {/* Merged: Bet Amount + Mines + Gems */}
+      <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-3">
+        {/* Bet Amount */}
+        <div>
+          <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
+            Bet Amount
+          </label>
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
-            style={{ backgroundColor: "#1F2937" }}
+            className="flex items-center rounded-md overflow-hidden"
+            style={{ border: "1px solid #374151" }}
           >
-            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
-            <input
-              suppressHydrationWarning
-              ref={betInputRef}
-              type="text"
-              inputMode="decimal"
-              value={betInput.value}
-              onChange={betInput.onChange}
-              onFocus={betInput.onFocus}
-              onBlur={betInput.onBlur}
-              onKeyDown={betInput.onKeyDown}
-              disabled={controlsDisabled || autoPlay.active}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB" }}
-              aria-label="Bet amount"
-            />
-          </div>
-          <div className="w-px self-stretch" style={{ backgroundColor: "#374151" }} />
-          <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
-            <button
-              type="button"
-              disabled={controlsDisabled || autoPlay.active}
-              onClick={() => setBet(betAmount / 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
-              style={{ color: "#9CA3AF" }}
+            <div
+              className="flex items-center flex-1 px-2.5 py-1.5"
+              style={{ backgroundColor: "#1F2937" }}
             >
-              &frac12;
-            </button>
-            <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
-            <button
-              type="button"
-              disabled={controlsDisabled || autoPlay.active}
-              onClick={() => setBet(betAmount * 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
-              style={{ color: "#9CA3AF" }}
-            >
-              2&times;
-            </button>
+              <span className="font-mono-stats shrink-0 text-sm" style={{ color: "#6B7280" }}>$</span>
+              <input
+                suppressHydrationWarning
+                ref={betInputRef}
+                type="text"
+                inputMode="decimal"
+                value={betInput.value}
+                onChange={betInput.onChange}
+                onFocus={betInput.onFocus}
+                onBlur={betInput.onBlur}
+                onKeyDown={betInput.onKeyDown}
+                disabled={controlsDisabled || autoPlay.active}
+                className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+                style={{ color: "#F9FAFB" }}
+                aria-label="Bet amount"
+              />
+            </div>
+            <div className="w-px self-stretch" style={{ backgroundColor: "#374151" }} />
+            <div className="flex items-center shrink-0" style={{ backgroundColor: "#263040" }}>
+              <button
+                type="button"
+                disabled={controlsDisabled || autoPlay.active}
+                onClick={() => setBet(betAmount / 2)}
+                className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+                style={{ color: "#9CA3AF" }}
+              >
+                &frac12;
+              </button>
+              <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
+              <button
+                type="button"
+                disabled={controlsDisabled || autoPlay.active}
+                onClick={() => setBet(betAmount * 2)}
+                className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+                style={{ color: "#9CA3AF" }}
+              >
+                2&times;
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Mines Dropdown */}
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-sm text-pb-text-secondary font-body block mb-2">
-          Mines
-        </label>
-        <div className="relative">
-          <select
-            value={mineCount}
-            disabled={controlsDisabled || autoPlay.active}
-            onChange={(e) => setMines(parseInt(e.target.value, 10))}
-            className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 12px center",
-            }}
-          >
-            {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+        {/* Mines Dropdown */}
+        <div className="mt-2.5">
+          <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
+            Mines
+          </label>
+          <div className="relative">
+            <select
+              value={mineCount}
+              disabled={controlsDisabled || autoPlay.active}
+              onChange={(e) => setMines(parseInt(e.target.value, 10))}
+              className="w-full bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md font-mono-stats text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 12px center",
+              }}
+            >
+              {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
 
-      {/* Gems Read-only Field */}
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4 opacity-70">
-        <label className="text-sm text-pb-text-secondary font-body block mb-2">
-          Gems
-        </label>
-        <div className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg text-pb-text-primary">
-          {safeGems}
+        {/* Gems Read-only Field */}
+        <div className="mt-2.5 opacity-70">
+          <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
+            Gems
+          </label>
+          <div className="w-full bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md font-mono-stats text-pb-text-primary">
+            {safeGems}
+          </div>
         </div>
       </div>
 
@@ -349,13 +352,13 @@ export default function MinesControls({
           </button>
 
           {/* Total Profit */}
-          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-            <label className="text-sm text-pb-text-secondary font-body block mb-2">
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-3">
+            <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
               Total Profit ({formatMinesMultiplier(multiplier)})
             </label>
             <div
               className={cn(
-                "w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg",
+                "w-full bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md font-mono-stats",
                 totalProfit > 0
                   ? "text-pb-accent"
                   : totalProfit < 0
@@ -373,8 +376,8 @@ export default function MinesControls({
       {activeTab === "auto" && (
         <>
           {/* Number of Bets */}
-          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-            <label className="text-sm text-pb-text-secondary font-body block mb-2">
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
               Number of Bets
             </label>
             <div className="flex items-center gap-2">
@@ -386,14 +389,14 @@ export default function MinesControls({
                 placeholder={isInfinite ? "∞" : ""}
                 onChange={(e) => handleNumberOfBetsChange(e.target.value)}
                 disabled={autoPlay.active || isInfinite}
-                className="flex-1 bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md font-mono-stats text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="button"
                 disabled={autoPlay.active}
                 onClick={toggleInfinite}
                 className={cn(
-                  "w-10 h-10 rounded-lg border flex items-center justify-center font-mono-stats text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+                  "w-8 h-8 rounded-md border flex items-center justify-center font-mono-stats text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                   isInfinite
                     ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
                     : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
@@ -405,8 +408,8 @@ export default function MinesControls({
           </div>
 
           {/* Tiles to Reveal */}
-          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-            <label className="text-xs text-pb-text-muted block mb-1">
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <label className="text-[10px] uppercase tracking-wider text-pb-text-muted block mb-1">
               Tiles to Reveal (then auto-cashout)
             </label>
             <div className="flex items-center gap-2">
@@ -470,9 +473,9 @@ export default function MinesControls({
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between px-3 py-2"
+              className="w-full flex items-center justify-between px-2.5 py-2"
             >
-              <span className="font-body text-sm text-pb-text-secondary">Advanced</span>
+              <span className="font-body text-xs text-pb-text-secondary">Advanced</span>
               <ChevronDown
                 size={14}
                 className={cn(
@@ -482,10 +485,10 @@ export default function MinesControls({
               />
             </button>
             {showAdvanced && (
-              <div className="px-3 pb-3 space-y-3">
+              <div className="px-2.5 pb-2.5 space-y-2">
                 {/* On Win */}
                 <div>
-                  <label className="text-xs text-pb-text-muted block mb-1">
+                  <label className="text-[10px] uppercase tracking-wider text-pb-text-muted block mb-1">
                     On Win
                   </label>
                   <div className="flex gap-1.5">
@@ -546,7 +549,7 @@ export default function MinesControls({
 
                 {/* On Loss */}
                 <div>
-                  <label className="text-xs text-pb-text-muted block mb-1">
+                  <label className="text-[10px] uppercase tracking-wider text-pb-text-muted block mb-1">
                     On Loss
                   </label>
                   <div className="flex gap-1.5">
@@ -722,7 +725,7 @@ export default function MinesControls({
         <button
           type="button"
           disabled
-          className="w-full h-[52px] rounded-[10px] bg-pb-accent/15 text-pb-accent font-heading font-bold text-base cursor-default border border-pb-accent/30"
+          className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm cursor-default border border-pb-accent/30"
         >
           <span className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-full bg-pb-accent animate-pulse" />
@@ -739,7 +742,7 @@ export default function MinesControls({
           type="button"
           onClick={onStartGame}
           disabled={balance < betAmount}
-          className="w-full h-12 rounded-[10px] bg-pb-accent text-[#0B0F1A] font-heading font-bold text-base hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full h-9 rounded-lg bg-pb-accent text-[#0B0F1A] font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           style={{ boxShadow: "0 0 20px rgba(0, 229, 160, 0.2)" }}
         >
           Bet
@@ -753,7 +756,7 @@ export default function MinesControls({
         <button
           type="button"
           disabled
-          className="w-full h-[52px] rounded-[10px] bg-[#374151] text-[#6B7280] font-heading font-bold text-base cursor-not-allowed"
+          className="w-full h-9 rounded-lg bg-[#374151] text-[#6B7280] font-heading font-bold text-sm cursor-not-allowed"
         >
           <span className="block">Cash Out</span>
           <span className="block text-xs -mt-0.5">Reveal a tile first</span>
@@ -769,7 +772,7 @@ export default function MinesControls({
           type="button"
           onClick={onCashOut}
           disabled={autoPlay.active}
-          className="w-full h-[52px] rounded-[10px] bg-pb-warning text-[#0B0F1A] font-heading font-bold text-base hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed transition-all mines-cashout-pulse"
+          className="w-full h-9 rounded-lg bg-pb-warning text-[#0B0F1A] font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed transition-all mines-cashout-pulse"
           style={{ boxShadow: "0 0 20px rgba(245, 158, 11, 0.3)" }}
         >
           <span className="block">Cash Out</span>
@@ -788,7 +791,7 @@ export default function MinesControls({
           type="button"
           onClick={onNewGame}
           disabled={postRevealPhase}
-          className="w-full h-12 rounded-[10px] bg-pb-accent text-[#0B0F1A] font-heading font-bold text-base hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="w-full h-9 rounded-lg bg-pb-accent text-[#0B0F1A] font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           New Game
         </button>

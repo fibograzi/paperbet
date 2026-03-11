@@ -211,13 +211,13 @@ export default function FlipControls({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Manual / Auto Tab Toggle */}
       <div
-        className="flex rounded-lg p-1"
+        className="flex rounded-md p-0.5"
         style={{ backgroundColor: "#1F2937" }}
       >
         {(["manual", "auto"] as const).map((tab) => (
@@ -229,7 +229,7 @@ export default function FlipControls({
               (tab === "auto" && isRoundActive && activeTab === "manual") ||
               (tab === "manual" && autoPlay.active)
             }
-            className="flex-1 py-2 rounded-md text-sm font-body transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-1.5 rounded-md text-xs font-body transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -243,14 +243,14 @@ export default function FlipControls({
 
       {/* Bet Amount Card */}
       <div
-        className="rounded-xl p-4"
+        className="rounded-lg p-3"
         style={{
           backgroundColor: "#111827",
           border: "1px solid #374151",
         }}
       >
         <label
-          className="font-body text-sm block mb-2"
+          className="font-body text-[10px] uppercase tracking-wider block mb-1"
           style={{ color: "#9CA3AF" }}
         >
           Bet Amount
@@ -260,10 +260,10 @@ export default function FlipControls({
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <span className="font-mono-stats shrink-0 text-sm" style={{ color: "#6B7280" }}>$</span>
             <input
               suppressHydrationWarning
               type="text"
@@ -274,8 +274,8 @@ export default function FlipControls({
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
               disabled={controlsDisabled}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB" }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB" }}
               aria-label="Bet amount"
             />
           </div>
@@ -285,7 +285,7 @@ export default function FlipControls({
               type="button"
               disabled={controlsDisabled}
               onClick={() => setBet(config.betAmount / 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
@@ -295,7 +295,7 @@ export default function FlipControls({
               type="button"
               disabled={controlsDisabled}
               onClick={() => setBet(config.betAmount * 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
@@ -347,9 +347,8 @@ export default function FlipControls({
               type="button"
               onClick={onFlip}
               disabled={balance < config.betAmount || !config.sidePick}
-              className="w-full rounded-[10px] font-body font-bold text-base transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flip-btn-glow"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flip-btn-glow"
               style={{
-                height: 48,
                 backgroundColor: "#00E5A0",
                 color: "#0B0F1A",
                 boxShadow: "0 0 20px rgba(0, 229, 160, 0.2)",
@@ -364,9 +363,8 @@ export default function FlipControls({
             <button
               type="button"
               disabled
-              className="w-full rounded-[10px] font-body font-bold text-base cursor-not-allowed"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm cursor-not-allowed"
               style={{
-                height: 48,
                 backgroundColor: "#374151",
                 color: "#9CA3AF",
               }}
@@ -377,14 +375,14 @@ export default function FlipControls({
 
           {/* Side Selection */}
           <div
-            className="rounded-xl p-4"
+            className="rounded-lg p-3"
             style={{
               backgroundColor: "#111827",
               border: "1px solid #374151",
             }}
           >
             <label
-              className="font-body text-sm block mb-2"
+              className="font-body text-[10px] uppercase tracking-wider block mb-1"
               style={{ color: "#9CA3AF" }}
             >
               Pick Your Side
@@ -500,7 +498,7 @@ export default function FlipControls({
 
       {/* === AUTO TAB CONTENT === */}
       {activeTab === "auto" && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Flips Per Round */}
           <div>
             <label
@@ -564,7 +562,7 @@ export default function FlipControls({
                       setAutoCount(Math.min(MAX_AUTO_ROUNDS, val));
                   }}
                   disabled={autoPlay.active}
-                  className="w-full rounded-lg py-1.5 pl-3 pr-3 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-md py-1.5 px-2.5 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{
                     backgroundColor: "#1F2937",
                     border: "1px solid #374151",
@@ -576,7 +574,7 @@ export default function FlipControls({
                 type="button"
                 disabled={autoPlay.active}
                 onClick={() => setAutoCount(MAX_AUTO_ROUNDS)}
-                className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor:
                     autoCount === MAX_AUTO_ROUNDS
@@ -621,7 +619,7 @@ export default function FlipControls({
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.15 }}
-                className="space-y-3 overflow-hidden"
+                className="space-y-2 overflow-hidden"
               >
                 {/* On Win */}
                 <div>
@@ -885,7 +883,7 @@ export default function FlipControls({
             <button
               type="button"
               onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
-              className="w-full py-2.5 rounded-[10px] font-body font-bold text-sm transition-colors hover:brightness-110"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110"
               style={{
                 backgroundColor: "#EF4444",
                 color: "#F9FAFB",
@@ -898,7 +896,7 @@ export default function FlipControls({
               type="button"
               onClick={handleAutoPlayStart}
               disabled={!isIdle}
-              className="w-full py-2.5 rounded-[10px] font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: "#00E5A0",
                 color: "#0B0F1A",
@@ -959,7 +957,7 @@ export default function FlipControls({
       {/* Session Reminder */}
       {state.showSessionReminder && (
         <div
-          className="rounded-xl p-3 text-xs"
+          className="rounded-lg px-2.5 py-1.5 text-[10px]"
           style={{
             backgroundColor: "#111827",
             border: "1px solid rgba(245, 158, 11, 0.3)",
@@ -967,8 +965,7 @@ export default function FlipControls({
           }}
         >
           <p>
-            You&apos;ve played {state.sessionBetCount} rounds. Remember, this
-            is practice mode.
+            {state.sessionBetCount} rounds played — practice mode.
           </p>
           <button
             type="button"

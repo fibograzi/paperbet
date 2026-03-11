@@ -160,11 +160,11 @@ export default function PlinkoGame() {
   }, [clearResultTimeout]);
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-4 py-6">
+    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
       {/* Desktop: 3-column layout | Tablet: board + side | Mobile: stacked */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-3">
         {/* Left: Controls (desktop only — mobile shows below board) */}
-        <div className="hidden lg:block w-[300px] shrink-0">
+        <div className="hidden lg:block w-[260px] shrink-0">
           <PlinkoControls
             state={state}
             dispatch={dispatch}
@@ -178,7 +178,7 @@ export default function PlinkoGame() {
         {/* Center: Board + Slots */}
         <div className="flex-1 min-w-0">
           {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-4">
+          <div className="lg:hidden mb-2">
             <PlinkoControls
               state={state}
               dispatch={dispatch}
@@ -202,7 +202,7 @@ export default function PlinkoGame() {
               ref={boardRef}
               rows={state.config.rows}
               risk={state.config.risk}
-              slotHeight={40}
+              slotHeight={32}
             />
 
             {/* Multiplier Slots */}
@@ -218,7 +218,7 @@ export default function PlinkoGame() {
         </div>
 
         {/* Right: Sidebar */}
-        <div className="w-full lg:w-[320px] shrink-0">
+        <div className="w-full lg:w-[280px] shrink-0">
           <PlinkoSidebar
             state={state}
             onDismissNudge={() =>

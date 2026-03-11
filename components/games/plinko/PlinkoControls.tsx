@@ -157,18 +157,18 @@ export default function PlinkoControls({
   });
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Manual / Auto tab toggle */}
-      <div className="flex rounded-lg p-1" style={{ backgroundColor: "#1F2937" }}>
+      <div className="flex rounded-md p-0.5" style={{ backgroundColor: "#1F2937" }}>
         {(["manual", "auto"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => !autoPlay.active && setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-center text-sm font-heading font-semibold transition-colors duration-150"
+            className="flex-1 py-1.5 rounded text-center text-xs font-heading font-semibold transition-colors duration-150"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -179,20 +179,20 @@ export default function PlinkoControls({
         ))}
       </div>
 
-      {/* Bet Amount */}
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-xs text-pb-text-muted mb-2 block">
+      {/* Bet Amount + Config */}
+      <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-3">
+        <label className="text-[10px] text-pb-text-muted mb-1 block uppercase tracking-wider">
           Bet Amount
         </label>
         <div
-          className="flex items-center rounded-lg overflow-hidden"
+          className="flex items-center rounded-md overflow-hidden"
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats text-pb-text-muted shrink-0" style={{ fontSize: 18 }}>$</span>
+            <span className="font-mono-stats text-pb-text-muted shrink-0 text-sm">$</span>
             <input
               suppressHydrationWarning
               ref={inputRef}
@@ -204,8 +204,8 @@ export default function PlinkoControls({
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
               disabled={autoPlay.active}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB", opacity: autoPlay.active ? 0.5 : 1 }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB", opacity: autoPlay.active ? 0.5 : 1 }}
               aria-label="Bet amount"
             />
           </div>
@@ -215,64 +215,64 @@ export default function PlinkoControls({
               type="button"
               disabled={autoPlay.active}
               onClick={() => setBetQuick("half")}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
             </button>
-            <div className="w-px h-4 shrink-0" style={{ backgroundColor: "#374151" }} />
+            <div className="w-px h-3.5 shrink-0" style={{ backgroundColor: "#374151" }} />
             <button
               type="button"
               disabled={autoPlay.active}
               onClick={() => setBetQuick("double")}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Difficulty (Risk) dropdown */}
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-xs text-pb-text-muted mb-2 block">Difficulty</label>
-        <select
-          value={config.risk}
-          onChange={(e) => dispatch({ type: "SET_RISK", risk: e.target.value as RiskLevel })}
-          disabled={configLocked}
-          className="w-full rounded-lg py-2.5 px-3 text-sm font-heading font-semibold capitalize appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={selectStyle}
-          aria-label="Difficulty level"
-        >
-          {RISK_LEVELS.map((level) => (
-            <option key={level} value={level}>
-              {level.charAt(0).toUpperCase() + level.slice(1)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Rows dropdown */}
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-xs text-pb-text-muted mb-2 block">Rows</label>
-        <select
-          value={config.rows}
-          onChange={(e) => {
-            const v = parseInt(e.target.value) as PlinkoRows;
-            dispatch({ type: "SET_ROWS", rows: v });
-          }}
-          disabled={configLocked}
-          className="w-full rounded-lg py-2.5 px-3 text-sm font-mono-stats appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={selectStyle}
-          aria-label="Number of rows"
-        >
-          {ROW_RANGE.map((rows) => (
-            <option key={rows} value={rows}>
-              {rows}
-            </option>
-          ))}
-        </select>
+        {/* Difficulty + Rows — side by side */}
+        <div className="flex gap-2 mt-2.5">
+          <div className="flex-1">
+            <label className="text-[10px] text-pb-text-muted mb-1 block uppercase tracking-wider">Difficulty</label>
+            <select
+              value={config.risk}
+              onChange={(e) => dispatch({ type: "SET_RISK", risk: e.target.value as RiskLevel })}
+              disabled={configLocked}
+              className="w-full rounded-md py-1.5 px-2.5 text-xs font-heading font-semibold capitalize appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={selectStyle}
+              aria-label="Difficulty level"
+            >
+              {RISK_LEVELS.map((level) => (
+                <option key={level} value={level}>
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-[80px] shrink-0">
+            <label className="text-[10px] text-pb-text-muted mb-1 block uppercase tracking-wider">Rows</label>
+            <select
+              value={config.rows}
+              onChange={(e) => {
+                const v = parseInt(e.target.value) as PlinkoRows;
+                dispatch({ type: "SET_ROWS", rows: v });
+              }}
+              disabled={configLocked}
+              className="w-full rounded-md py-1.5 px-2.5 text-xs font-mono-stats appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={selectStyle}
+              aria-label="Number of rows"
+            >
+              {ROW_RANGE.map((rows) => (
+                <option key={rows} value={rows}>
+                  {rows}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Manual tab content */}
@@ -282,7 +282,7 @@ export default function PlinkoControls({
             <button
               type="button"
               onClick={onStopAutoPlay}
-              className="w-full h-12 rounded-[10px] bg-pb-danger text-white font-heading font-bold text-base transition-all hover:brightness-110 active:scale-[0.98]"
+              className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98]"
             >
               Stop ({autoPlay.currentCount}
               {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
@@ -292,16 +292,16 @@ export default function PlinkoControls({
               type="button"
               onClick={onDrop}
               disabled={!canDrop}
-              className="w-full h-12 rounded-[10px] bg-pb-accent text-pb-bg-primary font-heading font-bold text-base transition-all hover:shadow-[0_0_30px_rgba(0,229,160,0.3)] hover:brightness-105 active:scale-[0.98] disabled:bg-pb-border disabled:text-pb-text-muted disabled:cursor-not-allowed disabled:shadow-none"
+              className="w-full h-9 rounded-lg bg-pb-accent text-pb-bg-primary font-heading font-bold text-sm transition-all hover:shadow-[0_0_24px_rgba(0,229,160,0.3)] hover:brightness-105 active:scale-[0.98] disabled:bg-pb-border disabled:text-pb-text-muted disabled:cursor-not-allowed disabled:shadow-none"
               style={{
-                boxShadow: canDrop ? "0 0 20px rgba(0, 229, 160, 0.2)" : "none",
+                boxShadow: canDrop ? "0 0 16px rgba(0, 229, 160, 0.2)" : "none",
               }}
             >
               Bet
             </button>
           )}
-          <div className="text-center text-xs text-pb-text-muted">
-            Press <kbd className="px-1.5 py-0.5 rounded bg-pb-bg-tertiary border border-pb-border font-mono-stats text-[10px]">Space</kbd> to drop
+          <div className="text-center text-[10px] text-pb-text-muted">
+            Press <kbd className="px-1 py-px rounded bg-pb-bg-tertiary border border-pb-border font-mono-stats text-[9px]">Space</kbd> to drop
           </div>
         </>
       )}
@@ -310,11 +310,11 @@ export default function PlinkoControls({
       {activeTab === "auto" && (
         <>
           {!autoPlay.active && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {/* Number of Bets */}
-              <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-                <div className="text-xs text-pb-text-muted mb-1.5">Number of Bets</div>
-                <div className="flex gap-2">
+              <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+                <div className="text-[10px] text-pb-text-muted mb-1 uppercase tracking-wider">Number of Bets</div>
+                <div className="flex gap-1.5">
                   <div className="flex-1 relative">
                     <input suppressHydrationWarning
                       type="number"
@@ -334,13 +334,13 @@ export default function PlinkoControls({
                           setAutoCountInput(String(Math.min(500, Math.max(1, parsed))));
                         }
                       }}
-                      className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 px-3 text-sm font-mono-stats text-pb-text-primary placeholder:text-pb-text-muted/50 focus:outline-none focus:ring-1 focus:ring-pb-accent/50 disabled:opacity-50"
+                      className="w-full bg-pb-bg-tertiary border border-pb-border rounded-md py-1.5 px-2.5 text-xs font-mono-stats text-pb-text-primary placeholder:text-pb-text-muted/50 focus:outline-none focus:ring-1 focus:ring-pb-accent/50 disabled:opacity-50"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsInfinite(!isInfinite)}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-mono-stats shrink-0 transition-colors"
+                    className="w-8 h-8 rounded-md flex items-center justify-center text-base font-mono-stats shrink-0 transition-colors"
                     style={toggleBtnStyle(isInfinite)}
                     aria-label="Toggle infinite bets"
                   >
@@ -350,24 +350,24 @@ export default function PlinkoControls({
               </div>
 
               {/* Advanced collapsible */}
-              <div className="bg-pb-bg-secondary border border-pb-border rounded-xl">
+              <div className="bg-pb-bg-secondary border border-pb-border rounded-lg">
                 <button
                   type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center justify-between w-full p-4 text-left"
+                  className="flex items-center justify-between w-full px-2.5 py-2 text-left"
                 >
-                  <span className="text-sm font-heading font-semibold text-pb-text-secondary">
+                  <span className="text-xs font-heading font-semibold text-pb-text-secondary">
                     Advanced
                   </span>
                   <ChevronDown
-                    size={16}
+                    size={14}
                     className="text-pb-text-muted transition-transform duration-200"
                     style={{ transform: showAdvanced ? "rotate(180deg)" : "rotate(0deg)" }}
                   />
                 </button>
 
                 {showAdvanced && (
-                  <div className="px-4 pb-4 space-y-3">
+                  <div className="px-2.5 pb-2.5 space-y-2">
                     {/* On Win */}
                     <div>
                       <div className="text-xs text-pb-text-muted mb-1.5">On Win</div>
@@ -529,7 +529,7 @@ export default function PlinkoControls({
             <button
               type="button"
               onClick={onStopAutoPlay}
-              className="w-full h-12 rounded-[10px] bg-pb-danger text-white font-heading font-bold text-base transition-all hover:brightness-110 active:scale-[0.98]"
+              className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98]"
             >
               Stop ({autoPlay.currentCount}
               {autoPlay.totalCount ? ` / ${autoPlay.totalCount}` : ""})
@@ -539,7 +539,7 @@ export default function PlinkoControls({
               type="button"
               onClick={handleAutoPlayStart}
               disabled={!canDrop}
-              className="w-full h-12 rounded-[10px] bg-pb-accent/15 text-pb-accent font-heading font-bold text-base border border-pb-accent/30 hover:bg-pb-accent/25 transition-colors disabled:opacity-40"
+              className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm border border-pb-accent/30 hover:bg-pb-accent/25 transition-colors disabled:opacity-40"
             >
               Start Autobet
             </button>
@@ -549,15 +549,14 @@ export default function PlinkoControls({
 
       {/* Session Reminder */}
       {state.showSessionReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-xl p-3 text-xs text-pb-text-secondary">
+        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-2.5 py-1.5 text-[10px] text-pb-text-secondary">
           <p>
-            You&apos;ve played {state.sessionBetCount} rounds. Remember, this is
-            practice mode.
+            {state.sessionBetCount} rounds played — practice mode.
           </p>
           <button
             type="button"
             onClick={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-            className="text-pb-warning text-xs mt-1 hover:underline"
+            className="text-pb-warning text-[10px] mt-0.5 hover:underline"
           >
             Dismiss
           </button>

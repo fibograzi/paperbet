@@ -12,6 +12,7 @@ const footerLinks = {
     { label: "Limbo Simulator", href: "/limbo" },
     { label: "Keno Simulator", href: "/keno" },
     { label: "Flip Simulator", href: "/flip" },
+    { label: "Roulette Lab", href: "/roulette" },
   ],
   learn: [
     { label: "Plinko Strategy Guide", href: "/blog/plinko-strategy-guide" },

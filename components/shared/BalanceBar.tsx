@@ -11,18 +11,18 @@ interface BalanceBarProps {
 export default function BalanceBar({ balance, onReset }: BalanceBarProps) {
   return (
     <div
-      className="flex items-center justify-between rounded-xl px-4 py-2.5"
+      className="flex items-center justify-between rounded-lg px-3 py-1.5"
       style={{ backgroundColor: "#111827", border: "1px solid #374151" }}
     >
-      <div>
+      <div className="flex items-center gap-2">
         <span
-          className="font-body text-[10px] uppercase tracking-wider block"
+          className="font-body text-[10px] uppercase tracking-wider"
           style={{ color: "#6B7280" }}
         >
           Balance
         </span>
         <span
-          className="font-mono-stats text-lg font-bold"
+          className="font-mono-stats text-sm font-bold"
           style={{ color: "#F9FAFB" }}
         >
           {formatCurrency(balance)}

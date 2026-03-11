@@ -189,19 +189,19 @@ export default function CrashControls({
 
   function renderBetAmount() {
     return (
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-xs text-pb-text-muted mb-2 block">
+      <div>
+        <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
           Bet Amount
         </label>
         <div
-          className="flex items-center rounded-lg overflow-hidden"
+          className="flex items-center rounded-md overflow-hidden"
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats text-pb-text-muted shrink-0" style={{ fontSize: 18 }}>$</span>
+            <span className="font-mono-stats text-pb-text-muted shrink-0 text-sm">$</span>
             <input
               suppressHydrationWarning
               ref={inputRef}
@@ -213,8 +213,8 @@ export default function CrashControls({
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
               disabled={autoPlay.active || controlsDisabled}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB", opacity: (autoPlay.active || controlsDisabled) ? 0.5 : 1 }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB", opacity: (autoPlay.active || controlsDisabled) ? 0.5 : 1 }}
               aria-label="Bet amount"
             />
           </div>
@@ -224,7 +224,7 @@ export default function CrashControls({
               type="button"
               disabled={autoPlay.active || controlsDisabled}
               onClick={() => setBetQuick("half")}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
@@ -234,7 +234,7 @@ export default function CrashControls({
               type="button"
               disabled={autoPlay.active || controlsDisabled}
               onClick={() => setBetQuick("double")}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
@@ -247,8 +247,8 @@ export default function CrashControls({
 
   function renderCashoutAt() {
     return (
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-        <label className="text-xs text-pb-text-muted mb-2 block">
+      <div className="mt-2.5">
+        <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
           Cashout At
         </label>
         <div className="relative">
@@ -258,7 +258,7 @@ export default function CrashControls({
             value={(config.autoCashout ?? 2.0).toFixed(2)}
             onChange={handleCashoutInput}
             disabled={autoPlay.active || controlsDisabled}
-            className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 pl-3 pr-14 text-right font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
+            className="w-full bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md text-right font-mono-stats text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 pr-14"
             aria-label="Cashout multiplier"
           />
           {/* Stepper arrows */}
@@ -282,7 +282,7 @@ export default function CrashControls({
               <ChevronDown size={14} />
             </button>
           </div>
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-sm">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">
             x
           </span>
         </div>
@@ -292,13 +292,11 @@ export default function CrashControls({
 
   function renderProfitOnWin() {
     return (
-      <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-pb-text-muted">Profit on Win</span>
-          <span className="font-mono-stats text-sm text-pb-accent">
-            {formatCurrency(profitOnWin)}
-          </span>
-        </div>
+      <div className="mt-2.5 flex items-center justify-between">
+        <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">Profit on Win</span>
+        <span className="font-mono-stats text-xs text-pb-accent">
+          {formatCurrency(profitOnWin)}
+        </span>
       </div>
     );
   }
@@ -308,13 +306,13 @@ export default function CrashControls({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Tab toggle */}
       <div
-        className="flex rounded-lg p-1"
+        className="flex rounded-md p-0.5"
         style={{ backgroundColor: "#1F2937" }}
       >
         {(["manual", "auto"] as const).map((tab) => (
@@ -322,7 +320,7 @@ export default function CrashControls({
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-center font-body text-sm font-semibold transition-all"
+            className="flex-1 py-1.5 rounded-md text-center font-body text-xs font-semibold transition-all"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -333,11 +331,12 @@ export default function CrashControls({
         ))}
       </div>
 
-      {/* Shared: Bet Amount */}
-      {renderBetAmount()}
-
-      {/* Shared: Cashout At */}
-      {renderCashoutAt()}
+      {/* Merged: Bet Amount + Cashout At + Profit on Win */}
+      <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-3">
+        {renderBetAmount()}
+        {renderCashoutAt()}
+        {renderProfitOnWin()}
+      </div>
 
       {/* ================================================================= */}
       {/* MANUAL TAB                                                        */}
@@ -346,9 +345,6 @@ export default function CrashControls({
         <>
           {/* Action Button */}
           {renderActionButton()}
-
-          {/* Profit on Win */}
-          {renderProfitOnWin()}
         </>
       )}
 
@@ -358,8 +354,8 @@ export default function CrashControls({
       {activeTab === "auto" && (
         <>
           {/* Number of Bets */}
-          <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
-            <label className="text-xs text-pb-text-muted mb-2 block">
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <label className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1 block">
               Number of Bets
             </label>
             <div className="flex items-center gap-2">
@@ -378,7 +374,7 @@ export default function CrashControls({
                   }}
                   disabled={autoCount === null || autoPlay.active}
                   placeholder={autoCount === null ? "\u221E" : ""}
-                  className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-2 pl-3 pr-3 text-right font-mono-stats text-lg text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
+                  className="w-full bg-pb-bg-tertiary border border-pb-border py-1.5 px-2.5 text-xs rounded-md text-right font-mono-stats text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
                   aria-label="Number of bets"
                 />
               </div>
@@ -387,7 +383,7 @@ export default function CrashControls({
                 onClick={() => setAutoCount(autoCount === null ? 10 : null)}
                 disabled={autoPlay.active}
                 className={cn(
-                  "w-10 h-10 rounded-lg border flex items-center justify-center font-mono-stats text-lg transition-colors disabled:opacity-40",
+                  "w-8 h-8 rounded-md border flex items-center justify-center font-mono-stats text-lg transition-colors disabled:opacity-40",
                   autoCount === null
                     ? "bg-pb-accent/15 text-pb-accent border-pb-accent/30"
                     : "bg-pb-bg-tertiary text-pb-text-secondary border-pb-border hover:bg-pb-border hover:text-pb-text-primary"
@@ -399,18 +395,15 @@ export default function CrashControls({
             </div>
           </div>
 
-          {/* Profit on Win */}
-          {renderProfitOnWin()}
-
           {/* Advanced toggle */}
           {!autoPlay.active && (
-            <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4">
+            <div className="bg-pb-bg-secondary border border-pb-border rounded-lg">
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-2 w-full text-left"
+                className="flex items-center gap-2 w-full text-left px-2.5 py-2"
               >
-                <span className="text-sm font-heading font-semibold text-pb-text-secondary">
+                <span className="text-xs font-heading font-semibold text-pb-text-secondary">
                   Advanced
                 </span>
                 <ChevronDown
@@ -423,7 +416,7 @@ export default function CrashControls({
               </button>
 
               {showAdvanced && (
-                <div className="mt-3 space-y-3">
+                <div className="px-2.5 pb-2.5 space-y-2">
                   {/* On Win */}
                   <div>
                     <div className="text-xs text-pb-text-muted mb-1.5">On Win</div>
@@ -636,7 +629,7 @@ export default function CrashControls({
           {autoPlay.active && (
             <>
               {/* Strategy Summary */}
-              <div className="bg-pb-bg-secondary border border-pb-border rounded-xl p-4 space-y-1.5">
+              <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5 space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="text-pb-text-muted">Cashout</span>
                   <span className="text-pb-text-primary font-mono-stats">
@@ -692,7 +685,7 @@ export default function CrashControls({
               </div>
 
               {/* Live P/L */}
-              <div className="flex justify-between items-center bg-pb-bg-secondary border border-pb-border rounded-xl px-4 py-3">
+              <div className="flex justify-between items-center bg-pb-bg-secondary border border-pb-border rounded-lg px-2.5 py-2">
                 <span className="text-xs text-pb-text-muted">Session P/L</span>
                 <span
                   className={cn(
@@ -724,15 +717,14 @@ export default function CrashControls({
 
       {/* Session Reminder */}
       {state.showSessionReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-xl p-3 text-xs text-pb-text-secondary">
+        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-2.5 py-1.5 text-[10px] text-pb-text-secondary">
           <p>
-            You&apos;ve played {state.sessionRoundCount} rounds. Remember, this is
-            practice mode.
+            {state.sessionRoundCount} rounds — practice mode.
           </p>
           <button
             type="button"
             onClick={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-            className="text-pb-warning text-xs mt-1 hover:underline"
+            className="text-pb-warning text-[10px] mt-1 hover:underline"
           >
             Dismiss
           </button>
@@ -765,7 +757,7 @@ export default function CrashControls({
           key="auto-playing"
           type="button"
           disabled
-          className="w-full h-[52px] rounded-[10px] bg-pb-accent/15 text-pb-accent font-heading font-bold text-base cursor-default border border-pb-accent/30"
+          className="w-full h-9 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-bold text-sm cursor-default border border-pb-accent/30"
         >
           <span className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-full bg-pb-accent animate-pulse" />
@@ -784,7 +776,7 @@ export default function CrashControls({
           type="button"
           onClick={onPlaceBet}
           disabled={!canBet}
-          className="w-full h-[52px] rounded-[10px] font-heading font-bold text-base hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed"
+          className="w-full h-9 rounded-lg font-heading font-bold text-sm hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed"
           style={{
             backgroundColor: canBet ? "#00E5A0" : "#374151",
             color: canBet ? "#0B0F1A" : "#6B7280",
@@ -805,7 +797,7 @@ export default function CrashControls({
           key="cancel-bet"
           type="button"
           onClick={onCancelBet}
-          className="w-full h-[52px] rounded-[10px] bg-pb-danger text-white font-heading font-bold text-base hover:brightness-110 active:scale-[0.98]"
+          className="w-full h-9 rounded-lg bg-pb-danger text-white font-heading font-bold text-sm hover:brightness-110 active:scale-[0.98]"
         >
           Cancel Bet
         </button>
@@ -821,7 +813,7 @@ export default function CrashControls({
           onClick={onCashOut}
           animate={{ scale: [1, 1.02, 1] }}
           transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-          className="w-full h-[52px] rounded-[10px] font-heading font-bold text-base text-pb-bg-primary hover:brightness-110 active:scale-[0.98]"
+          className="w-full h-9 rounded-lg font-heading font-bold text-sm text-pb-bg-primary hover:brightness-110 active:scale-[0.98]"
           style={{
             backgroundColor: "#F59E0B",
             boxShadow: "0 0 20px rgba(245, 158, 11, 0.3)",
@@ -842,7 +834,7 @@ export default function CrashControls({
           key="watching"
           type="button"
           disabled
-          className="w-full h-[52px] rounded-[10px] bg-pb-border text-pb-text-muted font-heading font-bold text-base cursor-not-allowed"
+          className="w-full h-9 rounded-lg bg-pb-border text-pb-text-muted font-heading font-bold text-sm cursor-not-allowed"
         >
           Watching...
         </button>
@@ -856,7 +848,7 @@ export default function CrashControls({
           key="cashed-out"
           type="button"
           disabled
-          className="w-full h-[52px] rounded-[10px] bg-pb-accent text-pb-bg-primary font-heading font-bold text-base cursor-not-allowed opacity-80"
+          className="w-full h-9 rounded-lg bg-pb-accent text-pb-bg-primary font-heading font-bold text-sm cursor-not-allowed opacity-80"
         >
           Cashed Out @ {formatCrashMultiplier(cashoutMultiplier)}!
         </button>
@@ -869,7 +861,7 @@ export default function CrashControls({
         key="next-round"
         type="button"
         disabled
-        className="w-full h-[52px] rounded-[10px] bg-pb-border text-pb-text-muted font-heading font-bold text-base cursor-not-allowed"
+        className="w-full h-9 rounded-lg bg-pb-border text-pb-text-muted font-heading font-bold text-sm cursor-not-allowed"
       >
         Next round in...
       </button>

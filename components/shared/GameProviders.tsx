@@ -26,8 +26,8 @@ export default function GameProviders({ gameId, gameName }: GameProvidersProps) 
 
   return (
     <div>
-      <h3 className="text-xs font-heading font-semibold text-pb-text-muted uppercase tracking-wide mb-2">
-        Casinos that Offer {gameName}
+      <h3 className="text-[10px] font-heading font-semibold text-pb-text-muted uppercase tracking-wider mb-1">
+        Casinos with {gameName}
       </h3>
       <div
         className="rounded-xl overflow-hidden"
@@ -39,7 +39,7 @@ export default function GameProviders({ gameId, gameName }: GameProvidersProps) 
             href={casino.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className="flex items-center justify-between px-3 py-2.5 transition-colors"
+            className="flex items-center justify-between px-2.5 py-1.5 transition-colors"
             style={{
               borderTop: i > 0 ? "1px solid #1F2937" : undefined,
               backgroundColor: "transparent",

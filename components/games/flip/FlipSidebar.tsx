@@ -64,7 +64,7 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Session Stats */}
       <SessionStats
         totalBets={stats.totalBets}
@@ -77,32 +77,25 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
       <GameProviders gameId="flip" gameName="Coin Flip" />
 
       {/* Spin the Deal Wheel CTA */}
-      <div
-        className="bg-pb-bg-secondary border rounded-xl p-4 text-center"
+      <a
+        href="/deals"
+        className="flex items-center gap-2.5 bg-pb-bg-secondary border rounded-lg px-3 py-2 hover:border-pb-accent/60 transition-colors"
         style={{
-          borderColor: "#00E5A0",
-          borderWidth: sessionBetCount >= 10 ? "2px" : "1px",
-          boxShadow:
-            sessionBetCount >= 10
-              ? "0 0 16px rgba(0, 229, 160, 0.15)"
-              : "none",
+          borderColor: sessionBetCount >= 10 ? "rgba(0, 229, 160, 0.4)" : "#374151",
+          boxShadow: sessionBetCount >= 10 ? "0 0 12px rgba(0, 229, 160, 0.1)" : "none",
         }}
       >
-        <div className="text-2xl mb-2">&#127905;</div>
-        <p className="font-heading font-semibold text-pb-text-primary text-sm">
-          Spin the Deal Wheel
-        </p>
-        <p className="text-xs text-pb-text-muted mt-1">
-          Discover featured coin flip bonuses
-        </p>
-        <a
-          href="/deals"
-          className="inline-block mt-3 text-sm font-semibold hover:underline"
-          style={{ color: "#00E5A0" }}
-        >
-          Spin Now &rarr;
-        </a>
-      </div>
+        <span className="text-lg shrink-0">&#127905;</span>
+        <div className="flex-1 min-w-0">
+          <span className="font-heading font-semibold text-pb-text-primary text-xs">
+            Spin the Deal Wheel
+          </span>
+          <span className="text-[10px] text-pb-text-muted ml-1.5">
+            Coin Flip bonuses
+          </span>
+        </div>
+        <span className="text-xs text-pb-accent font-semibold shrink-0">&rarr;</span>
+      </a>
 
 
       {/* Streak-Based Nudge */}
@@ -130,7 +123,7 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
       {/* Flip Bet History */}
       {history.length > 0 && (
         <div>
-          <h3 className="text-sm font-heading font-semibold text-pb-text-secondary mb-2">
+          <h3 className="text-[10px] font-heading font-semibold text-pb-text-muted uppercase tracking-wider mb-1">
             Bet History
           </h3>
           <div className="max-h-[300px] overflow-y-auto rounded-lg border border-pb-border">
@@ -271,26 +264,26 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
       <AnimatePresence>
         {showPostSessionNudge && (
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 20, opacity: 0 }}
-            className="bg-pb-bg-secondary border border-pb-accent/30 rounded-xl p-4"
+            exit={{ y: 12, opacity: 0 }}
+            className="bg-pb-bg-secondary border border-pb-accent/30 rounded-lg px-3 py-2"
           >
-            <p className="text-sm text-pb-text-secondary">
+            <p className="text-xs text-pb-text-secondary">
               Ready to play for real? Spin the Deal Wheel to discover featured
               bonuses at top crypto casinos.
             </p>
             <div className="flex items-center gap-3 mt-3">
               <a
                 href="/deals"
-                className="text-sm font-semibold text-pb-accent hover:underline"
+                className="text-xs font-semibold text-pb-accent hover:underline"
               >
                 Spin the Wheel &rarr;
               </a>
               <button
                 type="button"
                 onClick={onDismissNudge}
-                className="text-xs text-pb-text-muted hover:text-pb-text-secondary"
+                className="text-[10px] text-pb-text-muted hover:text-pb-text-secondary"
               >
                 Dismiss
               </button>
@@ -301,10 +294,9 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
 
       {/* Session Time Reminder */}
       {showTimeReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-xl p-3">
-          <p className="text-xs text-pb-text-secondary">
-            You&apos;ve been playing for 30+ minutes. Remember to take breaks
-            and play responsibly.
+        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-3 py-1.5">
+          <p className="text-[10px] text-pb-text-secondary">
+            30+ min session — take a break.
           </p>
           <button
             type="button"
@@ -317,7 +309,7 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
       )}
 
       {/* Disclaimer */}
-      <p className="text-xs text-pb-text-muted leading-relaxed">
+      <p className="text-[10px] text-pb-text-muted leading-relaxed">
         {SITE.disclaimer}
       </p>
     </div>

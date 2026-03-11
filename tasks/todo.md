@@ -168,3 +168,36 @@
 - [x] Phase 5 — Deal Wheel + Email Capture
 - [x] Phase 6 — Blog System + 3 SEO Articles
 - [x] Phase 7 — Final Polish, SEO, Mobile & Performance
+
+---
+
+# Roulette Lab Implementation
+
+## Phase 1: Engine Foundation
+- [ ] `lib/roulette/rouletteTypes.ts`
+- [ ] `lib/roulette/rouletteEngine.ts`
+- [ ] `lib/roulette/rouletteBets.ts`
+- [ ] `lib/roulette/strategyTypes.ts`
+- [ ] `lib/roulette/strategyEngine.ts`
+- [ ] `lib/roulette/oddsCalculator.ts`
+- [ ] `lib/roulette/simulationTypes.ts`
+- [ ] `lib/roulette/simulationEngine.ts`
+- [ ] `lib/roulette/riskOfRuinEngine.ts`
+- [ ] Tests + install recharts
+
+## Phase 2: Calculators
+- [ ] Odds Calculator page
+- [ ] Risk of Ruin page
+
+## Phase 3: Strategy Tester + Simulators
+- [ ] Web Worker + Strategy Tester
+- [ ] Martingale + Fibonacci simulators
+
+## Phase 4: Free Play Roulette
+- [ ] Full interactive roulette table
+
+## Phase 5: Hub + Content Pages
+- [ ] Hub, Learn, Disclaimer pages
+
+## Phase 6: Integration
+- [ ] Constants, Header, Footer, Sitemap, Blog updates

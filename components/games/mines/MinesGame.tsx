@@ -74,16 +74,16 @@ export default function MinesGame() {
   }, [state.phase, state.gameOverReason, state.profit, state.currentMultiplier, state.dangerPercent, state.revealingTile, state.gemsRevealed]);
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-4 py-6">
+    <div className="w-full max-w-[1280px] mx-auto px-3 py-3">
       {/* Aria live region for screen readers */}
       <div aria-live="assertive" className="sr-only">
         {ariaLiveText}
       </div>
 
       {/* Desktop: 3-column | Tablet: chart + side | Mobile: stacked */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-3">
         {/* Left: Controls (desktop only — mobile shows below game) */}
-        <div className="hidden lg:block w-[300px] shrink-0">
+        <div className="hidden lg:block w-[260px] shrink-0">
           <MinesControls
             state={state}
             dispatch={dispatch}
@@ -99,7 +99,7 @@ export default function MinesGame() {
         {/* Center: Multiplier Bar + Danger Meter + Board */}
         <div className="flex-1 min-w-0">
           {/* Mobile/Tablet: Controls above game area */}
-          <div className="lg:hidden mb-4">
+          <div className="lg:hidden mb-2">
             <MinesControls
               state={state}
               dispatch={dispatch}
@@ -146,7 +146,7 @@ export default function MinesGame() {
         </div>
 
         {/* Right: Sidebar */}
-        <div className="w-full lg:w-[320px] shrink-0">
+        <div className="w-full lg:w-[280px] shrink-0">
           <MinesSidebar
             state={state}
             onDismissNudge={() =>

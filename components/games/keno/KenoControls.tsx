@@ -201,18 +201,18 @@ export default function KenoControls({
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Manual / Auto toggle */}
-      <div className="rounded-lg p-1 flex" style={{ backgroundColor: "#1F2937" }}>
+      <div className="rounded-md p-0.5 flex" style={{ backgroundColor: "#1F2937" }}>
         {(["manual", "auto"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => !isAutoRunning && setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-center text-sm font-semibold transition-colors duration-150"
+            className="flex-1 py-1.5 rounded-md text-center text-xs font-semibold transition-colors duration-150"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -223,20 +223,20 @@ export default function KenoControls({
         ))}
       </div>
 
-      {/* Bet Amount */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-        <label className="font-body text-sm block mb-2" style={{ color: "#9CA3AF" }}>
+      {/* Bet Amount + Difficulty (merged card) */}
+      <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+        <label className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>
           Bet Amount
         </label>
         <div
-          className="flex items-center rounded-lg overflow-hidden"
+          className="flex items-center rounded-md overflow-hidden"
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <span className="font-mono-stats shrink-0 text-sm" style={{ color: "#6B7280" }}>$</span>
             <input
               suppressHydrationWarning
               type="text"
@@ -246,8 +246,8 @@ export default function KenoControls({
               onFocus={betInput.onFocus}
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB" }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB" }}
               disabled={!isIdle && !isAutoRunning}
               aria-label="Bet amount"
             />
@@ -258,7 +258,7 @@ export default function KenoControls({
               type="button"
               onClick={() => dispatch({ type: "SET_BET_AMOUNT", amount: betAmount / 2 })}
               disabled={!isIdle && !isAutoRunning}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
@@ -268,71 +268,71 @@ export default function KenoControls({
               type="button"
               onClick={() => dispatch({ type: "SET_BET_AMOUNT", amount: betAmount * 2 })}
               disabled={!isIdle && !isAutoRunning}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Difficulty dropdown */}
-      <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-        <label className="font-body text-sm block mb-2" style={{ color: "#9CA3AF" }}>
-          Difficulty
-        </label>
-        <div className="relative" ref={diffDropdownRef}>
-          <button
-            type="button"
-            onClick={() => isIdle && setDifficultyDropdownOpen(!difficultyDropdownOpen)}
-            disabled={!isIdle}
-            className="w-full flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors"
-            style={{
-              backgroundColor: "#1F2937",
-              border: `1px solid ${difficultyDropdownOpen ? DIFFICULTY_COLORS[difficulty] : "#374151"}`,
-              cursor: isIdle ? "pointer" : "not-allowed",
-            }}
-          >
-            <span className="font-body text-sm font-semibold" style={{ color: DIFFICULTY_COLORS[difficulty] }}>
-              {DIFFICULTY_LABELS[difficulty]}
-            </span>
-            <ChevronDown
-              size={14}
+        {/* Difficulty dropdown */}
+        <div className="mt-2.5">
+          <label className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>
+            Difficulty
+          </label>
+          <div className="relative" ref={diffDropdownRef}>
+            <button
+              type="button"
+              onClick={() => isIdle && setDifficultyDropdownOpen(!difficultyDropdownOpen)}
+              disabled={!isIdle}
+              className="w-full flex items-center justify-between rounded-md py-1.5 px-2.5 text-xs transition-colors"
               style={{
-                color: "#6B7280",
-                transform: difficultyDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 200ms",
+                backgroundColor: "#1F2937",
+                border: `1px solid ${difficultyDropdownOpen ? DIFFICULTY_COLORS[difficulty] : "#374151"}`,
+                cursor: isIdle ? "pointer" : "not-allowed",
               }}
-            />
-          </button>
-
-          {difficultyDropdownOpen && (
-            <div
-              className="absolute left-0 right-0 mt-1 rounded-lg py-1 z-50"
-              style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
             >
-              {DIFFICULTIES.map((diff) => (
-                <button
-                  key={diff}
-                  type="button"
-                  onClick={() => {
-                    dispatch({ type: "SET_DIFFICULTY", difficulty: diff });
-                    setDifficultyDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm font-body font-semibold transition-colors"
-                  style={{
-                    color: DIFFICULTY_COLORS[diff],
-                    backgroundColor: difficulty === diff ? `${DIFFICULTY_COLORS[diff]}15` : "transparent",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${DIFFICULTY_COLORS[diff]}26`)}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = difficulty === diff ? `${DIFFICULTY_COLORS[diff]}15` : "transparent")}
-                >
-                  {DIFFICULTY_LABELS[diff]}
-                </button>
-              ))}
-            </div>
-          )}
+              <span className="font-body text-xs font-semibold" style={{ color: DIFFICULTY_COLORS[difficulty] }}>
+                {DIFFICULTY_LABELS[difficulty]}
+              </span>
+              <ChevronDown
+                size={14}
+                style={{
+                  color: "#6B7280",
+                  transform: difficultyDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 200ms",
+                }}
+              />
+            </button>
+
+            {difficultyDropdownOpen && (
+              <div
+                className="absolute left-0 right-0 mt-1 rounded-md py-1 z-50"
+                style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
+              >
+                {DIFFICULTIES.map((diff) => (
+                  <button
+                    key={diff}
+                    type="button"
+                    onClick={() => {
+                      dispatch({ type: "SET_DIFFICULTY", difficulty: diff });
+                      setDifficultyDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 text-xs font-body font-semibold transition-colors"
+                    style={{
+                      color: DIFFICULTY_COLORS[diff],
+                      backgroundColor: difficulty === diff ? `${DIFFICULTY_COLORS[diff]}15` : "transparent",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${DIFFICULTY_COLORS[diff]}26`)}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = difficulty === diff ? `${DIFFICULTY_COLORS[diff]}15` : "transparent")}
+                  >
+                    {DIFFICULTY_LABELS[diff]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -346,7 +346,7 @@ export default function KenoControls({
             type="button"
             onClick={onBet}
             disabled={betButtonDisabled}
-            className="w-full py-3 rounded-[10px] font-body text-base font-bold transition-all"
+            className="w-full h-9 rounded-lg font-body text-sm font-bold transition-all"
             style={{
               backgroundColor: betButtonDisabled ? "#374151" : "#00E5A0",
               color: betButtonDisabled ? "#6B7280" : "#0B0F1A",
@@ -373,7 +373,7 @@ export default function KenoControls({
               <motion.button
                 type="button"
                 onClick={onStopAutoPlay}
-                className="w-full py-3 rounded-[10px] font-body text-base font-bold"
+                className="w-full h-9 rounded-lg font-body text-sm font-bold"
                 style={{ backgroundColor: "#EF4444", color: "#FFFFFF" }}
                 whileHover={{ backgroundColor: "#DC2626" }}
                 whileTap={{ scale: 0.98 }}
@@ -409,13 +409,13 @@ export default function KenoControls({
           ) : (
             <>
               {/* Number of Bets — input + ∞ toggle */}
-              <div className="rounded-xl p-4" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-                <label className="font-body text-sm block mb-2" style={{ color: "#9CA3AF" }}>
+              <div className="rounded-lg p-2.5" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+                <label className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>
                   Number of Bets
                 </label>
                 <div className="flex items-center gap-2">
                   <div
-                    className="flex-1 rounded-lg px-3 py-2 flex items-center"
+                    className="flex-1 rounded-md py-1.5 px-2.5 flex items-center"
                     style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
                   >
                     <input suppressHydrationWarning
@@ -429,14 +429,14 @@ export default function KenoControls({
                         setAutoNumberOfBets(Math.min(Math.max(1, v), AUTO_PLAY_MAX_CONSECUTIVE));
                       }}
                       disabled={autoInfinityToggle}
-                      className="w-full bg-transparent font-mono-stats text-lg text-right outline-none placeholder:text-[#6B7280]"
+                      className="w-full bg-transparent font-mono-stats text-xs text-right outline-none placeholder:text-[#6B7280]"
                       style={{ color: "#F9FAFB" }}
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setAutoInfinityToggle(!autoInfinityToggle)}
-                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-lg font-mono-stats font-bold transition-colors"
+                    className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 text-lg font-mono-stats font-bold transition-colors"
                     style={{
                       backgroundColor: autoInfinityToggle ? "rgba(0,229,160,0.15)" : "#1F2937",
                       border: `1px solid ${autoInfinityToggle ? "#00E5A0" : "#374151"}`,
@@ -450,13 +450,13 @@ export default function KenoControls({
               </div>
 
               {/* Advanced settings (collapsible) */}
-              <div className="rounded-xl" style={{ border: "1px solid #374151" }}>
+              <div className="rounded-lg" style={{ border: "1px solid #374151" }}>
                 <button
                   type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="w-full px-4 py-2.5 flex items-center justify-between"
+                  className="w-full px-2.5 py-2 flex items-center justify-between"
                 >
-                  <span className="font-body text-sm" style={{ color: "#9CA3AF" }}>
+                  <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>
                     Advanced
                   </span>
                   <ChevronDown
@@ -470,7 +470,7 @@ export default function KenoControls({
                 </button>
 
                 {showAdvanced && (
-                  <div className="px-4 pb-4 space-y-4">
+                  <div className="px-2.5 pb-2.5 space-y-2">
                     {/* On Win */}
                     <div>
                       <span className="font-body text-xs font-semibold block mb-1.5" style={{ color: "#00E5A0" }}>
@@ -663,16 +663,16 @@ export default function KenoControls({
               {/* 200-round responsible gambling warning */}
               {autoPlayPausedForWarning && (
                 <div
-                  className="rounded-lg p-3"
+                  className="rounded-lg px-2.5 py-1.5"
                   style={{ backgroundColor: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)" }}
                 >
-                  <p className="font-body text-xs" style={{ color: "#F59E0B" }}>
-                    Auto-play paused after 200 rounds. Take a moment to review your session before continuing.
+                  <p className="font-body text-[10px]" style={{ color: "#F59E0B" }}>
+                    Paused after 200 rounds. Review your session.
                   </p>
                   <button
                     type="button"
                     onClick={() => dispatch({ type: "DISMISS_AUTO_PLAY_WARNING" })}
-                    className="text-xs mt-1.5 hover:underline"
+                    className="text-[10px] mt-1 hover:underline"
                     style={{ color: "#9CA3AF" }}
                   >
                     Dismiss
@@ -685,7 +685,7 @@ export default function KenoControls({
                 type="button"
                 onClick={handleStartAuto}
                 disabled={!isIdle || hasNoPicks || balance < betAmount}
-                className="w-full py-3 rounded-[10px] font-body text-base font-bold transition-all"
+                className="w-full h-9 rounded-lg font-body text-sm font-bold transition-all"
                 style={{
                   backgroundColor: !isIdle || hasNoPicks || balance < betAmount ? "#374151" : "#00E5A0",
                   color: !isIdle || hasNoPicks || balance < betAmount ? "#6B7280" : "#0B0F1A",

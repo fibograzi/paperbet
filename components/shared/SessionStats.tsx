@@ -9,21 +9,6 @@ interface SessionStatsProps {
   biggestWin: { multiplier: number; amount: number } | null;
 }
 
-interface StatCardProps {
-  label: string;
-  value: string;
-  colorClass?: string;
-}
-
-function StatCard({ label, value, colorClass = "text-pb-text-primary" }: StatCardProps) {
-  return (
-    <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-3">
-      <p className="text-xs text-pb-text-muted">{label}</p>
-      <p className={`font-mono-stats text-xl ${colorClass}`}>{value}</p>
-    </div>
-  );
-}
-
 export default function SessionStats({
   totalBets,
   totalWagered,
@@ -44,19 +29,25 @@ export default function SessionStats({
     : "—";
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <StatCard label="Total Bets" value={String(totalBets)} />
-      <StatCard label="Total Wagered" value={formatCurrency(totalWagered)} />
-      <StatCard
-        label="Net Profit"
-        value={`${profitPrefix}${formatCurrency(netProfit)}`}
-        colorClass={profitColor}
-      />
-      <StatCard
-        label="Biggest Win"
-        value={biggestWinDisplay}
-        colorClass={biggestWin ? "text-pb-warning" : "text-pb-text-muted"}
-      />
+    <div className="bg-pb-bg-secondary border border-pb-border rounded-lg px-3 py-2">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-pb-text-muted uppercase tracking-wider">Bets</span>
+          <span className="font-mono-stats text-xs text-pb-text-primary">{totalBets}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-pb-text-muted uppercase tracking-wider">Wagered</span>
+          <span className="font-mono-stats text-xs text-pb-text-primary">{formatCurrency(totalWagered)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-pb-text-muted uppercase tracking-wider">Profit</span>
+          <span className={`font-mono-stats text-xs ${profitColor}`}>{profitPrefix}{formatCurrency(netProfit)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-pb-text-muted uppercase tracking-wider">Best Win</span>
+          <span className={`font-mono-stats text-xs ${biggestWin ? "text-pb-warning" : "text-pb-text-muted"}`}>{biggestWinDisplay}</span>
+        </div>
+      </div>
     </div>
   );
 }

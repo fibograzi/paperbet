@@ -185,6 +185,18 @@ export const GAMES: Game[] = [
     available: true,
     rtp: 98,
   },
+  {
+    id: "roulette",
+    name: "Roulette Lab",
+    slug: "roulette",
+    description:
+      "Explore 7 free roulette tools: play free, test strategies with Monte Carlo simulation, calculate odds, and understand risk of ruin.",
+    shortDesc: "Spin. Analyze. Learn.",
+    icon: "Circle",
+    color: "#10B981",
+    available: true,
+    rtp: 97.3,
+  },
 ];
 
 // ---------------------------------------------------------------------------

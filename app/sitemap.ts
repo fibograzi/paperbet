@@ -60,6 +60,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.4,
     },
+    { url: `${baseUrl}/roulette`, lastModified: launchDate, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/roulette/free-play`, lastModified: launchDate, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${baseUrl}/roulette/strategy-tester`, lastModified: launchDate, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/roulette/odds-calculator`, lastModified: launchDate, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/roulette/risk-of-ruin`, lastModified: launchDate, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${baseUrl}/roulette/simulators/martingale`, lastModified: launchDate, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/roulette/simulators/fibonacci`, lastModified: launchDate, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/roulette/learn`, lastModified: launchDate, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/roulette/disclaimer`, lastModified: launchDate, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({

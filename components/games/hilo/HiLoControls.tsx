@@ -142,13 +142,13 @@ export default function HiLoControls({
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Balance */}
       <BalanceBar balance={balance} onReset={() => dispatch({ type: "RESET_BALANCE" })} />
 
       {/* Manual / Auto Tab Toggle */}
       <div
-        className="flex rounded-lg p-1"
+        className="flex rounded-md p-0.5"
         style={{ backgroundColor: "#1F2937" }}
       >
         {(["manual", "auto"] as const).map((tab) => (
@@ -156,7 +156,7 @@ export default function HiLoControls({
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className="flex-1 py-2 rounded-md text-sm font-body transition-all duration-150"
+            className="flex-1 py-1.5 rounded-md text-xs font-body transition-all duration-150"
             style={{
               backgroundColor: activeTab === tab ? "#0B0F1A" : "transparent",
               color: activeTab === tab ? "#F9FAFB" : "#6B7280",
@@ -170,14 +170,14 @@ export default function HiLoControls({
 
       {/* Bet Amount Card */}
       <div
-        className="rounded-xl p-4"
+        className="rounded-lg p-3"
         style={{
           backgroundColor: "#111827",
           border: "1px solid #374151",
         }}
       >
         <label
-          className="font-body text-sm block mb-2"
+          className="font-body text-[10px] uppercase tracking-wider block mb-1"
           style={{ color: "#9CA3AF" }}
         >
           Bet Amount
@@ -187,10 +187,10 @@ export default function HiLoControls({
           style={{ border: "1px solid #374151" }}
         >
           <div
-            className="flex items-center flex-1 px-3 py-2.5"
+            className="flex items-center flex-1 px-2.5 py-1.5"
             style={{ backgroundColor: "#1F2937" }}
           >
-            <span className="font-mono-stats shrink-0" style={{ color: "#6B7280", fontSize: 18 }}>$</span>
+            <span className="font-mono-stats shrink-0 text-sm" style={{ color: "#6B7280" }}>$</span>
             <input
               suppressHydrationWarning
               type="text"
@@ -201,8 +201,8 @@ export default function HiLoControls({
               onBlur={betInput.onBlur}
               onKeyDown={betInput.onKeyDown}
               disabled={controlsDisabled}
-              className="flex-1 bg-transparent font-mono-stats text-right outline-none"
-              style={{ fontSize: 18, color: "#F9FAFB", opacity: controlsDisabled ? 0.5 : 1 }}
+              className="flex-1 bg-transparent font-mono-stats text-sm text-right outline-none"
+              style={{ color: "#F9FAFB", opacity: controlsDisabled ? 0.5 : 1 }}
               aria-label="Bet amount"
             />
           </div>
@@ -212,7 +212,7 @@ export default function HiLoControls({
               type="button"
               disabled={controlsDisabled}
               onClick={() => setBet(config.betAmount / 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               &frac12;
@@ -222,7 +222,7 @@ export default function HiLoControls({
               type="button"
               disabled={controlsDisabled}
               onClick={() => setBet(config.betAmount * 2)}
-              className="px-3 py-2.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
+              className="px-2.5 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-50"
               style={{ color: "#9CA3AF" }}
             >
               2&times;
@@ -274,9 +274,8 @@ export default function HiLoControls({
               type="button"
               onClick={onPlaceBet}
               disabled={balance < config.betAmount}
-              className="w-full rounded-[10px] font-body font-bold text-base transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                height: 48,
                 backgroundColor: "#6366F1",
                 color: "#F9FAFB",
               }}
@@ -292,9 +291,8 @@ export default function HiLoControls({
               <button
                 type="button"
                 disabled
-                className="w-full rounded-[10px] font-body font-bold text-base cursor-not-allowed"
+                className="w-full h-9 rounded-lg font-body font-bold text-sm cursor-not-allowed"
                 style={{
-                  height: 48,
                   backgroundColor: "#374151",
                   color: "#9CA3AF",
                 }}
@@ -335,7 +333,7 @@ export default function HiLoControls({
 
       {/* === AUTO TAB CONTENT === */}
       {activeTab === "auto" && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {/* Strategy Selector */}
           <div>
             <label
@@ -399,7 +397,7 @@ export default function HiLoControls({
                   }
                 }}
                 disabled={autoPlay.active}
-                className="w-full rounded-lg py-2 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-[#6366F1]/50 disabled:opacity-50"
+                className="w-full rounded-md py-1.5 px-2.5 pr-8 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-[#6366F1]/50 disabled:opacity-50"
                 style={{
                   backgroundColor: "#1F2937",
                   border: "1px solid #374151",
@@ -437,7 +435,7 @@ export default function HiLoControls({
                       setAutoCount(Math.min(MAX_AUTO_ROUNDS, val));
                   }}
                   disabled={autoPlay.active}
-                  className="w-full rounded-lg py-2 pl-3 pr-3 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-[#6366F1]/50 disabled:opacity-50"
+                  className="w-full rounded-md py-1.5 px-2.5 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-[#6366F1]/50 disabled:opacity-50"
                   style={{
                     backgroundColor: "#1F2937",
                     border: "1px solid #374151",
@@ -449,7 +447,7 @@ export default function HiLoControls({
                 type="button"
                 disabled={autoPlay.active}
                 onClick={() => setAutoCount(MAX_AUTO_ROUNDS)}
-                className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor:
                     autoCount === MAX_AUTO_ROUNDS
@@ -464,7 +462,7 @@ export default function HiLoControls({
                 }}
                 aria-label="Set to maximum rounds"
               >
-                <InfinityIcon size={18} />
+                <InfinityIcon size={16} />
               </button>
             </div>
           </div>
@@ -498,7 +496,7 @@ export default function HiLoControls({
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.15 }}
-                className="space-y-3 overflow-hidden"
+                className="space-y-2 overflow-hidden"
               >
                 {/* On Win */}
                 <div>
@@ -804,7 +802,7 @@ export default function HiLoControls({
             <button
               type="button"
               onClick={() => dispatch({ type: "AUTO_PLAY_STOP" })}
-              className="w-full py-2.5 rounded-[10px] font-body font-bold text-sm transition-colors hover:brightness-110"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110"
               style={{
                 backgroundColor: "#EF4444",
                 color: "#F9FAFB",
@@ -817,7 +815,7 @@ export default function HiLoControls({
               type="button"
               onClick={handleAutoPlayStart}
               disabled={!isIdle}
-              className="w-full py-2.5 rounded-[10px] font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-9 rounded-lg font-body font-bold text-sm transition-colors hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundColor: "#6366F1",
                 color: "#F9FAFB",
@@ -877,7 +875,7 @@ export default function HiLoControls({
       {/* Session Reminder */}
       {state.showSessionReminder && (
         <div
-          className="rounded-xl p-3 text-xs"
+          className="rounded-lg px-2.5 py-1.5 text-[10px]"
           style={{
             backgroundColor: "#111827",
             border: "1px solid rgba(245, 158, 11, 0.3)",
@@ -885,8 +883,7 @@ export default function HiLoControls({
           }}
         >
           <p>
-            You&apos;ve played {state.sessionBetCount} rounds. Remember, this
-            is practice mode.
+            {state.sessionBetCount} rounds played — practice mode.
           </p>
           <button
             type="button"
