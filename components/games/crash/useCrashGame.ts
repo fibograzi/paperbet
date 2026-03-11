@@ -22,7 +22,7 @@ import { generateId } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const SESSION_REMINDER_THRESHOLD = 50;
-const HISTORY_CAP = 50;
+const HISTORY_CAP = 1000;
 const CRASH_POINTS_CAP = 20;
 
 // ---------------------------------------------------------------------------
@@ -570,7 +570,7 @@ export function useCrashGame() {
         handleAutoPlayPostRound(didCashOut);
       }
 
-      const delay = stateRef.current.instantMode ? 50 : POST_CRASH_DELAY;
+      const delay = stateRef.current.instantMode ? 300 : POST_CRASH_DELAY;
       postCrashTimeoutRef.current = setTimeout(() => {
         postCrashTimeoutRef.current = null;
         if (!gameActiveRef.current) return;
@@ -774,7 +774,7 @@ export function useCrashGame() {
             }
 
             // After crash delay, start next round
-            const crashDelay = stateRef.current.instantMode ? 50 : POST_CRASH_DELAY;
+            const crashDelay = stateRef.current.instantMode ? 300 : POST_CRASH_DELAY;
             postCrashTimeoutRef.current = setTimeout(() => {
               postCrashTimeoutRef.current = null;
 
