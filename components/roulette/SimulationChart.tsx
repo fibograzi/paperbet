@@ -1,22 +1,19 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState } from "react";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import type { SimulationOutput } from "@/lib/roulette/simulationTypes";
-
-// Lazy-load Recharts components
-const BarChart = dynamic(() => import("recharts").then((m) => m.BarChart), { ssr: false });
-const Bar = dynamic(() => import("recharts").then((m) => m.Bar), { ssr: false });
-const LineChart = dynamic(() => import("recharts").then((m) => m.LineChart), { ssr: false });
-const Line = dynamic(() => import("recharts").then((m) => m.Line), { ssr: false });
-const XAxis = dynamic(() => import("recharts").then((m) => m.XAxis), { ssr: false });
-const YAxis = dynamic(() => import("recharts").then((m) => m.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import("recharts").then((m) => m.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import("recharts").then((m) => m.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import("recharts").then((m) => m.ResponsiveContainer), {
-  ssr: false,
-});
-const Cell = dynamic(() => import("recharts").then((m) => m.Cell), { ssr: false });
 
 interface SimulationChartProps {
   output: SimulationOutput;
@@ -41,20 +38,25 @@ export default function SimulationChart({ output }: SimulationChartProps) {
   const [activeTab, setActiveTab] = useState<TabType>("distribution");
 
   const histogramData = output.histogram.map((bucket) => ({
-    range: bucket.rangeStart >= 0 ? `+$${Math.abs(Math.round(bucket.rangeStart))}` : `-$${Math.abs(Math.round(bucket.rangeStart))}`,
+    range:
+      bucket.rangeStart >= 0
+        ? `+$${Math.abs(Math.round(bucket.rangeStart))}`
+        : `-$${Math.abs(Math.round(bucket.rangeStart))}`,
     count: bucket.count,
     isProfit: bucket.rangeStart >= 0,
-    rangeStart: bucket.rangeStart,
   }));
 
   // Build sample paths data — take first 10 sample paths, subsample to 100 points max
   const samplePaths = output.samplePathIndices.slice(0, 10).map((idx, i) => ({
     session: output.sessions[idx],
-    color: output.sessions[idx].wentBankrupt ? "#EF4444" : PATH_COLORS[i % PATH_COLORS.length],
-    idx,
+    color: output.sessions[idx].wentBankrupt
+      ? "#EF4444"
+      : PATH_COLORS[i % PATH_COLORS.length],
   }));
 
-  const maxPathLength = Math.max(...samplePaths.map((p) => p.session.bankrollHistory.length));
+  const maxPathLength = Math.max(
+    ...samplePaths.map((p) => p.session.bankrollHistory.length),
+  );
   const subsampleStep = Math.max(1, Math.floor(maxPathLength / 100));
 
   const pathsData: Record<string, number>[] = [];
@@ -67,7 +69,7 @@ export default function SimulationChart({ output }: SimulationChartProps) {
   }
 
   const tabClass = (tab: TabType) =>
-    `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+    `px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
       activeTab === tab
         ? "bg-pb-accent text-pb-bg-primary"
         : "text-pb-text-secondary hover:text-pb-text-primary"
@@ -85,10 +87,18 @@ export default function SimulationChart({ output }: SimulationChartProps) {
     <div className="space-y-4">
       {/* Tab switcher */}
       <div className="flex gap-2">
-        <button type="button" className={tabClass("distribution")} onClick={() => setActiveTab("distribution")}>
+        <button
+          type="button"
+          className={tabClass("distribution")}
+          onClick={() => setActiveTab("distribution")}
+        >
           Distribution
         </button>
-        <button type="button" className={tabClass("paths")} onClick={() => setActiveTab("paths")}>
+        <button
+          type="button"
+          className={tabClass("paths")}
+          onClick={() => setActiveTab("paths")}
+        >
           Sample Paths
         </button>
       </div>
@@ -96,8 +106,15 @@ export default function SimulationChart({ output }: SimulationChartProps) {
       <div className="h-72 w-full">
         {activeTab === "distribution" ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={histogramData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+            <BarChart
+              data={histogramData}
+              margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#374151"
+                vertical={false}
+              />
               <XAxis
                 dataKey="range"
                 tick={{ fill: "#6B7280", fontSize: 10 }}
@@ -114,7 +131,10 @@ export default function SimulationChart({ output }: SimulationChartProps) {
               <Tooltip
                 contentStyle={tooltipStyle}
                 cursor={{ fill: "rgba(255,255,255,0.05)" }}
-                formatter={(value) => [(value as number).toLocaleString(), "Sessions"]}
+                formatter={(value) => [
+                  (value as number).toLocaleString(),
+                  "Sessions",
+                ]}
               />
               <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                 {histogramData.map((entry, index) => (
@@ -129,14 +149,23 @@ export default function SimulationChart({ output }: SimulationChartProps) {
           </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={pathsData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+            <LineChart
+              data={pathsData}
+              margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis
                 dataKey="spin"
                 tick={{ fill: "#6B7280", fontSize: 10 }}
                 tickLine={false}
                 axisLine={false}
-                label={{ value: "Spins", position: "insideBottomRight", offset: -4, fill: "#6B7280", fontSize: 10 }}
+                label={{
+                  value: "Spins",
+                  position: "insideBottomRight",
+                  offset: -4,
+                  fill: "#6B7280",
+                  fontSize: 10,
+                }}
               />
               <YAxis
                 tick={{ fill: "#6B7280", fontSize: 10 }}
@@ -147,7 +176,10 @@ export default function SimulationChart({ output }: SimulationChartProps) {
               <Tooltip
                 contentStyle={tooltipStyle}
                 cursor={{ stroke: "#374151" }}
-                formatter={(value) => [`$${(value as number).toFixed(0)}`, "Bankroll"]}
+                formatter={(value) => [
+                  `$${(value as number).toFixed(0)}`,
+                  "Bankroll",
+                ]}
               />
               {samplePaths.map((p, i) => (
                 <Line

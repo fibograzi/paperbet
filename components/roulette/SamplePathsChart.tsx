@@ -1,47 +1,22 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useMemo } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+} from "recharts";
 import type { SamplePath } from "@/lib/roulette/riskOfRuinEngine";
 
 interface SamplePathsChartProps {
   paths: SamplePath[];
   bankrollUnits: number;
 }
-
-// Lazy-load Recharts to avoid SSR issues and reduce initial bundle
-const LineChart = dynamic(
-  () => import("recharts").then((mod) => mod.LineChart),
-  { ssr: false }
-);
-const Line = dynamic(
-  () => import("recharts").then((mod) => mod.Line),
-  { ssr: false }
-);
-const XAxis = dynamic(
-  () => import("recharts").then((mod) => mod.XAxis),
-  { ssr: false }
-);
-const YAxis = dynamic(
-  () => import("recharts").then((mod) => mod.YAxis),
-  { ssr: false }
-);
-const CartesianGrid = dynamic(
-  () => import("recharts").then((mod) => mod.CartesianGrid),
-  { ssr: false }
-);
-const Tooltip = dynamic(
-  () => import("recharts").then((mod) => mod.Tooltip),
-  { ssr: false }
-);
-const ReferenceLine = dynamic(
-  () => import("recharts").then((mod) => mod.ReferenceLine),
-  { ssr: false }
-);
-const ResponsiveContainer = dynamic(
-  () => import("recharts").then((mod) => mod.ResponsiveContainer),
-  { ssr: false }
-);
 
 const SURVIVING_COLORS = [
   "#00E5A0",
@@ -58,13 +33,9 @@ export default function SamplePathsChart({ paths, bankrollUnits }: SamplePathsCh
   const chartData = useMemo(() => {
     if (paths.length === 0) return [];
 
-    // Limit to 10 paths max
     const displayPaths = paths.slice(0, 10);
-
-    // Find max path length
     const maxLen = Math.max(...displayPaths.map((p) => p.bankrollHistory.length));
 
-    // Build data array: each row is a spin index
     return Array.from({ length: maxLen }, (_, spinIndex) => {
       const row: Record<string, number | undefined> = { spin: spinIndex };
       displayPaths.forEach((path, pathIndex) => {
@@ -123,7 +94,6 @@ export default function SamplePathsChart({ paths, bankrollUnits }: SamplePathsCh
               formatter={(value) => [`${value} units`, ""]}
               labelFormatter={(label) => `Spin ${label}`}
             />
-            {/* Reference line at zero (bankrupt) */}
             <ReferenceLine
               y={0}
               stroke="#EF4444"
@@ -131,7 +101,6 @@ export default function SamplePathsChart({ paths, bankrollUnits }: SamplePathsCh
               strokeOpacity={0.6}
               label={{ value: "Bankrupt", fill: "#EF4444", fontSize: 10, position: "insideLeft" }}
             />
-            {/* Reference line at starting bankroll */}
             <ReferenceLine
               y={bankrollUnits}
               stroke="#374151"
@@ -161,7 +130,6 @@ export default function SamplePathsChart({ paths, bankrollUnits }: SamplePathsCh
         </ResponsiveContainer>
       </div>
 
-      {/* Legend */}
       <div className="flex items-center gap-4 mt-3 text-xs text-pb-text-muted justify-center">
         <span className="flex items-center gap-1.5">
           <span

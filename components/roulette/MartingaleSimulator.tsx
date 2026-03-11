@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import ProgressionTable from "./ProgressionTable";
-import ExponentialGrowthChart from "./ExponentialGrowthChart";
 import EducationalPanel from "./EducationalPanel";
+
+const ExponentialGrowthChart = dynamic(() => import("./ExponentialGrowthChart"), {
+  ssr: false,
+  loading: () => <div className="h-56 w-full animate-pulse rounded-xl bg-pb-bg-tertiary" />,
+});
 import { runSimulation } from "@/lib/roulette/simulationEngine";
 import type { SimulationConfig } from "@/lib/roulette/strategyTypes";
 import type { SimulationSummary } from "@/lib/roulette/simulationTypes";

@@ -1,16 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-const AreaChart = dynamic(() => import("recharts").then((m) => m.AreaChart), { ssr: false });
-const Area = dynamic(() => import("recharts").then((m) => m.Area), { ssr: false });
-const XAxis = dynamic(() => import("recharts").then((m) => m.XAxis), { ssr: false });
-const YAxis = dynamic(() => import("recharts").then((m) => m.YAxis), { ssr: false });
-const CartesianGrid = dynamic(() => import("recharts").then((m) => m.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import("recharts").then((m) => m.Tooltip), { ssr: false });
-const ResponsiveContainer = dynamic(() => import("recharts").then((m) => m.ResponsiveContainer), {
-  ssr: false,
-});
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface ExponentialGrowthChartProps {
   baseBet: number;
@@ -83,7 +81,9 @@ export default function ExponentialGrowthChart({
             tick={{ fill: "#6B7280", fontSize: 10 }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)}`}
+            tickFormatter={(v: number) =>
+              `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0)}`
+            }
           />
           <Tooltip
             contentStyle={tooltipStyle}

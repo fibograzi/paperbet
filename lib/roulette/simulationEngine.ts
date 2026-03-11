@@ -223,6 +223,22 @@ function selectSamplePaths(sessions: SessionResult[], maxPaths: number): number[
 }
 
 // ---------------------------------------------------------------------------
+// Compute output from pre-collected sessions (used by async runner)
+// ---------------------------------------------------------------------------
+
+export function computeSimulationOutput(
+  config: SimulationConfig,
+  sessions: SessionResult[],
+  durationMs: number,
+): SimulationOutput {
+  const summary = computeSummary(sessions);
+  const histogram = buildHistogram(sessions);
+  const samplePathIndices = selectSamplePaths(sessions, 20);
+
+  return { config, sessions, summary, histogram, samplePathIndices, durationMs };
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 

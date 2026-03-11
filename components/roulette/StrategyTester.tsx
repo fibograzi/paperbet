@@ -1,12 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useStrategyTester } from "./useStrategyTester";
 import StrategyConfigPanel from "./StrategyConfigPanel";
 import SimulationProgress from "./SimulationProgress";
 import SimulationResults from "./SimulationResults";
-import SimulationChart from "./SimulationChart";
 import CsvExport from "./CsvExport";
 import EducationalPanel from "./EducationalPanel";
+
+const SimulationChart = dynamic(() => import("./SimulationChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-72 w-full animate-pulse rounded-xl bg-pb-bg-tertiary" />
+  ),
+});
 
 export default function StrategyTester() {
   const { isRunning, progress, sessionsCompleted, results, error, startSimulation, cancelSimulation, clearResults } =

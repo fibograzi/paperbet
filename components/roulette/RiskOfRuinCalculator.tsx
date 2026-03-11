@@ -9,8 +9,15 @@ import {
   generateSamplePaths,
 } from "@/lib/roulette/riskOfRuinEngine";
 import type { SensitivityRow, MartingaleRuinRow } from "@/lib/roulette/riskOfRuinEngine";
+import dynamic from "next/dynamic";
 import EducationalPanel from "./EducationalPanel";
-import SamplePathsChart from "./SamplePathsChart";
+
+const SamplePathsChart = dynamic(() => import("./SamplePathsChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-64 w-full animate-pulse rounded-xl bg-pb-bg-tertiary" />
+  ),
+});
 
 const BET_OPTIONS: { value: BetType; label: string }[] = [
   { value: "redBlack", label: "Red / Black (1:1)" },
