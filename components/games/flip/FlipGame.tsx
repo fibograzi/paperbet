@@ -7,7 +7,7 @@ import FlipControls from "./FlipControls";
 import FlipSidebar from "./FlipSidebar";
 
 export default function FlipGame() {
-  const { state, dispatch, flip, flipAgain, cashOut } = useFlipGame();
+  const { state, dispatch, flip, flipAgain, cashOut, startAutoPlay } = useFlipGame();
 
   // ---------------------------------------------------------------------------
   // Keyboard shortcuts
@@ -123,6 +123,7 @@ export default function FlipGame() {
             onFlip={flip}
             onCashOut={cashOut}
             onFlipAgain={flipAgain}
+            onStartAutoPlay={startAutoPlay}
           />
         </div>
 
@@ -144,6 +145,7 @@ export default function FlipGame() {
               onFlip={flip}
               onCashOut={cashOut}
               onFlipAgain={flipAgain}
+              onStartAutoPlay={startAutoPlay}
             />
           </div>
         </div>

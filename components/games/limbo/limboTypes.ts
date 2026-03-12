@@ -4,7 +4,6 @@
 
 export type LimboPhase = "idle" | "animating" | "result";
 export type LimboAnimationSpeed = "normal" | "fast" | "skip";
-export type LimboAutoBetSpeed = "normal" | "fast" | "turbo";
 
 // ---------------------------------------------------------------------------
 // Auto-play adjustment types
@@ -20,13 +19,11 @@ export type LimboBetAdjustment =
 export type LimboTargetAdjustment = "same" | "increase" | "decrease";
 
 export type LimboStrategy =
-  | "safe_grinder"
-  | "coin_flip"
-  | "sniper"
-  | "moon_shot"
   | "martingale"
   | "anti_martingale"
   | "dalembert"
+  | "fibonacci"
+  | "paroli"
   | "custom";
 
 // ---------------------------------------------------------------------------
@@ -50,7 +47,6 @@ export interface LimboRound {
 
 export interface LimboAutoPlayConfig {
   numberOfBets: number;     // 10, 25, 50, 100, 500, Infinity
-  speed: LimboAutoBetSpeed;
   onWinBetAction: LimboBetAdjustment;
   onWinBetValue: number;
   onLossBetAction: LimboBetAdjustment;
@@ -63,6 +59,7 @@ export interface LimboAutoPlayConfig {
   stopOnLoss: number | null;
   stopOnWinMultiplier: number | null;
   strategy: LimboStrategy;
+  baseBet: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,6 +109,7 @@ export interface LimboGameState {
   targetMultiplier: number;
   winChance: number;
   animationSpeed: LimboAnimationSpeed;
+  speedMode: "normal" | "quick" | "instant";
   currentResult: number | null;
   currentIsWin: boolean | null;
   currentProfit: number | null;
@@ -146,6 +144,7 @@ export type LimboAction =
   | { type: "AUTO_PLAY_START"; config: LimboAutoPlayConfig }
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST"; betAmount: number; targetMultiplier: number; winChance: number }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }

@@ -13,7 +13,7 @@ export const MIN_BET = 0.10;
 export const MAX_BET = 1000.00;
 export const DEFAULT_BET = 1.00;
 export const INITIAL_BALANCE = 1000;
-export const MAX_HISTORY = 500;
+export const MAX_HISTORY = 1000;
 export const MAX_PREVIOUS_RESULTS = 20;
 export const SESSION_REMINDER_THRESHOLD = 300;
 export const POST_SESSION_NUDGE_THRESHOLD = 25;
@@ -24,8 +24,8 @@ export const ROLL_DURATION_NORMAL = 600;
 export const ROLL_DURATION_FAST = 100;
 export const RESULT_SETTLE_DURATION = 200;
 export const AUTO_SPEED_NORMAL = 1500;
-export const AUTO_SPEED_FAST = 800;
-export const AUTO_SPEED_TURBO = 300;
+export const AUTO_SPEED_QUICK = 800;
+export const AUTO_SPEED_INSTANT = 50;
 
 // ---------------------------------------------------------------------------
 // Random number generation
@@ -268,18 +268,18 @@ export function formatWinChance(wc: number): string {
 // Auto-play speed helper
 // ---------------------------------------------------------------------------
 
-export function getAutoPlayDelay(speed: DiceAutoPlayConfig["speed"]): number {
+export function getAutoPlayDelay(speed: "normal" | "quick" | "instant"): number {
   switch (speed) {
     case "normal": return AUTO_SPEED_NORMAL;
-    case "fast": return AUTO_SPEED_FAST;
-    case "turbo": return AUTO_SPEED_TURBO;
+    case "quick": return AUTO_SPEED_QUICK;
+    case "instant": return AUTO_SPEED_INSTANT;
     default: return AUTO_SPEED_NORMAL;
   }
 }
 
 /** Get roll animation duration based on speed */
-export function getRollDuration(speed: DiceAutoPlayConfig["speed"] | DiceAnimationSpeed): number {
-  if (speed === "turbo" || speed === "fast") return ROLL_DURATION_FAST;
+export function getRollDuration(speed: "normal" | "quick" | "instant" | DiceAnimationSpeed): number {
+  if (speed === "instant" || speed === "quick" || speed === "fast") return ROLL_DURATION_FAST;
   return ROLL_DURATION_NORMAL;
 }
 

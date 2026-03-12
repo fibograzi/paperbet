@@ -39,6 +39,16 @@ import {
 } from "./diceEngine";
 import { generateId } from "@/lib/utils";
 
+// Fibonacci sequence — 50 entries (MAX_BET clamp is the practical ceiling)
+const FIB = [
+  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584,
+  4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811,
+  514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352,
+  24157817, 39088169, 63245986, 102334155, 165580141, 267914296, 433494437,
+  701408733, 1134903170, 1836311903, 2971215073, 4807526976, 7778742049,
+  12586269025,
+] as const;
+
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
@@ -49,6 +59,7 @@ function createInitialState(): DiceGameState {
     params: getDefaultParameters(DEFAULT_BET),
     betAmount: DEFAULT_BET,
     animationSpeed: "normal",
+    speedMode: "normal",
     currentResult: null,
     currentIsWin: null,
     currentProfit: null,
@@ -358,6 +369,10 @@ function diceReducer(state: DiceGameState, action: DiceAction): DiceGameState {
     // -----------------------------------------------------------------------
     // Session UI
     // -----------------------------------------------------------------------
+    case "SET_SPEED_MODE": {
+      return { ...state, speedMode: action.mode };
+    }
+
     case "DISMISS_SESSION_REMINDER": {
       return { ...state, showSessionReminder: false };
     }
@@ -376,7 +391,18 @@ function diceReducer(state: DiceGameState, action: DiceAction): DiceGameState {
     }
 
     case "RESET_BALANCE":
-      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: INITIAL_BALANCE,
+        stats: createInitialStats(),
+        history: [],
+        previousResults: [],
+        sessionRollCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+        speedMode: "normal",
+      };
 
     default:
       return state;
@@ -397,6 +423,8 @@ export function useDiceGame() {
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRollTimeRef = useRef(0);
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
 
   // ---------------------------------------------------------------------------
   // Roll action
@@ -416,13 +444,9 @@ export function useDiceGame() {
     const profit = won ? calculateProfitOnWin(s.betAmount, s.params.multiplier) : -s.betAmount;
 
     // Animation duration
-    const duration = s.animationSpeed === "fast"
+    const duration = s.animationSpeed === "fast" || s.speedMode === "instant" || s.speedMode === "quick"
       ? ROLL_DURATION_FAST
-      : (s.autoPlay.active && s.autoPlay.config?.speed === "turbo")
-        ? ROLL_DURATION_FAST
-        : (s.autoPlay.active && s.autoPlay.config?.speed === "fast")
-          ? ROLL_DURATION_FAST
-          : ROLL_DURATION_NORMAL;
+      : ROLL_DURATION_NORMAL;
 
     rollTimerRef.current = setTimeout(() => {
       dispatch({ type: "ROLL_COMPLETE", result, isWin: won, profit, payout });
@@ -472,32 +496,92 @@ export function useDiceGame() {
       return;
     }
 
-    // Apply adjustments from previous round
+    // Apply bet adjustment from previous round
     const lastRound = state.history[0];
     if (lastRound) {
-      const { newBetAmount, newParams } = applyAutoBetAdjustments(
-        lastRound.isWin,
-        state.betAmount,
-        progress.baseBetAmount,
-        state.params,
-        config,
-      );
+      const won = lastRound.isWin;
+      let newBetAmount = state.betAmount;
+      const baseBet = config.baseBet;
 
-      // Check if new bet exceeds balance or max
-      if (newBetAmount > state.balance || newBetAmount > MAX_BET) {
+      switch (config.strategy) {
+        case "martingale":
+          newBetAmount = won ? baseBet : newBetAmount * 2;
+          break;
+        case "anti_martingale":
+          newBetAmount = won ? newBetAmount * 2 : baseBet;
+          break;
+        case "dalembert":
+          newBetAmount = won
+            ? Math.max(baseBet, newBetAmount - baseBet)
+            : newBetAmount + baseBet;
+          break;
+        case "fibonacci": {
+          if (won) {
+            fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+          } else {
+            fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+          }
+          newBetAmount = baseBet * FIB[fibStepRef.current];
+          break;
+        }
+        case "paroli": {
+          if (won) {
+            consecutiveWinsRef.current += 1;
+            if (consecutiveWinsRef.current >= 3) {
+              consecutiveWinsRef.current = 0;
+              newBetAmount = baseBet;
+            } else {
+              newBetAmount = newBetAmount * 2;
+            }
+          } else {
+            consecutiveWinsRef.current = 0;
+            newBetAmount = baseBet;
+          }
+          break;
+        }
+        case "custom":
+        default: {
+          const { newBetAmount: customBet } = applyAutoBetAdjustments(
+            won, state.betAmount, progress.baseBetAmount, state.params, config,
+          );
+          newBetAmount = customBet;
+          break;
+        }
+      }
+
+      newBetAmount = Math.round(newBetAmount * 100) / 100;
+      newBetAmount = Math.max(MIN_BET, Math.min(MAX_BET, newBetAmount));
+
+      if (newBetAmount > state.balance) {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
 
-      dispatch({
-        type: "AUTO_PLAY_ADJUST",
-        betAmount: newBetAmount,
-        params: newParams,
-      });
+      // For named strategies, keep current params; for custom, use adjusted params
+      let newParams = state.params;
+      if (config.strategy === "custom") {
+        const { newParams: customParams } = applyAutoBetAdjustments(
+          won, state.betAmount, progress.baseBetAmount, state.params, config,
+        );
+        newParams = customParams;
+      } else {
+        newParams = {
+          ...state.params,
+          profitOnWin: calculateProfitOnWin(newBetAmount, state.params.multiplier),
+        };
+      }
+
+      if (newBetAmount !== state.betAmount || newParams !== state.params) {
+        dispatch({
+          type: "AUTO_PLAY_ADJUST",
+          betAmount: newBetAmount,
+          params: newParams,
+        });
+      }
     }
 
     // Schedule next roll with appropriate delay
-    const delay = getAutoPlayDelay(config.speed);
+    const delay = getAutoPlayDelay(state.speedMode);
     autoTimerRef.current = setTimeout(() => {
       roll();
     }, delay);
@@ -560,6 +644,8 @@ export function useDiceGame() {
   // ---------------------------------------------------------------------------
 
   const startAutoPlay = useCallback((config: DiceAutoPlayConfig) => {
+    fibStepRef.current = 0;
+    consecutiveWinsRef.current = 0;
     dispatch({ type: "AUTO_PLAY_START", config });
   }, []);
 

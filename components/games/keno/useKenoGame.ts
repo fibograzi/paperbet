@@ -37,6 +37,16 @@ import {
 } from "./kenoEngine";
 import { generateId } from "@/lib/utils";
 
+// Fibonacci sequence — 50 entries (MAX_BET clamp is the practical ceiling)
+const FIB = [
+  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584,
+  4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811,
+  514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352,
+  24157817, 39088169, 63245986, 102334155, 165580141, 267914296, 433494437,
+  701408733, 1134903170, 1836311903, 2971215073, 4807526976, 7778742049,
+  12586269025,
+] as const;
+
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
@@ -475,6 +485,8 @@ export function useKenoGame() {
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
 
   // ---------------------------------------------------------------------------
   // Bet action — initiate draw
@@ -590,14 +602,59 @@ export function useKenoGame() {
     // Apply bet adjustment from previous round
     const lastRound = state.history[0];
     if (lastRound) {
-      const newBet = applyAutoBetAdjustment(
-        lastRound.isWin,
-        state.betAmount,
-        progress.baseBetAmount,
-        config,
-      );
+      const won = lastRound.isWin;
+      let newBet = state.betAmount;
+      const baseBet = config.baseBet;
 
-      if (newBet > state.balance || newBet > MAX_BET) {
+      switch (config.strategy) {
+        case "martingale":
+          newBet = won ? baseBet : newBet * 2;
+          break;
+        case "anti_martingale":
+          newBet = won ? newBet * 2 : baseBet;
+          break;
+        case "dalembert":
+          newBet = won
+            ? Math.max(baseBet, newBet - baseBet)
+            : newBet + baseBet;
+          break;
+        case "fibonacci": {
+          if (won) {
+            fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+          } else {
+            fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+          }
+          newBet = baseBet * FIB[fibStepRef.current];
+          break;
+        }
+        case "paroli": {
+          if (won) {
+            consecutiveWinsRef.current += 1;
+            if (consecutiveWinsRef.current >= 3) {
+              consecutiveWinsRef.current = 0;
+              newBet = baseBet;
+            } else {
+              newBet = newBet * 2;
+            }
+          } else {
+            consecutiveWinsRef.current = 0;
+            newBet = baseBet;
+          }
+          break;
+        }
+        case "custom":
+        default: {
+          newBet = applyAutoBetAdjustment(
+            won, state.betAmount, progress.baseBetAmount, config,
+          );
+          break;
+        }
+      }
+
+      newBet = Math.round(newBet * 100) / 100;
+      newBet = Math.max(MIN_BET, Math.min(MAX_BET, newBet));
+
+      if (newBet > state.balance) {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
@@ -670,6 +727,8 @@ export function useKenoGame() {
   // ---------------------------------------------------------------------------
 
   const startAutoPlay = useCallback((config: KenoAutoPlayConfig) => {
+    fibStepRef.current = 0;
+    consecutiveWinsRef.current = 0;
     dispatch({ type: "AUTO_PLAY_START", config });
   }, []);
 

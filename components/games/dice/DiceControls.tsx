@@ -2,8 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Infinity as InfinityIcon, Dices, ChevronDown, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Infinity as InfinityIcon, Dices, Zap } from "lucide-react";
 import { useBetInput } from "@/lib/useBetInput";
 import type {
   DiceGameState,
@@ -19,6 +18,72 @@ import { formatCurrency } from "@/lib/utils";
 import BalanceBar from "@/components/shared/BalanceBar";
 
 // ---------------------------------------------------------------------------
+// Strategy definitions
+// ---------------------------------------------------------------------------
+
+const INCREASE_PRESETS = [25, 50, 100, 200];
+const DECREASE_PRESETS = [10, 25, 50, 75];
+
+interface StrategyDef {
+  id: DiceStrategy;
+  label: string;
+  description: string;
+  behavior: string;
+  risk: "low" | "medium" | "high";
+}
+
+const BET_STRATEGY_DEFS: StrategyDef[] = [
+  {
+    id: "martingale",
+    label: "Martingale",
+    description: "Double bet on each loss. One win recovers all previous losses.",
+    behavior: "Loss: ×2  ·  Win: Reset",
+    risk: "high",
+  },
+  {
+    id: "anti_martingale",
+    label: "Anti-Martingale",
+    description: "Double bet on each win. Ride winning streaks, reset on loss.",
+    behavior: "Win: ×2  ·  Loss: Reset",
+    risk: "medium",
+  },
+  {
+    id: "dalembert",
+    label: "D'Alembert",
+    description: "Increase bet by one unit on loss, decrease by one unit on win.",
+    behavior: "Loss: +1u  ·  Win: −1u",
+    risk: "low",
+  },
+  {
+    id: "fibonacci",
+    label: "Fibonacci",
+    description: "Follow the Fibonacci sequence on losses, step back two on win.",
+    behavior: "Loss: next Fib  ·  Win: −2 steps",
+    risk: "medium",
+  },
+  {
+    id: "paroli",
+    label: "Paroli",
+    description: "Double bet on win up to 3 consecutive wins, then reset.",
+    behavior: "Win streak ×2 (cap 3)  ·  Loss: Reset",
+    risk: "low",
+  },
+  {
+    id: "custom",
+    label: "Custom",
+    description: "Set your own on-win and on-loss bet adjustments.",
+    behavior: "Fully configurable",
+    risk: "low",
+  },
+];
+
+const RISK_COLORS: Record<"low" | "medium" | "high", string> = {
+  low: "#00E5A0",
+  medium: "#F59E0B",
+  high: "#EF4444",
+};
+
+// ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
 
@@ -29,35 +94,6 @@ interface DiceControlsProps {
   onStartAutoPlay: (config: DiceAutoPlayConfig) => void;
   onStopAutoPlay: () => void;
 }
-
-// ---------------------------------------------------------------------------
-// Strategy presets
-// ---------------------------------------------------------------------------
-
-interface StrategyPreset {
-  id: DiceStrategy;
-  name: string;
-  description: string;
-  target: number;
-  direction: "over" | "under";
-  onWinBet: DiceBetAdjustment;
-  onWinBetValue: number;
-  onLossBet: DiceBetAdjustment;
-  onLossBetValue: number;
-  switchOnWin: boolean;
-  switchOnLoss: boolean;
-}
-
-const STRATEGY_PRESETS: StrategyPreset[] = [
-  { id: "safe_grinder", name: "Safe Grinder", description: "Tiny frequent wins", target: 10.00, direction: "over", onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, switchOnWin: false, switchOnLoss: false },
-  { id: "coin_flip", name: "Coin Flip", description: "Classic 50/50", target: 50.00, direction: "over", onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, switchOnWin: false, switchOnLoss: false },
-  { id: "sniper", name: "Sniper", description: "Long droughts, big hits", target: 90.00, direction: "over", onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, switchOnWin: false, switchOnLoss: false },
-  { id: "moon_shot", name: "Moon Shot", description: "Lottery-style", target: 1.00, direction: "under", onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, switchOnWin: false, switchOnLoss: false },
-  { id: "martingale", name: "Martingale", description: "Double on loss", target: 50.00, direction: "over", onWinBet: "reset", onWinBetValue: 0, onLossBet: "increase_percent", onLossBetValue: 100, switchOnWin: false, switchOnLoss: false },
-  { id: "anti_martingale", name: "Anti-Martingale", description: "Double on win", target: 50.00, direction: "over", onWinBet: "increase_percent", onWinBetValue: 100, onLossBet: "reset", onLossBetValue: 0, switchOnWin: false, switchOnLoss: false },
-  { id: "dalembert", name: "D'Alembert", description: "+$0.10 loss, -$0.10 win", target: 50.00, direction: "over", onWinBet: "decrease_flat", onWinBetValue: 0.10, onLossBet: "increase_flat", onLossBetValue: 0.10, switchOnWin: false, switchOnLoss: false },
-  { id: "zigzag", name: "Zigzag", description: "Alternate direction", target: 50.00, direction: "over", onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, switchOnWin: true, switchOnLoss: true },
-];
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -96,33 +132,8 @@ export default function DiceControls({
   const [stopOnProfitAmount, setStopOnProfitAmount] = useState(10);
   const [stopOnLossEnabled, setStopOnLossEnabled] = useState(false);
   const [stopOnLossAmount, setStopOnLossAmount] = useState(10);
-  const [selectedStrategy, setSelectedStrategy] = useState<DiceStrategy>("custom");
-  const [showStrategies, setShowStrategies] = useState(false);
-  const [showOnWin, setShowOnWin] = useState(false);
-  const [showOnLoss, setShowOnLoss] = useState(false);
+  const [betStrategy, setBetStrategy] = useState<DiceStrategy>("custom");
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // -------------------------------------------------------------------------
-  // Strategy application
-  // -------------------------------------------------------------------------
-
-  const applyStrategy = useCallback((preset: StrategyPreset) => {
-    setSelectedStrategy(preset.id);
-    setOnWinBetAction(preset.onWinBet);
-    setOnWinBetValue(preset.onWinBetValue);
-    setOnLossBetAction(preset.onLossBet);
-    setOnLossBetValue(preset.onLossBetValue);
-    setSwitchOnWin(preset.switchOnWin);
-    setSwitchOnLoss(preset.switchOnLoss);
-    setOnWinTargetAction("same");
-    setOnLossTargetAction("same");
-
-    // Apply target & direction
-    dispatch({ type: "SYNC_PARAM", field: "target", value: preset.target });
-    if (preset.direction !== state.params.direction) {
-      dispatch({ type: "SET_DIRECTION", direction: preset.direction });
-    }
-  }, [dispatch, state.params.direction]);
 
   // -------------------------------------------------------------------------
   // Build auto-play config
@@ -130,6 +141,7 @@ export default function DiceControls({
 
   const buildAutoConfig = useCallback((): DiceAutoPlayConfig => ({
     numberOfRolls: isInfinite ? Infinity : autoNumberOfRolls,
+    baseBet: betAmount,
     onWinBetAction,
     onWinBetValue,
     onLossBetAction,
@@ -144,9 +156,10 @@ export default function DiceControls({
     stopOnLoss: stopOnLossEnabled ? stopOnLossAmount : null,
     stopOnWinStreak: null,
     stopOnLossStreak: null,
-    strategy: selectedStrategy,
+    strategy: betStrategy,
   }), [
     autoNumberOfRolls, isInfinite,
+    betAmount,
     onWinBetAction, onWinBetValue,
     onLossBetAction, onLossBetValue,
     onWinTargetAction, onWinTargetValue,
@@ -154,7 +167,7 @@ export default function DiceControls({
     switchOnWin, switchOnLoss,
     stopOnProfitEnabled, stopOnProfitAmount,
     stopOnLossEnabled, stopOnLossAmount,
-    selectedStrategy,
+    betStrategy,
   ]);
 
   // -------------------------------------------------------------------------
@@ -166,8 +179,6 @@ export default function DiceControls({
   }, [dispatch]);
 
   const betInput = useBetInput(betAmount, setBet);
-
-  const isMartingaleType = selectedStrategy === "martingale" || selectedStrategy === "anti_martingale";
 
   // -------------------------------------------------------------------------
   // Render
@@ -203,11 +214,6 @@ export default function DiceControls({
       <div>
         <div className="flex items-center justify-between mb-1">
           <span className="font-body text-[10px] uppercase tracking-wider" style={{ color: "#9CA3AF" }}>Bet Amount</span>
-          {isAutoRunning && isMartingaleType && (
-            <span className="text-xs font-body px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(20,184,166,0.15)", color: "#14B8A6" }}>
-              {STRATEGY_PRESETS.find((s) => s.id === selectedStrategy)?.name}
-            </span>
-          )}
         </div>
 
         <div
@@ -257,11 +263,6 @@ export default function DiceControls({
           </div>
         </div>
 
-        {isMartingaleType && (
-          <p className="text-xs mt-2 font-body" style={{ color: "#F59E0B" }}>
-            Can lead to rapid bankroll depletion
-          </p>
-        )}
       </div>
 
       {/* ===== MANUAL TAB ===== */}
@@ -418,129 +419,95 @@ export default function DiceControls({
             )}
           </div>
 
-          {/* Advanced (collapsible) */}
-          <div className="rounded-lg border border-pb-border">
+          {/* Advanced — strategy grid */}
+          <div className="rounded-lg" style={{ border: "1px solid #374151" }}>
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between px-2.5 py-2"
+              className="w-full flex items-center justify-between px-3 py-2"
+              disabled={isAutoRunning}
             >
-              <span className="font-body text-xs text-pb-text-secondary">Advanced</span>
-              <ChevronDown
-                size={14}
-                className={cn(
-                  "text-pb-text-muted transition-transform",
-                  showAdvanced && "rotate-180"
+              <span className="font-body text-xs font-semibold" style={{ color: "#9CA3AF" }}>
+                Advanced
+                {betStrategy !== "custom" && (
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgba(0,229,160,0.15)", color: "#00E5A0" }}>
+                    {BET_STRATEGY_DEFS.find((s) => s.id === betStrategy)?.label}
+                  </span>
                 )}
-              />
+              </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" style={{ transform: showAdvanced ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 150ms" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
+
             {showAdvanced && (
-              <div className="px-2.5 pb-2.5 space-y-2">
-                {/* On Win (nested collapsible) */}
-                <CollapsibleSection title="On Win" open={showOnWin} onToggle={() => setShowOnWin(!showOnWin)}>
-                  <BetAdjustmentSelector
-                    label="Bet"
-                    action={onWinBetAction}
-                    value={onWinBetValue}
-                    disabled={isAutoRunning}
-                    onActionChange={setOnWinBetAction}
-                    onValueChange={setOnWinBetValue}
-                  />
-                  <TargetAdjustmentSelector
-                    action={onWinTargetAction}
-                    value={onWinTargetValue}
-                    disabled={isAutoRunning}
-                    onActionChange={setOnWinTargetAction}
-                    onValueChange={setOnWinTargetValue}
-                  />
-                  <ToggleOption
-                    label="Switch direction on win"
-                    checked={switchOnWin}
-                    disabled={isAutoRunning}
-                    onChange={setSwitchOnWin}
-                  />
-                </CollapsibleSection>
-
-                {/* On Loss (nested collapsible) */}
-                <CollapsibleSection title="On Loss" open={showOnLoss} onToggle={() => setShowOnLoss(!showOnLoss)}>
-                  <BetAdjustmentSelector
-                    label="Bet"
-                    action={onLossBetAction}
-                    value={onLossBetValue}
-                    disabled={isAutoRunning}
-                    onActionChange={setOnLossBetAction}
-                    onValueChange={setOnLossBetValue}
-                  />
-                  <TargetAdjustmentSelector
-                    action={onLossTargetAction}
-                    value={onLossTargetValue}
-                    disabled={isAutoRunning}
-                    onActionChange={setOnLossTargetAction}
-                    onValueChange={setOnLossTargetValue}
-                  />
-                  <ToggleOption
-                    label="Switch direction on loss"
-                    checked={switchOnLoss}
-                    disabled={isAutoRunning}
-                    onChange={setSwitchOnLoss}
-                  />
-                </CollapsibleSection>
-
-                {/* Stop conditions */}
-                <div className="space-y-2">
-                  <StopCondition
-                    label="Stop on Profit"
-                    prefix="$"
-                    enabled={stopOnProfitEnabled}
-                    value={stopOnProfitAmount}
-                    disabled={isAutoRunning}
-                    onToggle={setStopOnProfitEnabled}
-                    onValueChange={setStopOnProfitAmount}
-                  />
-                  <StopCondition
-                    label="Stop on Loss"
-                    prefix="$"
-                    enabled={stopOnLossEnabled}
-                    value={stopOnLossAmount}
-                    disabled={isAutoRunning}
-                    onToggle={setStopOnLossEnabled}
-                    onValueChange={setStopOnLossAmount}
-                  />
+              <div className="px-3 pb-3 space-y-3">
+                {/* 3-col strategy grid */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {BET_STRATEGY_DEFS.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      disabled={isAutoRunning}
+                      onClick={() => setBetStrategy(s.id)}
+                      className="rounded-lg p-2 text-center transition-all duration-150 disabled:opacity-50"
+                      style={{
+                        backgroundColor: betStrategy === s.id ? "rgba(0,229,160,0.1)" : "#111827",
+                        border: betStrategy === s.id ? "2px solid #00E5A0" : "1px solid #374151",
+                      }}
+                    >
+                      <span className="font-body text-xs font-semibold block" style={{ color: betStrategy === s.id ? "#00E5A0" : "#F9FAFB" }}>
+                        {s.label}
+                      </span>
+                    </button>
+                  ))}
                 </div>
+
+                {/* Description card */}
+                {(() => {
+                  const def = BET_STRATEGY_DEFS.find((s) => s.id === betStrategy);
+                  if (!def) return null;
+                  return (
+                    <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-body text-xs font-semibold" style={{ color: "#F9FAFB" }}>{def.label}</span>
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full font-body font-semibold"
+                          style={{ backgroundColor: `${RISK_COLORS[def.risk]}20`, color: RISK_COLORS[def.risk] }}
+                        >
+                          {def.risk} risk
+                        </span>
+                      </div>
+                      <p className="font-body text-[11px] mb-2" style={{ color: "#9CA3AF" }}>{def.description}</p>
+                      <p className="font-mono-stats text-[10px]" style={{ color: "#6B7280" }}>{def.behavior}</p>
+                    </div>
+                  );
+                })()}
+
+                {/* Custom: show On Win / On Loss controls */}
+                {betStrategy === "custom" && (
+                  <div className="space-y-2">
+                    <BetAdjustmentSelector
+                      label="On Win"
+                      action={onWinBetAction}
+                      value={onWinBetValue}
+                      disabled={isAutoRunning}
+                      onActionChange={setOnWinBetAction}
+                      onValueChange={setOnWinBetValue}
+                    />
+                    <BetAdjustmentSelector
+                      label="On Loss"
+                      action={onLossBetAction}
+                      value={onLossBetValue}
+                      disabled={isAutoRunning}
+                      onActionChange={setOnLossBetAction}
+                      onValueChange={setOnLossBetValue}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
-
-          {/* Strategy presets (collapsible) */}
-          <CollapsibleSection
-            title="Strategy Presets"
-            open={showStrategies}
-            onToggle={() => setShowStrategies(!showStrategies)}
-          >
-            <div className="grid grid-cols-2 gap-2">
-              {STRATEGY_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  disabled={isAutoRunning}
-                  onClick={() => applyStrategy(preset)}
-                  className="text-left rounded-lg p-3 transition-colors"
-                  style={{
-                    backgroundColor: selectedStrategy === preset.id ? "rgba(20,184,166,0.1)" : "#111827",
-                    border: selectedStrategy === preset.id ? "2px solid #14B8A6" : "1px solid #374151",
-                    opacity: isAutoRunning ? 0.5 : 1,
-                  }}
-                >
-                  <span className="font-body text-sm font-semibold block" style={{ color: "#F9FAFB" }}>
-                    {preset.name}
-                  </span>
-                  <span className="font-body text-xs block mt-0.5" style={{ color: "#6B7280" }}>
-                    {preset.description}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </CollapsibleSection>
 
           {/* Start/Stop Autobet button */}
           <div className="hidden lg:block">
@@ -680,14 +647,9 @@ function CollapsibleSection({
         className="w-full flex items-center justify-between px-2.5 py-2"
       >
         <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>{title}</span>
-        <ChevronDown
-          size={14}
-          style={{
-            color: "#6B7280",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 150ms",
-          }}
-        />
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 150ms" }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
       {open && <div className="px-2.5 pb-2.5 space-y-2">{children}</div>}
     </div>

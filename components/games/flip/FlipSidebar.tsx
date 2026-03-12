@@ -28,6 +28,7 @@ const SESSION_TIME_REMINDER_MS = 30 * 60 * 1000; // 30 minutes
 export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps) {
   const { stats, history, sessionBetCount, showPostSessionNudge, showStreakNudge } = state;
   const [showTimeReminder, setShowTimeReminder] = useState(false);
+  const [showMoreStats, setShowMoreStats] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTimeReminder(true), SESSION_TIME_REMINDER_MS);
@@ -72,6 +73,57 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
         netProfit={stats.netProfit}
         biggestWin={biggestWin}
       />
+
+      {/* More Stats (expandable) */}
+      <div className="rounded-xl" style={{ border: "1px solid #374151" }}>
+        <button
+          type="button"
+          onClick={() => setShowMoreStats(!showMoreStats)}
+          className="w-full px-4 py-2 flex items-center justify-between"
+        >
+          <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>More Stats</span>
+          <span className="text-xs" style={{ color: "#6B7280" }}>{showMoreStats ? "▲" : "▼"}</span>
+        </button>
+        {showMoreStats && (
+          <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+            <StatMini
+              label="Win Rate"
+              value={stats.winRate > 0 ? stats.winRate.toFixed(1) + "%" : "—"}
+            />
+            <StatMini
+              label="Best Multiplier"
+              value={stats.bestMultiplier > 1 ? stats.bestMultiplier.toFixed(2) + "x" : "—"}
+              color="#00E5A0"
+            />
+            <StatMini
+              label="Avg Cashout"
+              value={stats.averageCashout > 0 ? stats.averageCashout.toFixed(2) + "x" : "—"}
+            />
+            <StatMini
+              label="Longest Chain"
+              value={stats.longestFlipChain > 0 ? String(stats.longestFlipChain) + " flips" : "—"}
+            />
+            <StatMini
+              label="Best Win Streak"
+              value={stats.bestWinStreak > 0 ? String(stats.bestWinStreak) : "—"}
+              color="#00E5A0"
+            />
+            <StatMini
+              label="Cur Win Streak"
+              value={stats.currentWinStreak > 0 ? String(stats.currentWinStreak) : "—"}
+              color="#00E5A0"
+            />
+            <StatMini
+              label="Heads Picks"
+              value={stats.totalBets > 0 ? ((stats.headsPicks / stats.totalBets) * 100).toFixed(0) + "%" : "—"}
+            />
+            <StatMini
+              label="Biggest Loss"
+              value={stats.biggestLoss > 0 ? formatCurrency(stats.biggestLoss) : "—"}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Casinos that offer this game */}
       <GameProviders gameId="flip" gameName="Coin Flip" />
@@ -312,6 +364,17 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
       <p className="text-[10px] text-pb-text-muted leading-relaxed">
         {SITE.disclaimer}
       </p>
+    </div>
+  );
+}
+
+function StatMini({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="rounded-lg p-2" style={{ backgroundColor: "#111827" }}>
+      <span className="font-body text-xs block" style={{ color: "#6B7280" }}>{label}</span>
+      <span className="font-mono-stats text-sm font-bold block" style={{ color: color ?? "#F9FAFB" }}>
+        {value}
+      </span>
     </div>
   );
 }

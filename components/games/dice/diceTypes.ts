@@ -5,7 +5,6 @@
 export type DiceDirection = "over" | "under";
 export type DicePhase = "idle" | "rolling" | "result";
 export type DiceAnimationSpeed = "normal" | "fast";
-export type DiceAutoBetSpeed = "normal" | "fast" | "turbo";
 
 // ---------------------------------------------------------------------------
 // Auto-play adjustment types
@@ -21,14 +20,11 @@ export type DiceBetAdjustment =
 export type DiceTargetAdjustment = "same" | "increase" | "decrease";
 
 export type DiceStrategy =
-  | "safe_grinder"
-  | "coin_flip"
-  | "sniper"
-  | "moon_shot"
   | "martingale"
   | "anti_martingale"
   | "dalembert"
-  | "zigzag"
+  | "fibonacci"
+  | "paroli"
   | "custom";
 
 // ---------------------------------------------------------------------------
@@ -66,7 +62,7 @@ export interface DiceRound {
 
 export interface DiceAutoPlayConfig {
   numberOfRolls: number;    // 10, 25, 50, 100, 500, Infinity
-  speed: DiceAutoBetSpeed;
+  baseBet: number;          // base bet for reset/calculation in named strategies
   onWinBetAction: DiceBetAdjustment;
   onWinBetValue: number;
   onLossBetAction: DiceBetAdjustment;
@@ -130,6 +126,7 @@ export interface DiceGameState {
   params: DiceParameters;
   betAmount: number;
   animationSpeed: DiceAnimationSpeed;
+  speedMode: "normal" | "quick" | "instant";
   currentResult: number | null;
   currentIsWin: boolean | null;
   currentProfit: number | null;
@@ -167,6 +164,7 @@ export type DiceAction =
   | { type: "AUTO_PLAY_TICK" }
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST"; betAmount: number; params: DiceParameters }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }

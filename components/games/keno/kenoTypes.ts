@@ -12,6 +12,14 @@ export type KenoDifficulty = "classic" | "low" | "medium" | "high";
 // Auto-play
 // ---------------------------------------------------------------------------
 
+export type KenoStrategy =
+  | "martingale"
+  | "anti_martingale"
+  | "dalembert"
+  | "fibonacci"
+  | "paroli"
+  | "custom";
+
 export interface KenoAutoPlayConfig {
   numberOfBets: number;       // 10, 25, 50, 100, Infinity
   onWinAction: "reset" | "increase_percent" | "decrease_percent";
@@ -20,6 +28,8 @@ export interface KenoAutoPlayConfig {
   onLossValue: number;
   stopOnProfit: number | null;
   stopOnLoss: number | null;
+  strategy: KenoStrategy;
+  baseBet: number;
 }
 
 export interface KenoAutoPlayProgress {

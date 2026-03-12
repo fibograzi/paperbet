@@ -99,6 +99,8 @@ export default function DiceSidebar({ state, onDismissNudge, onDismissReminder }
             />
             <StatMini label="Best Win Streak" value={stats.bestWinStreak > 0 ? `${stats.bestWinStreak}` : "—"} color="#00E5A0" />
             <StatMini label="Worst Loss Streak" value={stats.bestLossStreak > 0 ? `${stats.bestLossStreak}` : "—"} color="#EF4444" />
+            <StatMini label="Biggest Win" value={stats.bestWin ? formatCurrency(stats.bestWin.profit) : "—"} color="#00E5A0" />
+            <StatMini label="Biggest Loss" value={stats.biggestLoss > 0 ? formatCurrency(stats.biggestLoss) : "—"} color="#EF4444" />
           </div>
         )}
       </div>

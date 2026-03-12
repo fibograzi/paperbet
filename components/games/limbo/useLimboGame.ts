@@ -34,6 +34,16 @@ import {
 } from "./limboEngine";
 import { generateId } from "@/lib/utils";
 
+// Fibonacci sequence — 50 entries (MAX_BET clamp is the practical ceiling)
+const FIB = [
+  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584,
+  4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811,
+  514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352,
+  24157817, 39088169, 63245986, 102334155, 165580141, 267914296, 433494437,
+  701408733, 1134903170, 1836311903, 2971215073, 4807526976, 7778742049,
+  12586269025,
+] as const;
+
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
@@ -45,6 +55,7 @@ function createInitialState(): LimboGameState {
     targetMultiplier: DEFAULT_TARGET,
     winChance: calculateWinChance(DEFAULT_TARGET),
     animationSpeed: "normal",
+    speedMode: "normal",
     currentResult: null,
     currentIsWin: null,
     currentProfit: null,
@@ -316,6 +327,10 @@ function limboReducer(state: LimboGameState, action: LimboAction): LimboGameStat
     // -----------------------------------------------------------------------
     // Session UI
     // -----------------------------------------------------------------------
+    case "SET_SPEED_MODE": {
+      return { ...state, speedMode: action.mode };
+    }
+
     case "DISMISS_SESSION_REMINDER": {
       return { ...state, showSessionReminder: false };
     }
@@ -334,7 +349,18 @@ function limboReducer(state: LimboGameState, action: LimboAction): LimboGameStat
     }
 
     case "RESET_BALANCE":
-      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: INITIAL_BALANCE,
+        stats: createInitialStats(),
+        history: [],
+        previousResults: [],
+        sessionBetCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+        speedMode: "normal",
+      };
 
     default:
       return state;
@@ -354,6 +380,8 @@ export function useLimboGame() {
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
 
   // ---------------------------------------------------------------------------
   // Bet action
@@ -375,7 +403,7 @@ export function useLimboGame() {
     // Animation duration
     const duration = getAnimDuration(
       s.animationSpeed,
-      s.autoPlay.active ? s.autoPlay.config?.speed : undefined,
+      s.autoPlay.active ? s.speedMode : undefined,
     );
 
     if (duration === 0) {
@@ -429,20 +457,74 @@ export function useLimboGame() {
       return;
     }
 
-    // Apply adjustments from previous round
+    // Apply bet adjustment from previous round
     const lastRound = state.history[0];
     if (lastRound) {
-      const { newBetAmount, newTarget } = applyAutoBetAdjustments(
-        lastRound.isWin,
-        state.betAmount,
-        progress.baseBetAmount,
-        state.targetMultiplier,
-        config,
-      );
+      const won = lastRound.isWin;
+      let newBetAmount = state.betAmount;
+      const baseBet = config.baseBet;
 
-      if (newBetAmount > state.balance || newBetAmount > MAX_BET) {
+      switch (config.strategy) {
+        case "martingale":
+          newBetAmount = won ? baseBet : newBetAmount * 2;
+          break;
+        case "anti_martingale":
+          newBetAmount = won ? newBetAmount * 2 : baseBet;
+          break;
+        case "dalembert":
+          newBetAmount = won
+            ? Math.max(baseBet, newBetAmount - baseBet)
+            : newBetAmount + baseBet;
+          break;
+        case "fibonacci": {
+          if (won) {
+            fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+          } else {
+            fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+          }
+          newBetAmount = baseBet * FIB[fibStepRef.current];
+          break;
+        }
+        case "paroli": {
+          if (won) {
+            consecutiveWinsRef.current += 1;
+            if (consecutiveWinsRef.current >= 3) {
+              consecutiveWinsRef.current = 0;
+              newBetAmount = baseBet;
+            } else {
+              newBetAmount = newBetAmount * 2;
+            }
+          } else {
+            consecutiveWinsRef.current = 0;
+            newBetAmount = baseBet;
+          }
+          break;
+        }
+        case "custom":
+        default: {
+          const { newBetAmount: customBet } = applyAutoBetAdjustments(
+            won, state.betAmount, progress.baseBetAmount, state.targetMultiplier, config,
+          );
+          newBetAmount = customBet;
+          break;
+        }
+      }
+
+      newBetAmount = Math.round(newBetAmount * 100) / 100;
+      newBetAmount = Math.max(MIN_BET, Math.min(MAX_BET, newBetAmount));
+
+      if (newBetAmount > state.balance) {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
+      }
+
+      // For named strategies, keep target same; for custom, adjust target too
+      let newTarget = state.targetMultiplier;
+      if (config.strategy === "custom") {
+        const { newTarget: customTarget } = applyAutoBetAdjustments(
+          won, state.betAmount, progress.baseBetAmount, state.targetMultiplier, config,
+        );
+        newTarget = customTarget;
       }
 
       dispatch({
@@ -454,7 +536,7 @@ export function useLimboGame() {
     }
 
     // Schedule next bet
-    const delay = getAutoPlayDelay(config.speed);
+    const delay = getAutoPlayDelay(state.speedMode);
     autoTimerRef.current = setTimeout(() => {
       bet();
     }, delay);
@@ -516,6 +598,8 @@ export function useLimboGame() {
   // ---------------------------------------------------------------------------
 
   const startAutoPlay = useCallback((config: LimboAutoPlayConfig) => {
+    fibStepRef.current = 0;
+    consecutiveWinsRef.current = 0;
     dispatch({ type: "AUTO_PLAY_START", config });
   }, []);
 

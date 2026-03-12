@@ -27,6 +27,16 @@ import { generateId } from "@/lib/utils";
 // Constants
 // ---------------------------------------------------------------------------
 
+// Fibonacci sequence — 50 entries (MAX_BET clamp is the practical ceiling)
+const FIB = [
+  1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584,
+  4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811,
+  514229, 832040, 1346269, 2178309, 3524578, 5702887, 9227465, 14930352,
+  24157817, 39088169, 63245986, 102334155, 165580141, 267914296, 433494437,
+  701408733, 1134903170, 1836311903, 2971215073, 4807526976, 7778742049,
+  12586269025,
+] as const;
+
 const INITIAL_BALANCE = 1000;
 const DEFAULT_BET = 1;
 const MIN_BET = 0.1;
@@ -500,7 +510,6 @@ function flipReducer(
     }
 
     case "AUTO_PLAY_ADJUST_BET": {
-      if (state.phase !== "idle") return state;
       const clamped = clampBet(action.amount);
       const safeBet = Math.min(clamped, state.balance);
       return {
@@ -563,6 +572,8 @@ export function useFlipGame() {
   const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoFlipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoPlayStartBetCountRef = useRef(0);
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
 
   // --- Helper: generate result and dispatch flip start ---
   const dispatchFlip = useCallback(() => {
@@ -665,16 +676,12 @@ export function useFlipGame() {
     // IDLE → start a new round
     if (state.phase === "idle") {
       const s = stateRef.current;
-      // Track the sessionBetCount when auto-play starts so the bet
-      // adjustment effect can skip stale manual results
-      if (s.autoPlay.progress?.currentRound === 0) {
-        autoPlayStartBetCountRef.current = s.sessionBetCount;
-      }
+      const noRoundsCompleted = s.sessionBetCount <= autoPlayStartBetCountRef.current;
       if (s.balance < s.config.betAmount) {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
-      const idleDelay = s.autoPlay.progress?.currentRound === 0 ? 0
+      const idleDelay = noRoundsCompleted ? 0
         : s.speedMode === "instant" ? 50
         : s.speedMode === "quick" ? 200
         : 400;
@@ -731,26 +738,86 @@ export function useFlipGame() {
     const lastResult = state.history[0];
     if (!lastResult) return;
 
-    const config = state.autoPlay.config;
-    const isWin = lastResult.cashedOut;
-    const strategy = isWin ? config.onWin : config.onLoss;
-    const percent = isWin
-      ? config.increaseOnWinPercent
-      : config.increaseOnLossPercent;
-
+    const ap = state.autoPlay.config;
+    const won = lastResult.cashedOut;
     let newBet = state.config.betAmount;
-    if (strategy === "reset") {
-      newBet = config.baseBet;
-    } else if (strategy === "increase") {
-      newBet = state.config.betAmount * (1 + percent / 100);
-    } else if (strategy === "decrease") {
-      newBet = Math.max(MIN_BET, state.config.betAmount * (1 - percent / 100));
+
+    switch (ap.strategy) {
+      case "martingale":
+        newBet = won ? ap.baseBet : newBet * 2;
+        break;
+
+      case "anti_martingale":
+        newBet = won ? newBet * 2 : ap.baseBet;
+        break;
+
+      case "dalembert":
+        newBet = won
+          ? Math.max(ap.baseBet, newBet - ap.baseBet)
+          : newBet + ap.baseBet;
+        break;
+
+      case "fibonacci": {
+        if (won) {
+          fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+        } else {
+          fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+        }
+        newBet = ap.baseBet * FIB[fibStepRef.current];
+        break;
+      }
+
+      case "paroli": {
+        if (won) {
+          consecutiveWinsRef.current += 1;
+          if (consecutiveWinsRef.current >= 3) {
+            consecutiveWinsRef.current = 0;
+            newBet = ap.baseBet;
+          } else {
+            newBet = newBet * 2;
+          }
+        } else {
+          consecutiveWinsRef.current = 0;
+          newBet = ap.baseBet;
+        }
+        break;
+      }
+
+      case "custom":
+      default: {
+        const winLossStrategy = won ? ap.onWin : ap.onLoss;
+        const percent = won ? ap.increaseOnWinPercent : ap.increaseOnLossPercent;
+        switch (winLossStrategy) {
+          case "reset":
+            newBet = ap.baseBet;
+            break;
+          case "increase":
+            newBet = newBet * (1 + percent / 100);
+            break;
+          case "decrease":
+            newBet = Math.max(ap.baseBet, newBet * (1 - percent / 100));
+            break;
+          case "same":
+          default:
+            break;
+        }
+      }
     }
+
+    newBet = Math.round(newBet * 100) / 100;
+    newBet = Math.max(MIN_BET, Math.min(MAX_BET, newBet));
 
     dispatch({ type: "AUTO_PLAY_ADJUST_BET", amount: newBet });
     dispatch({ type: "AUTO_PLAY_TICK" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.autoPlay.active, state.phase, state.sessionBetCount]);
+
+  const startAutoPlay = useCallback((config: FlipAutoPlayConfig) => {
+    fibStepRef.current = 0;
+    consecutiveWinsRef.current = 0;
+    autoPlayStartBetCountRef.current = stateRef.current.sessionBetCount;
+    dispatch({ type: "AUTO_PLAY_START", config });
+  }, []);
 
   // --- Post-session nudge (60s inactivity after 10+ bets) ---
   useEffect(() => {
@@ -784,5 +851,6 @@ export function useFlipGame() {
     flip,
     flipAgain,
     cashOut,
+    startAutoPlay,
   };
 }

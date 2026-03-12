@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Zap } from "lucide-react";
 import { useBetInput } from "@/lib/useBetInput";
 import type {
   LimboGameState,
@@ -10,7 +10,6 @@ import type {
   LimboAutoPlayConfig,
   LimboBetAdjustment,
   LimboTargetAdjustment,
-  LimboAutoBetSpeed,
   LimboStrategy,
   LimboAnimationSpeed,
 } from "./limboTypes";
@@ -36,32 +35,70 @@ interface LimboControlsProps {
 }
 
 // ---------------------------------------------------------------------------
-// Strategy presets
+// Strategy definitions
 // ---------------------------------------------------------------------------
 
-interface StrategyPreset {
+const INCREASE_PRESETS = [25, 50, 100, 200];
+const DECREASE_PRESETS = [10, 25, 50, 75];
+
+interface BetStrategyDef {
   id: LimboStrategy;
-  name: string;
+  label: string;
   description: string;
-  target: number;
-  betAmount?: number;
-  onWinBet: LimboBetAdjustment;
-  onWinBetValue: number;
-  onLossBet: LimboBetAdjustment;
-  onLossBetValue: number;
-  stopOnLoss?: number;
-  stopOnProfit?: number;
+  behavior: string;
+  risk: "low" | "medium" | "high";
 }
 
-const STRATEGY_PRESETS: StrategyPreset[] = [
-  { id: "safe_grinder", name: "Safe Grinder", description: "90% win, tiny profit", target: 1.10, onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, stopOnLoss: 20 },
-  { id: "coin_flip", name: "Coin Flip", description: "49.5% win chance", target: 2.00, onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0 },
-  { id: "sniper", name: "Sniper", description: "9.9% win, 10x payout", target: 10.00, onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, stopOnLoss: 25 },
-  { id: "moon_shot", name: "Moon Shot", description: "0.99% win, 100x payout", target: 100.00, betAmount: 0.10, onWinBet: "same", onWinBetValue: 0, onLossBet: "same", onLossBetValue: 0, stopOnProfit: 50 },
-  { id: "martingale", name: "Martingale", description: "Double on loss", target: 2.00, onWinBet: "reset", onWinBetValue: 0, onLossBet: "increase_percent", onLossBetValue: 100 },
-  { id: "anti_martingale", name: "Anti-Martingale", description: "Double on win", target: 2.00, onWinBet: "increase_percent", onWinBetValue: 100, onLossBet: "reset", onLossBetValue: 0 },
-  { id: "dalembert", name: "D'Alembert", description: "+$0.10 loss, -$0.10 win", target: 2.00, onWinBet: "decrease_flat", onWinBetValue: 0.10, onLossBet: "increase_flat", onLossBetValue: 0.10 },
+const BET_STRATEGY_DEFS: BetStrategyDef[] = [
+  {
+    id: "martingale",
+    label: "Martingale",
+    description: "Double bet on each loss. One win recovers all previous losses.",
+    behavior: "Loss: ×2  ·  Win: Reset",
+    risk: "high",
+  },
+  {
+    id: "anti_martingale",
+    label: "Anti-Martingale",
+    description: "Double bet on each win. Ride winning streaks, reset on loss.",
+    behavior: "Win: ×2  ·  Loss: Reset",
+    risk: "medium",
+  },
+  {
+    id: "dalembert",
+    label: "D'Alembert",
+    description: "Increase bet by one unit on loss, decrease by one unit on win.",
+    behavior: "Loss: +1u  ·  Win: −1u",
+    risk: "low",
+  },
+  {
+    id: "fibonacci",
+    label: "Fibonacci",
+    description: "Follow the Fibonacci sequence on losses, step back two on win.",
+    behavior: "Loss: next Fib  ·  Win: −2 steps",
+    risk: "medium",
+  },
+  {
+    id: "paroli",
+    label: "Paroli",
+    description: "Double bet on win up to 3 consecutive wins, then reset.",
+    behavior: "Win streak ×2 (cap 3)  ·  Loss: Reset",
+    risk: "low",
+  },
+  {
+    id: "custom",
+    label: "Custom",
+    description: "Set your own on-win and on-loss bet adjustments.",
+    behavior: "Fully configurable",
+    risk: "low",
+  },
 ];
+
+const RISK_COLORS: Record<"low" | "medium" | "high", string> = {
+  low: "#00E5A0",
+  medium: "#F59E0B",
+  high: "#EF4444",
+};
 
 // ---------------------------------------------------------------------------
 // Main component
@@ -74,7 +111,7 @@ export default function LimboControls({
   onStartAutoPlay,
   onStopAutoPlay,
 }: LimboControlsProps) {
-  const { phase, betAmount, balance, targetMultiplier, animationSpeed, autoPlay } = state;
+  const { phase, betAmount, balance, targetMultiplier, animationSpeed, autoPlay, speedMode } = state;
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const isIdle = phase === "idle";
   const isAnimating = phase === "animating";
@@ -86,7 +123,6 @@ export default function LimboControls({
 
   const [autoNumberOfBets, setAutoNumberOfBets] = useState(100);
   const [autoInfinite, setAutoInfinite] = useState(false);
-  const [autoSpeed, setAutoSpeed] = useState<LimboAutoBetSpeed>("normal");
   const [onWinBetAction, setOnWinBetAction] = useState<LimboBetAdjustment>("same");
   const [onWinBetValue, setOnWinBetValue] = useState(100);
   const [onLossBetAction, setOnLossBetAction] = useState<LimboBetAdjustment>("same");
@@ -101,42 +137,8 @@ export default function LimboControls({
   const [stopOnLossAmount, setStopOnLossAmount] = useState(10);
   const [stopOnWinMultEnabled, setStopOnWinMultEnabled] = useState(false);
   const [stopOnWinMultValue, setStopOnWinMultValue] = useState(100);
-  const [selectedStrategy, setSelectedStrategy] = useState<LimboStrategy>("custom");
-  const [showStrategies, setShowStrategies] = useState(false);
+  const [betStrategy, setBetStrategy] = useState<LimboStrategy>("custom");
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // -------------------------------------------------------------------------
-  // Strategy application
-  // -------------------------------------------------------------------------
-
-  const applyStrategy = useCallback((preset: StrategyPreset) => {
-    setSelectedStrategy(preset.id);
-    setOnWinBetAction(preset.onWinBet);
-    setOnWinBetValue(preset.onWinBetValue);
-    setOnLossBetAction(preset.onLossBet);
-    setOnLossBetValue(preset.onLossBetValue);
-    setOnWinTargetAction("same");
-    setOnLossTargetAction("same");
-    dispatch({ type: "SET_TARGET", target: preset.target });
-
-    if (preset.betAmount !== undefined) {
-      dispatch({ type: "SET_BET_AMOUNT", amount: preset.betAmount });
-    }
-
-    if (preset.stopOnLoss !== undefined) {
-      setStopOnLossEnabled(true);
-      setStopOnLossAmount(preset.stopOnLoss * (preset.betAmount ?? betAmount));
-    } else {
-      setStopOnLossEnabled(false);
-    }
-
-    if (preset.stopOnProfit !== undefined) {
-      setStopOnProfitEnabled(true);
-      setStopOnProfitAmount(preset.stopOnProfit * (preset.betAmount ?? betAmount));
-    } else {
-      setStopOnProfitEnabled(false);
-    }
-  }, [dispatch, betAmount]);
 
   // -------------------------------------------------------------------------
   // Build auto-play config
@@ -144,7 +146,6 @@ export default function LimboControls({
 
   const buildAutoConfig = useCallback((): LimboAutoPlayConfig => ({
     numberOfBets: autoInfinite ? Infinity : Math.min(500, autoNumberOfBets),
-    speed: autoSpeed,
     onWinBetAction,
     onWinBetValue,
     onLossBetAction,
@@ -156,9 +157,10 @@ export default function LimboControls({
     stopOnProfit: stopOnProfitEnabled ? stopOnProfitAmount : null,
     stopOnLoss: stopOnLossEnabled ? stopOnLossAmount : null,
     stopOnWinMultiplier: stopOnWinMultEnabled ? stopOnWinMultValue : null,
-    strategy: selectedStrategy,
+    strategy: betStrategy,
+    baseBet: betAmount,
   }), [
-    autoNumberOfBets, autoInfinite, autoSpeed,
+    autoNumberOfBets, autoInfinite,
     onWinBetAction, onWinBetValue,
     onLossBetAction, onLossBetValue,
     onWinTargetAction, onWinTargetValue,
@@ -166,7 +168,7 @@ export default function LimboControls({
     stopOnProfitEnabled, stopOnProfitAmount,
     stopOnLossEnabled, stopOnLossAmount,
     stopOnWinMultEnabled, stopOnWinMultValue,
-    selectedStrategy,
+    betStrategy, betAmount,
   ]);
 
   // -------------------------------------------------------------------------
@@ -178,8 +180,6 @@ export default function LimboControls({
   }, [dispatch]);
 
   const betInput = useBetInput(betAmount, setBet);
-
-  const isMartingaleType = selectedStrategy === "martingale" || selectedStrategy === "anti_martingale";
 
   // -------------------------------------------------------------------------
   // Render
@@ -215,11 +215,6 @@ export default function LimboControls({
       <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
         <div className="flex items-center justify-between mb-1">
           <span className="font-body text-[10px] uppercase tracking-wider" style={{ color: "#9CA3AF" }}>Bet Amount</span>
-          {isAutoRunning && isMartingaleType && (
-            <span className="text-xs font-body px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(0,229,160,0.15)", color: "#00E5A0" }}>
-              {STRATEGY_PRESETS.find((s) => s.id === selectedStrategy)?.name}
-            </span>
-          )}
         </div>
 
         <div
@@ -270,11 +265,6 @@ export default function LimboControls({
           </div>
         </div>
 
-        {isMartingaleType && (
-          <p className="text-xs mt-2 font-body" style={{ color: "#F59E0B" }}>
-            Can lead to rapid bankroll depletion
-          </p>
-        )}
       </div>
 
       {/* ===== MANUAL TAB ===== */}
@@ -388,140 +378,163 @@ export default function LimboControls({
             </div>
           </div>
 
-          {/* Speed */}
-          <div>
-            <span className="font-body text-xs block mb-1.5" style={{ color: "#6B7280" }}>Speed</span>
-            <div className="flex rounded-lg p-1" style={{ backgroundColor: "#1F2937" }}>
-              {(["normal", "fast", "turbo"] as LimboAutoBetSpeed[]).map((speed) => (
-                <button
-                  key={speed}
-                  type="button"
-                  disabled={isAutoRunning}
-                  onClick={() => setAutoSpeed(speed)}
-                  className="flex-1 py-1.5 rounded-md text-center font-body text-xs font-semibold transition-colors capitalize"
-                  style={{
-                    backgroundColor: autoSpeed === speed ? "rgba(0,229,160,0.15)" : "transparent",
-                    color: autoSpeed === speed ? "#00E5A0" : "#9CA3AF",
-                  }}
-                >
-                  {speed}
-                </button>
-              ))}
+          {/* Speed mode selector */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
             </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "Faster rounds — reduced delays" : "Maximum speed — instant results"}
+              </p>
+            )}
           </div>
 
-          {/* Advanced (collapsible) — contains On Win, On Loss, Stop conditions */}
-          <CollapsibleSection title="Advanced" open={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
-            {/* On Win */}
-            <div className="space-y-2">
-              <span className="font-body text-xs font-semibold block" style={{ color: "#9CA3AF" }}>On Win</span>
-              <BetAdjustmentSelector
-                label="Bet"
-                action={onWinBetAction}
-                value={onWinBetValue}
-                disabled={isAutoRunning}
-                onActionChange={setOnWinBetAction}
-                onValueChange={setOnWinBetValue}
-              />
-              <TargetAdjustmentSelector
-                action={onWinTargetAction}
-                value={onWinTargetValue}
-                disabled={isAutoRunning}
-                onActionChange={setOnWinTargetAction}
-                onValueChange={setOnWinTargetValue}
-              />
-            </div>
-
-            {/* Divider */}
-            <div className="h-px my-2" style={{ backgroundColor: "#374151" }} />
-
-            {/* On Loss */}
-            <div className="space-y-2">
-              <span className="font-body text-xs font-semibold block" style={{ color: "#9CA3AF" }}>On Loss</span>
-              <BetAdjustmentSelector
-                label="Bet"
-                action={onLossBetAction}
-                value={onLossBetValue}
-                disabled={isAutoRunning}
-                onActionChange={setOnLossBetAction}
-                onValueChange={setOnLossBetValue}
-              />
-              <TargetAdjustmentSelector
-                action={onLossTargetAction}
-                value={onLossTargetValue}
-                disabled={isAutoRunning}
-                onActionChange={setOnLossTargetAction}
-                onValueChange={setOnLossTargetValue}
-              />
-            </div>
-
-            {/* Divider */}
-            <div className="h-px my-2" style={{ backgroundColor: "#374151" }} />
-
-            {/* Stop conditions */}
-            <div className="space-y-2">
-              <span className="font-body text-xs font-semibold block" style={{ color: "#9CA3AF" }}>Stop Conditions</span>
-              <StopCondition
-                label="Stop on Profit"
-                prefix="$"
-                enabled={stopOnProfitEnabled}
-                value={stopOnProfitAmount}
-                disabled={isAutoRunning}
-                onToggle={setStopOnProfitEnabled}
-                onValueChange={setStopOnProfitAmount}
-              />
-              <StopCondition
-                label="Stop on Loss"
-                prefix="$"
-                enabled={stopOnLossEnabled}
-                value={stopOnLossAmount}
-                disabled={isAutoRunning}
-                onToggle={setStopOnLossEnabled}
-                onValueChange={setStopOnLossAmount}
-              />
-              <StopCondition
-                label="Stop on Result"
-                prefix=""
-                suffix="x"
-                enabled={stopOnWinMultEnabled}
-                value={stopOnWinMultValue}
-                disabled={isAutoRunning}
-                onToggle={setStopOnWinMultEnabled}
-                onValueChange={setStopOnWinMultValue}
-              />
-            </div>
-          </CollapsibleSection>
-
-          {/* Strategy presets */}
-          <CollapsibleSection
-            title="Strategy Presets"
-            open={showStrategies}
-            onToggle={() => setShowStrategies(!showStrategies)}
-          >
-            <div className="grid grid-cols-2 gap-2">
-              {STRATEGY_PRESETS.map((preset) => (
-                <button
-                  key={preset.id}
-                  type="button"
-                  disabled={isAutoRunning}
-                  onClick={() => applyStrategy(preset)}
-                  className="text-left rounded-lg p-3 transition-colors"
-                  style={{
-                    backgroundColor: selectedStrategy === preset.id ? "rgba(0,229,160,0.1)" : "#111827",
-                    border: selectedStrategy === preset.id ? "2px solid #00E5A0" : "1px solid #374151",
-                    opacity: isAutoRunning ? 0.5 : 1,
-                  }}
-                >
-                  <span className="font-body text-sm font-semibold block" style={{ color: "#F9FAFB" }}>
-                    {preset.name}
+          {/* Advanced — strategy grid */}
+          <div className="rounded-lg" style={{ border: "1px solid #374151" }}>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between px-3 py-2"
+              disabled={isAutoRunning}
+            >
+              <span className="font-body text-xs font-semibold" style={{ color: "#9CA3AF" }}>
+                Advanced
+                {betStrategy !== "custom" && (
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgba(0,229,160,0.15)", color: "#00E5A0" }}>
+                    {BET_STRATEGY_DEFS.find((s) => s.id === betStrategy)?.label}
                   </span>
-                  <span className="font-body text-xs block mt-0.5" style={{ color: "#6B7280" }}>
-                    {preset.description}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </CollapsibleSection>
+                )}
+              </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" style={{ transform: showAdvanced ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 150ms" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {showAdvanced && (
+              <div className="px-3 pb-3 space-y-3">
+                {/* 3-col strategy grid */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {BET_STRATEGY_DEFS.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      disabled={isAutoRunning}
+                      onClick={() => setBetStrategy(s.id)}
+                      className="rounded-lg p-2 text-center transition-all duration-150 disabled:opacity-50"
+                      style={{
+                        backgroundColor: betStrategy === s.id ? "rgba(0,229,160,0.1)" : "#111827",
+                        border: betStrategy === s.id ? "2px solid #00E5A0" : "1px solid #374151",
+                      }}
+                    >
+                      <span className="font-body text-xs font-semibold block" style={{ color: betStrategy === s.id ? "#00E5A0" : "#F9FAFB" }}>
+                        {s.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Description card */}
+                {(() => {
+                  const def = BET_STRATEGY_DEFS.find((s) => s.id === betStrategy);
+                  if (!def) return null;
+                  return (
+                    <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="font-body text-xs font-semibold" style={{ color: "#F9FAFB" }}>{def.label}</span>
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full font-body font-semibold"
+                          style={{ backgroundColor: `${RISK_COLORS[def.risk]}20`, color: RISK_COLORS[def.risk] }}
+                        >
+                          {def.risk} risk
+                        </span>
+                      </div>
+                      <p className="font-body text-[11px] mb-2" style={{ color: "#9CA3AF" }}>{def.description}</p>
+                      <p className="font-mono-stats text-[10px]" style={{ color: "#6B7280" }}>{def.behavior}</p>
+                    </div>
+                  );
+                })()}
+
+                {/* Custom: show On Win / On Loss + stop conditions */}
+                {betStrategy === "custom" && (
+                  <div className="space-y-2">
+                    <BetAdjustmentSelector
+                      label="On Win"
+                      action={onWinBetAction}
+                      value={onWinBetValue}
+                      disabled={isAutoRunning}
+                      onActionChange={setOnWinBetAction}
+                      onValueChange={setOnWinBetValue}
+                    />
+                    <BetAdjustmentSelector
+                      label="On Loss"
+                      action={onLossBetAction}
+                      value={onLossBetValue}
+                      disabled={isAutoRunning}
+                      onActionChange={setOnLossBetAction}
+                      onValueChange={setOnLossBetValue}
+                    />
+                    <StopCondition
+                      label="Stop on profit"
+                      prefix="$"
+                      enabled={stopOnProfitEnabled}
+                      value={stopOnProfitAmount}
+                      disabled={isAutoRunning}
+                      onToggle={setStopOnProfitEnabled}
+                      onValueChange={setStopOnProfitAmount}
+                    />
+                    <StopCondition
+                      label="Stop on loss"
+                      prefix="$"
+                      enabled={stopOnLossEnabled}
+                      value={stopOnLossAmount}
+                      disabled={isAutoRunning}
+                      onToggle={setStopOnLossEnabled}
+                      onValueChange={setStopOnLossAmount}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Start/Stop Autobet button — desktop only */}
           <div className="hidden lg:block">

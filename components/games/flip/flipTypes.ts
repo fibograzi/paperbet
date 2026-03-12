@@ -5,6 +5,14 @@
 export type CoinSide = "heads" | "tails";
 export type SidePick = CoinSide | "random";
 
+export type FlipStrategy =
+  | "martingale"
+  | "anti_martingale"
+  | "dalembert"
+  | "fibonacci"
+  | "paroli"
+  | "custom";
+
 // ---------------------------------------------------------------------------
 // Game states
 // ---------------------------------------------------------------------------
@@ -84,13 +92,14 @@ export interface FlipSessionStats {
 export interface FlipAutoPlayConfig {
   flipsPerRound: number; // 1-20
   totalCount: number | null; // null = infinite
-  onWin: "reset" | "increase" | "decrease";
-  onLoss: "reset" | "increase" | "decrease";
+  onWin: "same" | "reset" | "increase" | "decrease";
+  onLoss: "same" | "reset" | "increase" | "decrease";
   increaseOnWinPercent: number;
   increaseOnLossPercent: number;
   baseBet: number;
   stopOnProfit: number | null;
   stopOnLoss: number | null;
+  strategy: FlipStrategy;
 }
 
 // ---------------------------------------------------------------------------

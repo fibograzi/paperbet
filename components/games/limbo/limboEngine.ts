@@ -13,7 +13,7 @@ export const MAX_TARGET = 10000;
 export const DEFAULT_TARGET = 2.00;
 export const MAX_RESULT_CAP = 10000;
 export const INITIAL_BALANCE = 1000;
-export const MAX_HISTORY = 500;
+export const MAX_HISTORY = 1000;
 export const MAX_PREVIOUS_RESULTS = 20;
 export const SESSION_REMINDER_THRESHOLD = 200;
 export const POST_SESSION_NUDGE_THRESHOLD = 20;
@@ -25,8 +25,8 @@ export const ANIM_DURATION_FAST = 300;
 export const ANIM_DURATION_SKIP = 0;
 export const RESULT_SETTLE_DURATION = 200;
 export const AUTO_SPEED_NORMAL = 2000;
-export const AUTO_SPEED_FAST = 1000;
-export const AUTO_SPEED_TURBO = 500;
+export const AUTO_SPEED_QUICK = 1000;
+export const AUTO_SPEED_INSTANT = 50;
 
 // ---------------------------------------------------------------------------
 // Random number generation — Crash point formula
@@ -213,11 +213,11 @@ export function formatResultNumber(result: number): string {
 // Auto-play speed helpers
 // ---------------------------------------------------------------------------
 
-export function getAutoPlayDelay(speed: LimboAutoPlayConfig["speed"]): number {
+export function getAutoPlayDelay(speed: "normal" | "quick" | "instant"): number {
   switch (speed) {
     case "normal": return AUTO_SPEED_NORMAL;
-    case "fast": return AUTO_SPEED_FAST;
-    case "turbo": return AUTO_SPEED_TURBO;
+    case "quick": return AUTO_SPEED_QUICK;
+    case "instant": return AUTO_SPEED_INSTANT;
     default: return AUTO_SPEED_NORMAL;
   }
 }
@@ -225,10 +225,10 @@ export function getAutoPlayDelay(speed: LimboAutoPlayConfig["speed"]): number {
 /** Get animation duration based on speed settings */
 export function getAnimDuration(
   animSpeed: "normal" | "fast" | "skip",
-  autoSpeed?: LimboAutoPlayConfig["speed"],
+  autoSpeed?: "normal" | "quick" | "instant",
 ): number {
   if (animSpeed === "skip") return ANIM_DURATION_SKIP;
   if (animSpeed === "fast") return ANIM_DURATION_FAST;
-  if (autoSpeed === "turbo" || autoSpeed === "fast") return ANIM_DURATION_FAST;
+  if (autoSpeed === "instant" || autoSpeed === "quick") return ANIM_DURATION_FAST;
   return ANIM_DURATION_NORMAL;
 }
