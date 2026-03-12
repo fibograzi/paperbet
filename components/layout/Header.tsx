@@ -54,6 +54,7 @@ export default function Header() {
   const isGameActive = GAMES.some((g) => pathname.startsWith(`/${g.slug}`));
 
   return (
+    <>
     <header className="fixed top-0 w-full bg-pb-bg-secondary/80 backdrop-blur-xl z-50 border-b border-pb-border">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16 lg:h-[72px]">
         {/* Logo */}
@@ -176,8 +177,8 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
-      <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
     </header>
+    <MobileNav isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+    </>
   );
 }
