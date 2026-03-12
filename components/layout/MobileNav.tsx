@@ -53,8 +53,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             onClick={onClose}
           />
           <motion.div
-            className="fixed inset-0 z-50"
-            style={{ backgroundColor: "#0B0F1A" }}
+            className="fixed inset-0 z-50 bg-pb-bg-primary"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
