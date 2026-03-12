@@ -498,29 +498,20 @@ export function useKenoGame() {
 
     const draw = state.currentDraw;
 
-    // Quick/Instant speed or instantBet → fast stagger (30ms per tile)
-    // Both quick and instant use same animation; only auto-play delay differs
-    if (state.speedMode !== "normal" || state.instantBet) {
-      const fastStagger = 30;
-      const timers: ReturnType<typeof setTimeout>[] = [];
-
+    // Instant speed or instantBet → reveal all at once
+    if (state.speedMode === "instant" || state.instantBet) {
       for (let i = 0; i < draw.drawnNumbers.length; i++) {
-        const timer = setTimeout(() => {
-          dispatch({ type: "REVEAL_NUMBER", index: i });
-        }, (i + 1) * fastStagger);
-        timers.push(timer);
+        dispatch({ type: "REVEAL_NUMBER", index: i });
       }
-
-      const completeTimer = setTimeout(() => {
+      const timer = setTimeout(() => {
         dispatch({ type: "DRAW_COMPLETE" });
-      }, draw.drawnNumbers.length * fastStagger + RESULT_DISPLAY_DELAY);
-      timers.push(completeTimer);
+      }, RESULT_DISPLAY_DELAY);
 
-      return () => { timers.forEach(clearTimeout); };
+      return () => clearTimeout(timer);
     }
 
-    // Normal — stagger each reveal
-    const stagger = TILE_REVEAL_STAGGER;
+    // Normal and Quick — stagger each reveal (quick = faster)
+    const stagger = state.speedMode === "quick" ? 40 : TILE_REVEAL_STAGGER;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     for (let i = 0; i < draw.drawnNumbers.length; i++) {
@@ -549,10 +540,11 @@ export function useKenoGame() {
 
   useEffect(() => {
     if (state.phase === "result") {
-      // Quick/Instant use same fast settle (200ms); only auto-play delay differs
-      const delay = (state.speedMode !== "normal" || state.instantBet)
-        ? BOARD_RESET_DURATION
-        : RESULT_DISPLAY_DURATION;
+      const delay = (state.speedMode === "instant" || state.instantBet)
+        ? BOARD_RESET_DURATION    // 200ms
+        : state.speedMode === "quick"
+          ? 500
+          : RESULT_DISPLAY_DURATION; // 1500ms
 
       settleTimerRef.current = setTimeout(() => {
         dispatch({ type: "RESULT_SETTLE" });

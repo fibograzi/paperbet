@@ -50,7 +50,7 @@ export default function FlipCoin({
   // After flipping: use lastResult
   const displayResult = isFlipping ? pendingResult : lastResult;
 
-  const skipAnimation = instantBet || speedMode !== "normal";
+  const skipAnimation = instantBet || speedMode === "instant";
 
   // Determine the CSS animation class
   const getAnimationClass = () => {
@@ -93,9 +93,14 @@ export default function FlipCoin({
             transform: rotation !== undefined
               ? `rotateY(${rotation}deg)`
               : undefined,
+            // Quick: compress the CSS spin to 0.4s; Instant: 0.1s snap transition
+            animationDuration:
+              isFlipping && speedMode === "quick" && !instantBet
+                ? "0.4s"
+                : undefined,
             transition:
               (isFlipping && skipAnimation)
-                ? "transform 0.2s ease-out"
+                ? "transform 0.1s ease-out"
                 : (!isFlipping && !isIdle)
                   ? "transform 0.3s ease-out"
                   : undefined,
