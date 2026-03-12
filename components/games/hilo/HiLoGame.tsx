@@ -8,7 +8,7 @@ import HiLoSidebar from "./HiLoSidebar";
 import type { Prediction } from "./hiloTypes";
 
 export default function HiLoGame() {
-  const { state, dispatch, placeBet, predict, skip, cashOut } = useHiLoGame();
+  const { state, dispatch, placeBet, predict, skip, cashOut, startAutoPlay } = useHiLoGame();
 
   // ---------------------------------------------------------------------------
   // Keyboard shortcuts
@@ -85,6 +85,7 @@ export default function HiLoGame() {
             onPredict={predict}
             onSkip={skip}
             onCashOut={cashOut}
+            onStartAutoPlay={startAutoPlay}
           />
         </div>
 
@@ -103,6 +104,7 @@ export default function HiLoGame() {
               onPredict={predict}
               onSkip={skip}
               onCashOut={cashOut}
+              onStartAutoPlay={startAutoPlay}
             />
           </div>
         </div>

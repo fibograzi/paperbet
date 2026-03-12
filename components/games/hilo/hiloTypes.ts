@@ -132,11 +132,24 @@ export interface HiLoSessionStats {
 }
 
 // ---------------------------------------------------------------------------
+// Betting strategy (for auto-play bet adjustment)
+// ---------------------------------------------------------------------------
+
+export type HiLoStrategy =
+  | "martingale"
+  | "anti_martingale"
+  | "dalembert"
+  | "fibonacci"
+  | "paroli"
+  | "custom";
+
+// ---------------------------------------------------------------------------
 // Auto-play config
 // ---------------------------------------------------------------------------
 
 export interface HiLoAutoPlayConfig {
-  strategy: AutoStrategy;
+  autoStrategy: AutoStrategy;
+  strategy: HiLoStrategy;
   cashOutAt: number; // cash out at cumulative multiplier
   totalCount: number | null; // null = infinite
   onWin: "same" | "reset" | "increase" | "decrease";

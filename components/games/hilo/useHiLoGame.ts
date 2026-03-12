@@ -30,6 +30,9 @@ import { generateId } from "@/lib/utils";
 // Constants
 // ---------------------------------------------------------------------------
 
+// Fibonacci multipliers (capped at step 10 = 89× base)
+const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89] as const;
+
 const INITIAL_BALANCE = 1000;
 const DEFAULT_BET = 1;
 const MIN_BET = 0.1;
@@ -551,6 +554,17 @@ export function useHiLoGame() {
   const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRoundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoPlayStartBetCountRef = useRef(0);
+  // Strategy-specific progression trackers (reset on every startAutoPlay call)
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
+
+  // --- startAutoPlay: resets strategy refs before dispatching ---
+
+  const startAutoPlay = useCallback((config: HiLoAutoPlayConfig) => {
+    fibStepRef.current = 0;
+    consecutiveWinsRef.current = 0;
+    dispatch({ type: "AUTO_PLAY_START", config });
+  }, []);
 
   // --- Manual actions ---
 
@@ -718,7 +732,7 @@ export function useHiLoGame() {
       }
 
       // Make prediction based on strategy
-      const action = autoPredict(round.currentCard, config.strategy);
+      const action = autoPredict(round.currentCard, config.autoStrategy);
       const predictDelay = s.speedMode === "instant" ? 50
         : s.speedMode === "quick" ? 100
         : 200;
@@ -754,21 +768,75 @@ export function useHiLoGame() {
     const lastResult = state.history[0];
     if (!lastResult) return;
 
-    const config = state.autoPlay.config;
-    const isWin = lastResult.cashedOut;
-    const strategy = isWin ? config.onWin : config.onLoss;
-    const percent = isWin
-      ? config.increaseOnWinPercent
-      : config.increaseOnLossPercent;
-
+    const ap = state.autoPlay.config;
+    const won = lastResult.cashedOut;
     let newBet = state.config.betAmount;
-    if (strategy === "reset") {
-      newBet = config.baseBet;
-    } else if (strategy === "increase") {
-      newBet = state.config.betAmount * (1 + percent / 100);
-    } else if (strategy === "decrease") {
-      newBet = Math.max(MIN_BET, state.config.betAmount * (1 - percent / 100));
+
+    switch (ap.strategy) {
+      case "martingale":
+        newBet = won ? ap.baseBet : newBet * 2;
+        break;
+
+      case "anti_martingale":
+        newBet = won ? newBet * 2 : ap.baseBet;
+        break;
+
+      case "dalembert":
+        newBet = won
+          ? Math.max(ap.baseBet, newBet - ap.baseBet)
+          : newBet + ap.baseBet;
+        break;
+
+      case "fibonacci": {
+        if (won) {
+          fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+        } else {
+          fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+        }
+        newBet = ap.baseBet * FIB[fibStepRef.current];
+        break;
+      }
+
+      case "paroli": {
+        if (won) {
+          consecutiveWinsRef.current += 1;
+          if (consecutiveWinsRef.current >= 3) {
+            consecutiveWinsRef.current = 0;
+            newBet = ap.baseBet;
+          } else {
+            newBet = newBet * 2;
+          }
+        } else {
+          consecutiveWinsRef.current = 0;
+          newBet = ap.baseBet;
+        }
+        break;
+      }
+
+      case "custom":
+      default: {
+        const winLossStrategy = won ? ap.onWin : ap.onLoss;
+        const percent = won ? ap.increaseOnWinPercent : ap.increaseOnLossPercent;
+        switch (winLossStrategy) {
+          case "reset":
+            newBet = ap.baseBet;
+            break;
+          case "increase":
+            newBet = newBet * (1 + percent / 100);
+            break;
+          case "decrease":
+            newBet = Math.max(ap.baseBet, newBet * (1 - percent / 100));
+            break;
+          case "same":
+          default:
+            break;
+        }
+      }
     }
+
+    // Round to 2 decimals, enforce min/max
+    newBet = Math.round(newBet * 100) / 100;
+    newBet = Math.max(MIN_BET, Math.min(MAX_BET, newBet));
 
     dispatch({ type: "AUTO_PLAY_ADJUST_BET", amount: newBet });
     dispatch({ type: "AUTO_PLAY_TICK" });
@@ -813,5 +881,6 @@ export function useHiLoGame() {
     predict,
     skip,
     cashOut,
+    startAutoPlay,
   };
 }
