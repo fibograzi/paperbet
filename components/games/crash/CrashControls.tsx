@@ -35,6 +35,7 @@ interface CrashControlsProps {
 }
 
 const INCREASE_PRESETS = [25, 50, 100, 200];
+const DECREASE_PRESETS = [10, 25, 50, 75];
 
 type WinLossAction = "same" | "increase" | "decrease" | "reset";
 
@@ -520,7 +521,7 @@ export default function CrashControls({
                     {(autoOnWin === "increase" || autoOnWin === "decrease") && (
                       <div className="mt-1.5">
                         <div className="flex gap-1 mb-1">
-                          {INCREASE_PRESETS.map((pct) => (
+                          {(autoOnWin === "decrease" ? DECREASE_PRESETS : INCREASE_PRESETS).map((pct) => (
                             <button
                               key={pct}
                               type="button"
@@ -544,13 +545,14 @@ export default function CrashControls({
                           <input suppressHydrationWarning
                             type="number"
                             min={1}
-                            max={10000}
+                            max={autoOnWin === "decrease" ? 95 : 10000}
                             step={1}
                             value={increaseOnWinPercent}
                             onChange={(e) => {
                               const val = parseInt(e.target.value, 10);
+                              const max = autoOnWin === "decrease" ? 95 : 10000;
                               if (!isNaN(val) && val >= 1) {
-                                setIncreaseOnWinPercent(Math.min(10000, val));
+                                setIncreaseOnWinPercent(Math.min(max, val));
                               }
                             }}
                             className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
@@ -600,7 +602,7 @@ export default function CrashControls({
                     {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
                       <div className="mt-1.5">
                         <div className="flex gap-1 mb-1">
-                          {INCREASE_PRESETS.map((pct) => (
+                          {(autoOnLoss === "decrease" ? DECREASE_PRESETS : INCREASE_PRESETS).map((pct) => (
                             <button
                               key={pct}
                               type="button"
@@ -624,13 +626,14 @@ export default function CrashControls({
                           <input suppressHydrationWarning
                             type="number"
                             min={1}
-                            max={10000}
+                            max={autoOnLoss === "decrease" ? 95 : 10000}
                             step={1}
                             value={increaseOnLossPercent}
                             onChange={(e) => {
                               const val = parseInt(e.target.value, 10);
+                              const max = autoOnLoss === "decrease" ? 95 : 10000;
                               if (!isNaN(val) && val >= 1) {
-                                setIncreaseOnLossPercent(Math.min(10000, val));
+                                setIncreaseOnLossPercent(Math.min(max, val));
                               }
                             }}
                             className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"

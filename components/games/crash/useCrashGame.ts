@@ -473,7 +473,7 @@ export function useCrashGame() {
           newBet = stateRef.current.config.betAmount * (1 + increasePercent / 100);
           break;
         case "decrease":
-          newBet = Math.max(0.1, stateRef.current.config.betAmount * (1 - increasePercent / 100));
+          newBet = Math.max(ap.baseBet, stateRef.current.config.betAmount * (1 - increasePercent / 100));
           break;
         case "same":
         default:
