@@ -22,7 +22,7 @@ import { generateId } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 const SESSION_REMINDER_THRESHOLD = 50;
-const HISTORY_CAP = 1000;
+const HISTORY_CAP = 100;
 const CRASH_POINTS_CAP = 20;
 
 // ---------------------------------------------------------------------------
@@ -472,6 +472,9 @@ export function useCrashGame() {
         case "increase":
           newBet = stateRef.current.config.betAmount * (1 + increasePercent / 100);
           break;
+        case "decrease":
+          newBet = Math.max(0.1, stateRef.current.config.betAmount * (1 - increasePercent / 100));
+          break;
         case "same":
         default:
           break;
@@ -570,7 +573,7 @@ export function useCrashGame() {
         handleAutoPlayPostRound(didCashOut);
       }
 
-      const delay = stateRef.current.speedMode === "instant" ? 150
+      const delay = stateRef.current.speedMode === "instant" ? 300
         : stateRef.current.speedMode === "quick" ? 750
         : POST_CRASH_DELAY;
       postCrashTimeoutRef.current = setTimeout(() => {
@@ -776,7 +779,7 @@ export function useCrashGame() {
             }
 
             // After crash delay, start next round
-            const crashDelay = stateRef.current.speedMode === "instant" ? 150
+            const crashDelay = stateRef.current.speedMode === "instant" ? 300
               : stateRef.current.speedMode === "quick" ? 750
               : POST_CRASH_DELAY;
             postCrashTimeoutRef.current = setTimeout(() => {

@@ -23,8 +23,8 @@ interface CrashControlsProps {
   onStartAutoPlay: (config: {
     totalCount: number | null;
     cashoutAt: number;
-    onWin: "same" | "increase" | "reset";
-    onLoss: "same" | "increase" | "reset";
+    onWin: "same" | "increase" | "decrease" | "reset";
+    onLoss: "same" | "increase" | "decrease" | "reset";
     increaseOnWinPercent: number;
     increaseOnLossPercent: number;
     baseBet: number;
@@ -36,7 +36,7 @@ interface CrashControlsProps {
 
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
-type WinLossAction = "same" | "increase" | "reset";
+type WinLossAction = "same" | "increase" | "decrease" | "reset";
 
 export default function CrashControls({
   state,
@@ -486,31 +486,49 @@ export default function CrashControls({
                 <div className="px-2.5 pb-2.5 space-y-2">
                   {/* On Win */}
                   <div>
-                    <div className="text-xs text-pb-text-muted mb-1.5">On Win</div>
-                    <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
-                      {renderStrategyControl(
+                    <label className="font-body text-xs block mb-1.5" style={{ color: "#6B7280" }}>
+                      On Win
+                    </label>
+                    <div className="flex gap-1.5 mb-1.5">
+                      {(
                         [
+                          { value: "same", label: "Same" },
                           { value: "reset", label: "Reset" },
                           { value: "increase", label: "Increase" },
-                          { value: "same", label: "Same" },
-                        ],
-                        autoOnWin,
-                        setAutoOnWin
-                      )}
+                          { value: "decrease", label: "Decrease" },
+                        ] as const
+                      ).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setAutoOnWin(opt.value)}
+                          className="flex-1 py-1.5 rounded-md text-xs font-body transition-colors"
+                          style={{
+                            backgroundColor:
+                              autoOnWin === opt.value ? "rgba(0, 229, 160, 0.15)" : "#1F2937",
+                            color: autoOnWin === opt.value ? "#00E5A0" : "#9CA3AF",
+                            border:
+                              autoOnWin === opt.value
+                                ? "1px solid rgba(0, 229, 160, 0.3)"
+                                : "1px solid #374151",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
-                    {autoOnWin === "increase" && (
-                      <div className="mt-2">
-                        <div className="text-xs text-pb-text-muted mb-1">Increase by</div>
-                        <div className="flex gap-1.5 mb-1.5">
+                    {(autoOnWin === "increase" || autoOnWin === "decrease") && (
+                      <div className="mt-1.5">
+                        <div className="flex gap-1 mb-1">
                           {INCREASE_PRESETS.map((pct) => (
                             <button
                               key={pct}
                               type="button"
                               onClick={() => setIncreaseOnWinPercent(pct)}
-                              className="flex-1 py-1 rounded-md text-xs font-mono-stats transition-colors"
+                              className="flex-1 py-1 text-[10px] font-mono-stats rounded transition-colors"
                               style={{
                                 backgroundColor:
-                                  increaseOnWinPercent === pct ? "rgba(0, 229, 160, 0.15)" : "",
+                                  increaseOnWinPercent === pct ? "rgba(0, 229, 160, 0.15)" : "#1F2937",
                                 color: increaseOnWinPercent === pct ? "#00E5A0" : "#9CA3AF",
                                 border:
                                   increaseOnWinPercent === pct
@@ -536,7 +554,7 @@ export default function CrashControls({
                               }
                             }}
                             className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
-                            aria-label="Custom increase on win percentage"
+                            aria-label="On win percentage"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">
                             %
@@ -548,35 +566,53 @@ export default function CrashControls({
 
                   {/* On Loss */}
                   <div>
-                    <div className="text-xs text-pb-text-muted mb-1.5">On Loss</div>
-                    <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
-                      {renderStrategyControl(
+                    <label className="font-body text-xs block mb-1.5" style={{ color: "#6B7280" }}>
+                      On Loss
+                    </label>
+                    <div className="flex gap-1.5 mb-1.5">
+                      {(
                         [
+                          { value: "same", label: "Same" },
                           { value: "reset", label: "Reset" },
                           { value: "increase", label: "Increase" },
-                          { value: "same", label: "Same" },
-                        ],
-                        autoOnLoss,
-                        setAutoOnLoss
-                      )}
+                          { value: "decrease", label: "Decrease" },
+                        ] as const
+                      ).map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setAutoOnLoss(opt.value)}
+                          className="flex-1 py-1.5 rounded-md text-xs font-body transition-colors"
+                          style={{
+                            backgroundColor:
+                              autoOnLoss === opt.value ? "rgba(239, 68, 68, 0.15)" : "#1F2937",
+                            color: autoOnLoss === opt.value ? "#EF4444" : "#9CA3AF",
+                            border:
+                              autoOnLoss === opt.value
+                                ? "1px solid rgba(239, 68, 68, 0.3)"
+                                : "1px solid #374151",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
-                    {autoOnLoss === "increase" && (
-                      <div className="mt-2">
-                        <div className="text-xs text-pb-text-muted mb-1">Increase by</div>
-                        <div className="flex gap-1.5 mb-1.5">
+                    {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
+                      <div className="mt-1.5">
+                        <div className="flex gap-1 mb-1">
                           {INCREASE_PRESETS.map((pct) => (
                             <button
                               key={pct}
                               type="button"
                               onClick={() => setIncreaseOnLossPercent(pct)}
-                              className="flex-1 py-1 rounded-md text-xs font-mono-stats transition-colors"
+                              className="flex-1 py-1 text-[10px] font-mono-stats rounded transition-colors"
                               style={{
                                 backgroundColor:
-                                  increaseOnLossPercent === pct ? "rgba(0, 229, 160, 0.15)" : "",
-                                color: increaseOnLossPercent === pct ? "#00E5A0" : "#9CA3AF",
+                                  increaseOnLossPercent === pct ? "rgba(239, 68, 68, 0.15)" : "#1F2937",
+                                color: increaseOnLossPercent === pct ? "#EF4444" : "#9CA3AF",
                                 border:
                                   increaseOnLossPercent === pct
-                                    ? "1px solid rgba(0, 229, 160, 0.3)"
+                                    ? "1px solid rgba(239, 68, 68, 0.3)"
                                     : "1px solid #374151",
                               }}
                             >
@@ -598,7 +634,7 @@ export default function CrashControls({
                               }
                             }}
                             className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
-                            aria-label="Custom increase on loss percentage"
+                            aria-label="On loss percentage"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">
                             %
@@ -710,7 +746,9 @@ export default function CrashControls({
                       ? "Reset"
                       : autoPlay.onWin === "increase"
                         ? `+${autoPlay.increaseOnWinPercent}%`
-                        : "Same"}
+                        : autoPlay.onWin === "decrease"
+                          ? `-${autoPlay.increaseOnWinPercent}%`
+                          : "Same"}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs">
@@ -720,7 +758,9 @@ export default function CrashControls({
                       ? "Reset"
                       : autoPlay.onLoss === "increase"
                         ? `+${autoPlay.increaseOnLossPercent}%`
-                        : "Same"}
+                        : autoPlay.onLoss === "decrease"
+                          ? `-${autoPlay.increaseOnLossPercent}%`
+                          : "Same"}
                   </span>
                 </div>
                 <div className="flex justify-between text-xs">

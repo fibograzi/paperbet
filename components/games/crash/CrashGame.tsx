@@ -30,8 +30,8 @@ export default function CrashGame() {
     (config: {
       totalCount: number | null;
       cashoutAt: number;
-      onWin: "same" | "increase" | "reset";
-      onLoss: "same" | "increase" | "reset";
+      onWin: "same" | "increase" | "decrease" | "reset";
+      onLoss: "same" | "increase" | "decrease" | "reset";
       increaseOnWinPercent: number;
       increaseOnLossPercent: number;
       baseBet: number;

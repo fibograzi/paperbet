@@ -52,8 +52,8 @@ export interface CrashAutoPlayState {
   totalCount: number | null; // null = infinite
   currentCount: number;
   cashoutAt: number; // required for auto-play
-  onWin: "same" | "increase" | "reset";
-  onLoss: "same" | "increase" | "reset";
+  onWin: "same" | "increase" | "decrease" | "reset";
+  onLoss: "same" | "increase" | "decrease" | "reset";
   increaseOnWinPercent: number;
   increaseOnLossPercent: number;
   baseBet: number;
