@@ -47,11 +47,20 @@ export interface CrashSessionStats {
 // Auto-play state
 // ---------------------------------------------------------------------------
 
+export type CrashStrategy =
+  | "martingale"
+  | "anti_martingale"
+  | "dalembert"
+  | "fibonacci"
+  | "paroli"
+  | "custom";
+
 export interface CrashAutoPlayState {
   active: boolean;
   totalCount: number | null; // null = infinite
   currentCount: number;
   cashoutAt: number; // required for auto-play
+  strategy: CrashStrategy;
   onWin: "same" | "increase" | "decrease" | "reset";
   onLoss: "same" | "increase" | "decrease" | "reset";
   increaseOnWinPercent: number;

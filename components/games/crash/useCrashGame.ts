@@ -25,6 +25,9 @@ const SESSION_REMINDER_THRESHOLD = 50;
 const HISTORY_CAP = 100;
 const CRASH_POINTS_CAP = 20;
 
+// Fibonacci multipliers (capped at step 10 = 89× base)
+const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89] as const;
+
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
@@ -48,6 +51,7 @@ const initialAutoPlay: CrashAutoPlayState = {
   totalCount: null,
   currentCount: 0,
   cashoutAt: 2.0,
+  strategy: "custom",
   onWin: "same",
   onLoss: "same",
   increaseOnWinPercent: 50,
@@ -405,6 +409,9 @@ export function useCrashGame() {
   const crashPointRef = useRef<number>(1);
   const stateRef = useRef(state);
   const gameActiveRef = useRef(false);
+  // Strategy-specific progression trackers (reset on every AUTO_PLAY_START)
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
 
   // Keep stateRef in sync on every render
   stateRef.current = state;
@@ -461,23 +468,70 @@ export function useCrashGame() {
       const ap = stateRef.current.autoPlay;
       if (!ap.active) return;
 
-      const strategy = won ? ap.onWin : ap.onLoss;
-      const increasePercent = won ? ap.increaseOnWinPercent : ap.increaseOnLossPercent;
       let newBet = stateRef.current.config.betAmount;
 
-      switch (strategy) {
-        case "reset":
-          newBet = ap.baseBet;
+      switch (ap.strategy) {
+        case "martingale":
+          newBet = won ? ap.baseBet : newBet * 2;
           break;
-        case "increase":
-          newBet = stateRef.current.config.betAmount * (1 + increasePercent / 100);
+
+        case "anti_martingale":
+          newBet = won ? newBet * 2 : ap.baseBet;
           break;
-        case "decrease":
-          newBet = Math.max(ap.baseBet, stateRef.current.config.betAmount * (1 - increasePercent / 100));
+
+        case "dalembert":
+          // Flat unit: +1 base unit on loss, -1 base unit on win, floor at base
+          newBet = won
+            ? Math.max(ap.baseBet, newBet - ap.baseBet)
+            : newBet + ap.baseBet;
           break;
-        case "same":
-        default:
+
+        case "fibonacci": {
+          if (won) {
+            fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+          } else {
+            fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+          }
+          newBet = ap.baseBet * FIB[fibStepRef.current];
           break;
+        }
+
+        case "paroli": {
+          if (won) {
+            consecutiveWinsRef.current++;
+            if (consecutiveWinsRef.current >= 3) {
+              // 3 consecutive wins — reset and start fresh
+              consecutiveWinsRef.current = 0;
+              newBet = ap.baseBet;
+            } else {
+              newBet = newBet * 2;
+            }
+          } else {
+            consecutiveWinsRef.current = 0;
+            newBet = ap.baseBet;
+          }
+          break;
+        }
+
+        case "custom":
+        default: {
+          const action = won ? ap.onWin : ap.onLoss;
+          const pct = won ? ap.increaseOnWinPercent : ap.increaseOnLossPercent;
+          switch (action) {
+            case "reset":
+              newBet = ap.baseBet;
+              break;
+            case "increase":
+              newBet = newBet * (1 + pct / 100);
+              break;
+            case "decrease":
+              newBet = Math.max(ap.baseBet, newBet * (1 - pct / 100));
+              break;
+            case "same":
+            default:
+              break;
+          }
+        }
       }
 
       // Round to 2 decimals, enforce min/max
@@ -856,5 +910,15 @@ export function useCrashGame() {
     startNewRound();
   }, [startNewRound]);
 
-  return { state, dispatch, placeBet, cancelBet, queueBet, cancelQueue, cashOut, startGame };
+  const startAutoPlay = useCallback(
+    (config: Omit<CrashAutoPlayState, "active" | "currentCount" | "startingNetProfit">) => {
+      // Reset strategy-specific progression trackers
+      fibStepRef.current = 0;
+      consecutiveWinsRef.current = 0;
+      dispatch({ type: "AUTO_PLAY_START", config });
+    },
+    [dispatch]
+  );
+
+  return { state, dispatch, placeBet, cancelBet, queueBet, cancelQueue, cashOut, startGame, startAutoPlay };
 }

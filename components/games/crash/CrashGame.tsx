@@ -10,7 +10,7 @@ import CrashPreviousRounds from "./CrashPreviousRounds";
 import CrashSidebar from "./CrashSidebar";
 
 export default function CrashGame() {
-  const { state, dispatch, placeBet, cancelBet, queueBet, cancelQueue, cashOut, startGame } =
+  const { state, dispatch, placeBet, cancelBet, queueBet, cancelQueue, cashOut, startGame, startAutoPlay } =
     useCrashGame();
 
   // Start the game loop on mount. The hook's internal gameActiveRef
@@ -27,28 +27,15 @@ export default function CrashGame() {
 
   // Auto-play handlers
   const handleStartAutoPlay = useCallback(
-    (config: {
-      totalCount: number | null;
-      cashoutAt: number;
-      onWin: "same" | "increase" | "decrease" | "reset";
-      onLoss: "same" | "increase" | "decrease" | "reset";
-      increaseOnWinPercent: number;
-      increaseOnLossPercent: number;
-      baseBet: number;
-      stopOnProfit: number | null;
-      stopOnLoss: number | null;
-    }) => {
-      dispatch({
-        type: "AUTO_PLAY_START",
-        config: config as Omit<CrashAutoPlayState, "active" | "currentCount" | "startingNetProfit">,
-      });
+    (config: Omit<CrashAutoPlayState, "active" | "currentCount" | "startingNetProfit">) => {
+      startAutoPlay(config);
       // If in betting phase and no bet yet, immediately place bet for current round
       if (state.phase === "betting" && !state.hasBet && state.balance >= state.config.betAmount) {
         dispatch({ type: "PLACE_BET" });
         dispatch({ type: "AUTO_PLAY_TICK" });
       }
     },
-    [dispatch, state.phase, state.hasBet, state.balance, state.config.betAmount]
+    [startAutoPlay, dispatch, state.phase, state.hasBet, state.balance, state.config.betAmount]
   );
 
   const handleStopAutoPlay = useCallback(() => {

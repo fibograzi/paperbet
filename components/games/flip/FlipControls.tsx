@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { Crown, Diamond, Shuffle, Infinity, Zap, ChevronDown } from "lucide-react";
+import { Crown, Diamond, Shuffle, Infinity, Zap } from "lucide-react";
 import { useBetInput } from "@/lib/useBetInput";
 import type {
   FlipGameState,
@@ -38,7 +38,6 @@ const MAX_AUTO_ROUNDS = 500;
 
 type WinLossAction = "reset" | "increase" | "decrease";
 type Tab = "manual" | "auto";
-const INCREASE_PRESETS = [25, 50, 100, 200];
 
 // ---------------------------------------------------------------------------
 // Side Button Component
@@ -134,16 +133,14 @@ export default function FlipControls({
   // Auto-play local state
   const [autoFlipsPerRound, setAutoFlipsPerRound] = useState(1);
   const [autoCount, setAutoCount] = useState(10);
-  const [autoOnWin, setAutoOnWin] = useState<WinLossAction>("reset");
-  const [autoOnLoss, setAutoOnLoss] = useState<WinLossAction>("reset");
-  const [increaseOnWinPercent, setIncreaseOnWinPercent] = useState(50);
-  const [increaseOnLossPercent, setIncreaseOnLossPercent] = useState(100);
-  const [stopOnProfitEnabled, setStopOnProfitEnabled] = useState(false);
-  const [stopOnLossEnabled, setStopOnLossEnabled] = useState(false);
-  const [stopOnProfitAmount, setStopOnProfitAmount] = useState(100);
-  const [stopOnLossAmount, setStopOnLossAmount] = useState(50);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
+  const [autoOnWin] = useState<WinLossAction>("reset");
+  const [autoOnLoss] = useState<WinLossAction>("reset");
+  const [increaseOnWinPercent] = useState(50);
+  const [increaseOnLossPercent] = useState(100);
+  const [stopOnProfitEnabled] = useState(false);
+  const [stopOnLossEnabled] = useState(false);
+  const [stopOnProfitAmount] = useState(100);
+  const [stopOnLossAmount] = useState(50);
   const isIdle = phase === "idle";
   const isFlipping = phase === "flipping";
   const isWon = phase === "won";
@@ -611,198 +608,6 @@ export default function FlipControls({
             )}
           </div>
 
-          {/* Advanced (collapsible) */}
-          <div className="rounded-lg border border-pb-border">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between px-2.5 py-2"
-            >
-              <span className="font-body text-xs text-pb-text-secondary">Advanced</span>
-              <ChevronDown
-                size={14}
-                className={cn(
-                  "text-pb-text-muted transition-transform",
-                  showAdvanced ? "rotate-180" : "",
-                )}
-              />
-            </button>
-            {showAdvanced && (
-              <div className="px-2.5 pb-2.5 space-y-2">
-                {/* On Win */}
-                <div>
-                  <label className="text-[10px] uppercase tracking-wider text-pb-text-muted block mb-1">
-                    On Win
-                  </label>
-                  <div className="flex gap-1.5">
-                    {(["reset", "increase", "decrease"] as const).map((action) => (
-                      <button
-                        key={action}
-                        type="button"
-                        disabled={autoPlay.active}
-                        onClick={() => setAutoOnWin(action)}
-                        className={cn(
-                          "flex-1 py-1 text-xs font-body rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                          autoOnWin === action
-                            ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                            : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
-                        )}
-                      >
-                        {action === "reset" ? "Reset" : action === "increase" ? "Increase" : "Decrease"}
-                      </button>
-                    ))}
-                  </div>
-                  {(autoOnWin === "increase" || autoOnWin === "decrease") && (
-                    <div className="mt-1.5">
-                      <div className="flex gap-1">
-                        {INCREASE_PRESETS.map((pct) => (
-                          <button
-                            key={pct}
-                            type="button"
-                            disabled={autoPlay.active}
-                            onClick={() => setIncreaseOnWinPercent(pct)}
-                            className={cn(
-                              "flex-1 py-1 text-[10px] font-mono-stats rounded border disabled:opacity-50 transition-colors",
-                              increaseOnWinPercent === pct
-                                ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                                : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted",
-                            )}
-                          >
-                            {pct}%
-                          </button>
-                        ))}
-                      </div>
-                      <input suppressHydrationWarning
-                        type="number"
-                        min={1}
-                        max={10000}
-                        value={increaseOnWinPercent}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val >= 1)
-                            setIncreaseOnWinPercent(Math.min(10000, val));
-                        }}
-                        disabled={autoPlay.active}
-                        className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-                        aria-label="Increase on win percentage"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* On Loss */}
-                <div>
-                  <label className="text-[10px] uppercase tracking-wider text-pb-text-muted block mb-1">
-                    On Loss
-                  </label>
-                  <div className="flex gap-1.5">
-                    {(["reset", "increase", "decrease"] as const).map((action) => (
-                      <button
-                        key={action}
-                        type="button"
-                        disabled={autoPlay.active}
-                        onClick={() => setAutoOnLoss(action)}
-                        className={cn(
-                          "flex-1 py-1 text-xs font-body rounded-md border transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-                          autoOnLoss === action
-                            ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                            : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
-                        )}
-                      >
-                        {action === "reset" ? "Reset" : action === "increase" ? "Increase" : "Decrease"}
-                      </button>
-                    ))}
-                  </div>
-                  {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
-                    <div className="mt-1.5">
-                      <div className="flex gap-1">
-                        {INCREASE_PRESETS.map((pct) => (
-                          <button
-                            key={pct}
-                            type="button"
-                            disabled={autoPlay.active}
-                            onClick={() => setIncreaseOnLossPercent(pct)}
-                            className={cn(
-                              "flex-1 py-1 text-[10px] font-mono-stats rounded border disabled:opacity-50 transition-colors",
-                              increaseOnLossPercent === pct
-                                ? "bg-pb-accent/15 border-pb-accent/30 text-pb-accent"
-                                : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted",
-                            )}
-                          >
-                            {pct}%
-                          </button>
-                        ))}
-                      </div>
-                      <input suppressHydrationWarning
-                        type="number"
-                        min={1}
-                        max={10000}
-                        value={increaseOnLossPercent}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val >= 1)
-                            setIncreaseOnLossPercent(Math.min(10000, val));
-                        }}
-                        disabled={autoPlay.active}
-                        className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-                        aria-label="Increase on loss percentage"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Stop on Profit */}
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 text-xs text-pb-text-muted cursor-pointer">
-                    <input suppressHydrationWarning
-                      type="checkbox"
-                      checked={stopOnProfitEnabled}
-                      onChange={(e) => setStopOnProfitEnabled(e.target.checked)}
-                      disabled={autoPlay.active}
-                      className="accent-pb-accent"
-                    />
-                    Stop on Profit ≥
-                  </label>
-                  <input suppressHydrationWarning
-                    type="number"
-                    min={1}
-                    value={stopOnProfitAmount}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val) && val > 0) setStopOnProfitAmount(val);
-                    }}
-                    disabled={autoPlay.active || !stopOnProfitEnabled}
-                    className="w-20 bg-pb-bg-tertiary border border-pb-border rounded py-1 px-2 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-                  />
-                </div>
-
-                {/* Stop on Loss */}
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 text-xs text-pb-text-muted cursor-pointer">
-                    <input suppressHydrationWarning
-                      type="checkbox"
-                      checked={stopOnLossEnabled}
-                      onChange={(e) => setStopOnLossEnabled(e.target.checked)}
-                      disabled={autoPlay.active}
-                      className="accent-pb-accent"
-                    />
-                    Stop on Loss ≥
-                  </label>
-                  <input suppressHydrationWarning
-                    type="number"
-                    min={1}
-                    value={stopOnLossAmount}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val) && val > 0) setStopOnLossAmount(val);
-                    }}
-                    disabled={autoPlay.active || !stopOnLossEnabled}
-                    className="w-20 bg-pb-bg-tertiary border border-pb-border rounded py-1 px-2 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
           {/* Start / Stop Auto-Play button */}
           <div className="hidden lg:block">
             {autoPlay.active ? (
