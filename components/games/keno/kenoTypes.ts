@@ -12,14 +12,11 @@ export type KenoDifficulty = "classic" | "low" | "medium" | "high";
 // Auto-play
 // ---------------------------------------------------------------------------
 
-export type KenoAutoPlaySpeed = "normal" | "fast" | "turbo";
-
 export interface KenoAutoPlayConfig {
   numberOfBets: number;       // 10, 25, 50, 100, Infinity
-  speed: KenoAutoPlaySpeed;
-  onWinAction: "reset" | "increase_percent";
+  onWinAction: "reset" | "increase_percent" | "decrease_percent";
   onWinValue: number;
-  onLossAction: "reset" | "increase_percent";
+  onLossAction: "reset" | "increase_percent" | "decrease_percent";
   onLossValue: number;
   stopOnProfit: number | null;
   stopOnLoss: number | null;
@@ -121,6 +118,8 @@ export interface KenoGameState {
   showPostSessionNudge: boolean;
   postSessionNudgeDismissed: boolean;
   maxPicksShake: boolean;       // brief shake when trying to select 11th number
+  // Speed
+  speedMode: "normal" | "quick" | "instant";
   // Auto-play
   autoPlay: {
     active: boolean;
@@ -151,6 +150,7 @@ export type KenoAction =
   | { type: "AUTO_PLAY_START"; config: KenoAutoPlayConfig }
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST"; betAmount: number }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }

@@ -139,8 +139,8 @@ export interface HiLoAutoPlayConfig {
   strategy: AutoStrategy;
   cashOutAt: number; // cash out at cumulative multiplier
   totalCount: number | null; // null = infinite
-  onWin: "reset" | "increase";
-  onLoss: "reset" | "increase";
+  onWin: "same" | "reset" | "increase" | "decrease";
+  onLoss: "same" | "reset" | "increase" | "decrease";
   increaseOnWinPercent: number;
   increaseOnLossPercent: number;
   baseBet: number;
@@ -167,6 +167,7 @@ export interface HiLoGameState {
   phase: HiLoPhase;
   config: HiLoConfig;
   balance: number;
+  speedMode: "normal" | "quick" | "instant";
   round: HiLoRound | null;
   history: HiLoBetResult[];
   stats: HiLoSessionStats;
@@ -202,6 +203,7 @@ export type HiLoAction =
   | { type: "AUTO_PLAY_TICK" }
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST_BET"; amount: number }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }

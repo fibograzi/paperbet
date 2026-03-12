@@ -54,8 +54,8 @@ export interface MinesAutoPlayState {
   totalCount: number | null; // null = infinite
   currentCount: number;
   autoRevealTarget: number; // gems to reveal before auto-cashout
-  onWin: "same" | "increase" | "reset";
-  onLoss: "same" | "increase" | "reset";
+  onWin: "same" | "increase" | "decrease" | "reset";
+  onLoss: "same" | "increase" | "decrease" | "reset";
   increaseOnWinPercent: number;
   increaseOnLossPercent: number;
   baseBet: number;
@@ -71,6 +71,9 @@ export interface MinesAutoPlayState {
 export interface MinesGameState {
   phase: MinesPhase;
   gameOverReason: GameOverReason | null;
+
+  // Speed mode
+  speedMode: "normal" | "quick" | "instant";
 
   // Balance
   balance: number;
@@ -129,6 +132,7 @@ export type MinesAction =
   | { type: "AUTO_PLAY_TICK" }
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST_BET"; amount: number }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }

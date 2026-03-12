@@ -36,7 +36,7 @@ interface FlipControlsProps {
 
 const MAX_AUTO_ROUNDS = 500;
 
-type WinLossAction = "reset" | "increase";
+type WinLossAction = "reset" | "increase" | "decrease";
 type Tab = "manual" | "auto";
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
@@ -635,7 +635,7 @@ export default function FlipControls({
                     On Win
                   </label>
                   <div className="flex gap-1.5">
-                    {(["reset", "increase"] as const).map((action) => (
+                    {(["reset", "increase", "decrease"] as const).map((action) => (
                       <button
                         key={action}
                         type="button"
@@ -648,11 +648,11 @@ export default function FlipControls({
                             : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
                         )}
                       >
-                        {action === "reset" ? "Reset" : "Increase"}
+                        {action === "reset" ? "Reset" : action === "increase" ? "Increase" : "Decrease"}
                       </button>
                     ))}
                   </div>
-                  {autoOnWin === "increase" && (
+                  {(autoOnWin === "increase" || autoOnWin === "decrease") && (
                     <div className="mt-1.5">
                       <div className="flex gap-1">
                         {INCREASE_PRESETS.map((pct) => (
@@ -696,7 +696,7 @@ export default function FlipControls({
                     On Loss
                   </label>
                   <div className="flex gap-1.5">
-                    {(["reset", "increase"] as const).map((action) => (
+                    {(["reset", "increase", "decrease"] as const).map((action) => (
                       <button
                         key={action}
                         type="button"
@@ -709,11 +709,11 @@ export default function FlipControls({
                             : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
                         )}
                       >
-                        {action === "reset" ? "Reset" : "Increase"}
+                        {action === "reset" ? "Reset" : action === "increase" ? "Increase" : "Decrease"}
                       </button>
                     ))}
                   </div>
-                  {autoOnLoss === "increase" && (
+                  {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
                     <div className="mt-1.5">
                       <div className="flex gap-1">
                         {INCREASE_PRESETS.map((pct) => (

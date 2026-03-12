@@ -743,6 +743,8 @@ export function useFlipGame() {
       newBet = config.baseBet;
     } else if (strategy === "increase") {
       newBet = state.config.betAmount * (1 + percent / 100);
+    } else if (strategy === "decrease") {
+      newBet = Math.max(MIN_BET, state.config.betAmount * (1 - percent / 100));
     }
 
     dispatch({ type: "AUTO_PLAY_ADJUST_BET", amount: newBet });

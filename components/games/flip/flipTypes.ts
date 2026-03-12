@@ -84,8 +84,8 @@ export interface FlipSessionStats {
 export interface FlipAutoPlayConfig {
   flipsPerRound: number; // 1-20
   totalCount: number | null; // null = infinite
-  onWin: "reset" | "increase";
-  onLoss: "reset" | "increase";
+  onWin: "reset" | "increase" | "decrease";
+  onLoss: "reset" | "increase" | "decrease";
   increaseOnWinPercent: number;
   increaseOnLossPercent: number;
   baseBet: number;
@@ -112,6 +112,7 @@ export interface FlipGameState {
   phase: FlipPhase;
   config: FlipConfig;
   balance: number;
+  speedMode: "normal" | "quick" | "instant";
   streak: FlipStreak | null; // null when idle
   pendingResult: CoinSide | null; // predetermined result during "flipping" animation
   pendingPick: CoinSide | null; // resolved pick during "flipping" animation
@@ -151,6 +152,7 @@ export type FlipAction =
   | { type: "AUTO_PLAY_TICK" }
   | { type: "AUTO_PLAY_STOP" }
   | { type: "AUTO_PLAY_ADJUST_BET"; amount: number }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }

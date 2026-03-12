@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Shuffle,
   ChevronDown,
+  Zap,
 } from "lucide-react";
 import type { MinesGameState, MinesAction, MinesAutoPlayState } from "./minesTypes";
 import { useBetInput } from "@/lib/useBetInput";
@@ -39,7 +40,7 @@ interface MinesControlsProps {
 const AUTO_REVEAL_PRESETS = [1, 3, 5, 10];
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
-type WinLossAction = "same" | "increase" | "reset";
+type WinLossAction = "same" | "increase" | "decrease" | "reset";
 
 // ---------------------------------------------------------------------------
 // Component
@@ -64,6 +65,7 @@ export default function MinesControls({
     currentMultiplier,
     autoPlay,
     postRevealPhase,
+    speedMode,
   } = state;
 
   // Tab & UI state
@@ -470,6 +472,56 @@ export default function MinesControls({
             </p>
           </div>
 
+          {/* Speed mode selector */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
+            </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "Faster rounds — reduced delays" : "Maximum speed — instant results"}
+              </p>
+            )}
+          </div>
+
           {/* Advanced Toggle */}
           <div className="rounded-lg border border-pb-border">
             <button
@@ -494,7 +546,7 @@ export default function MinesControls({
                     On Win
                   </label>
                   <div className="flex gap-1.5">
-                    {(["reset", "same", "increase"] as const).map((action) => (
+                    {(["reset", "same", "increase", "decrease"] as const).map((action) => (
                       <button
                         key={action}
                         type="button"
@@ -507,11 +559,11 @@ export default function MinesControls({
                             : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
                         )}
                       >
-                        {action === "increase" ? "Increase" : action === "reset" ? "Reset" : "Same"}
+                        {action === "increase" ? "Increase" : action === "decrease" ? "Decrease" : action === "reset" ? "Reset" : "Same"}
                       </button>
                     ))}
                   </div>
-                  {autoOnWin === "increase" && (
+                  {(autoOnWin === "increase" || autoOnWin === "decrease") && (
                     <div className="mt-1.5">
                       <div className="flex gap-1">
                         {INCREASE_PRESETS.map((pct) => (
@@ -555,7 +607,7 @@ export default function MinesControls({
                     On Loss
                   </label>
                   <div className="flex gap-1.5">
-                    {(["reset", "same", "increase"] as const).map((action) => (
+                    {(["reset", "same", "increase", "decrease"] as const).map((action) => (
                       <button
                         key={action}
                         type="button"
@@ -568,11 +620,11 @@ export default function MinesControls({
                             : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
                         )}
                       >
-                        {action === "increase" ? "Increase" : action === "reset" ? "Reset" : "Same"}
+                        {action === "increase" ? "Increase" : action === "decrease" ? "Decrease" : action === "reset" ? "Reset" : "Same"}
                       </button>
                     ))}
                   </div>
-                  {autoOnLoss === "increase" && (
+                  {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
                     <div className="mt-1.5">
                       <div className="flex gap-1">
                         {INCREASE_PRESETS.map((pct) => (

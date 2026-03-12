@@ -12,7 +12,7 @@ export const MIN_BET = 0.10;
 export const MAX_BET = 1000.00;
 export const DEFAULT_BET = 1.00;
 export const INITIAL_BALANCE = 1000;
-export const MAX_HISTORY = 500;
+export const MAX_HISTORY = 1000;
 export const MAX_PREVIOUS_RESULTS = 15;
 export const SESSION_REMINDER_THRESHOLD = 100;
 export const POST_SESSION_NUDGE_THRESHOLD = 10;
@@ -25,8 +25,8 @@ export const TILE_FLIP_DURATION = 300;      // individual tile flip
 export const RESULT_DISPLAY_DELAY = 200;    // after last reveal before showing result
 export const RESULT_DISPLAY_DURATION = 1500; // how long result stays
 export const AUTO_SPEED_NORMAL = 2000;
-export const AUTO_SPEED_FAST = 1000;
-export const AUTO_SPEED_TURBO = 500;
+export const AUTO_SPEED_QUICK = 1000;
+export const AUTO_SPEED_INSTANT = 50;
 export const BOARD_RESET_DURATION = 200;    // fade-reset between rounds
 
 // ---------------------------------------------------------------------------
@@ -192,11 +192,11 @@ export function formatKenoMultiplier(multiplier: number): string {
 // Auto-play speed helper
 // ---------------------------------------------------------------------------
 
-export function getAutoPlayDelay(speed: KenoAutoPlayConfig["speed"]): number {
+export function getAutoPlayDelay(speed: "normal" | "quick" | "instant"): number {
   switch (speed) {
     case "normal": return AUTO_SPEED_NORMAL;
-    case "fast": return AUTO_SPEED_FAST;
-    case "turbo": return AUTO_SPEED_TURBO;
+    case "quick": return AUTO_SPEED_QUICK;
+    case "instant": return AUTO_SPEED_INSTANT;
     default: return AUTO_SPEED_NORMAL;
   }
 }
@@ -216,6 +216,9 @@ export function applyAutoBetAdjustment(
 
   if (action === "increase_percent") {
     return clampBet(betAmount * (1 + value / 100));
+  }
+  if (action === "decrease_percent") {
+    return clampBet(betAmount * (1 - value / 100));
   }
   // "reset"
   return baseBetAmount;

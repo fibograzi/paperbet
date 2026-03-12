@@ -34,7 +34,7 @@ interface HiLoControlsProps {
 const MAX_AUTO_ROUNDS = 500;
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
-type WinLossAction = "same" | "reset" | "increase";
+type WinLossAction = "same" | "reset" | "increase" | "decrease";
 type AutoStrategy = "always_higher" | "always_lower" | "smart";
 type Tab = "manual" | "auto";
 
@@ -526,6 +526,7 @@ export default function HiLoControls({
                         { value: "same", label: "Same" },
                         { value: "reset", label: "Reset" },
                         { value: "increase", label: "Increase" },
+                        { value: "decrease", label: "Decrease" },
                       ] as const
                     ).map((opt) => (
                       <button
@@ -551,7 +552,7 @@ export default function HiLoControls({
                       </button>
                     ))}
                   </div>
-                  {autoOnWin === "increase" && (
+                  {(autoOnWin === "increase" || autoOnWin === "decrease") && (
                     <div className="mt-1.5">
                       <div className="flex gap-1 mb-1">
                         {INCREASE_PRESETS.map((pct) => (
@@ -624,6 +625,7 @@ export default function HiLoControls({
                         { value: "same", label: "Same" },
                         { value: "reset", label: "Reset" },
                         { value: "increase", label: "Increase" },
+                        { value: "decrease", label: "Decrease" },
                       ] as const
                     ).map((opt) => (
                       <button
@@ -649,7 +651,7 @@ export default function HiLoControls({
                       </button>
                     ))}
                   </div>
-                  {autoOnLoss === "increase" && (
+                  {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
                     <div className="mt-1.5">
                       <div className="flex gap-1 mb-1">
                         {INCREASE_PRESETS.map((pct) => (

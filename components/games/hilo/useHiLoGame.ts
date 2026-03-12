@@ -37,7 +37,7 @@ const MAX_BET = 1000;
 const SESSION_REMINDER_THRESHOLD = 100;
 const POST_SESSION_NUDGE_BETS = 10;
 const POST_SESSION_NUDGE_IDLE_MS = 60_000;
-const MAX_HISTORY = 500;
+const MAX_HISTORY = 1000;
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -71,6 +71,7 @@ function initialState(): HiLoGameState {
     phase: "idle",
     config: { betAmount: DEFAULT_BET, instantBet: false },
     balance: INITIAL_BALANCE,
+    speedMode: "normal",
     round: null,
     history: [],
     stats: initialStats(),
@@ -516,8 +517,21 @@ function hiloReducer(
         postSessionNudgeDismissed: true,
       };
 
+    case "SET_SPEED_MODE":
+      return { ...state, speedMode: action.mode };
+
     case "RESET_BALANCE":
-      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: INITIAL_BALANCE,
+        speedMode: "normal",
+        stats: initialStats(),
+        history: [],
+        sessionBetCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+      };
 
     default:
       return state;
@@ -673,9 +687,13 @@ export function useHiLoGame() {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
+      const idleDelay = s.autoPlay.progress?.currentRound === 0 ? 0
+        : s.speedMode === "instant" ? 50
+        : s.speedMode === "quick" ? 200
+        : 800;
       autoPlayTimerRef.current = setTimeout(() => {
         dispatch({ type: "PLACE_BET" });
-      }, s.autoPlay.progress?.currentRound === 0 ? 0 : 800);
+      }, idleDelay);
       return;
     }
 
@@ -690,23 +708,29 @@ export function useHiLoGame() {
         round.correctPredictions >= 1 &&
         round.cumulativeMultiplier >= config.cashOutAt
       ) {
+        const cashoutDelay = s.speedMode === "instant" ? 20
+          : s.speedMode === "quick" ? 75
+          : 150;
         autoRoundTimerRef.current = setTimeout(() => {
           dispatch({ type: "CASH_OUT" });
-        }, 150);
+        }, cashoutDelay);
         return;
       }
 
       // Make prediction based on strategy
       const action = autoPredict(round.currentCard, config.strategy);
+      const predictDelay = s.speedMode === "instant" ? 50
+        : s.speedMode === "quick" ? 100
+        : 200;
       if (action === "skip") {
         autoRoundTimerRef.current = setTimeout(() => {
           dispatch({ type: "SKIP" });
-        }, 200);
+        }, predictDelay);
       } else {
         autoRoundTimerRef.current = setTimeout(() => {
           pendingPredictionRef.current = action;
           dispatch({ type: "PREDICT", prediction: action });
-        }, 200);
+        }, predictDelay);
       }
       return;
     }
@@ -742,6 +766,8 @@ export function useHiLoGame() {
       newBet = config.baseBet;
     } else if (strategy === "increase") {
       newBet = state.config.betAmount * (1 + percent / 100);
+    } else if (strategy === "decrease") {
+      newBet = Math.max(MIN_BET, state.config.betAmount * (1 - percent / 100));
     }
 
     dispatch({ type: "AUTO_PLAY_ADJUST_BET", amount: newBet });

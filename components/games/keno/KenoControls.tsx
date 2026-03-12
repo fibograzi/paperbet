@@ -61,9 +61,9 @@ export default function KenoControls({
   // Auto-play config local state
   const [autoNumberOfBets, setAutoNumberOfBets] = useState(100);
   const [autoInfinityToggle, setAutoInfinityToggle] = useState(false);
-  const [onWinAction, setOnWinAction] = useState<"reset" | "increase_percent">("reset");
+  const [onWinAction, setOnWinAction] = useState<"reset" | "increase_percent" | "decrease_percent">("reset");
   const [onWinValue, setOnWinValue] = useState(100);
-  const [onLossAction, setOnLossAction] = useState<"reset" | "increase_percent">("reset");
+  const [onLossAction, setOnLossAction] = useState<"reset" | "increase_percent" | "decrease_percent">("reset");
   const [onLossValue, setOnLossValue] = useState(100);
   const [stopOnProfitEnabled, setStopOnProfitEnabled] = useState(false);
   const [stopOnProfitAmount, setStopOnProfitAmount] = useState(10);
@@ -525,7 +525,7 @@ export default function KenoControls({
                         On Win
                       </label>
                       <div className="flex gap-1.5">
-                        {(["reset", "increase_percent"] as const).map((action) => (
+                        {(["reset", "increase_percent", "decrease_percent"] as const).map((action) => (
                           <button
                             key={action}
                             type="button"
@@ -537,11 +537,11 @@ export default function KenoControls({
                                 : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
                             )}
                           >
-                            {action === "reset" ? "Reset" : "Increase"}
+                            {action === "reset" ? "Reset" : action === "increase_percent" ? "Increase" : "Decrease"}
                           </button>
                         ))}
                       </div>
-                      {onWinAction === "increase_percent" && (
+                      {(onWinAction === "increase_percent" || onWinAction === "decrease_percent") && (
                         <div className="mt-1.5">
                           <div className="flex gap-1">
                             {INCREASE_PRESETS.map((pct) => (
@@ -571,7 +571,7 @@ export default function KenoControls({
                                 setOnWinValue(Math.min(10000, val));
                             }}
                             className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
-                            aria-label="Increase on win percentage"
+                            aria-label="On win percentage"
                           />
                         </div>
                       )}
@@ -583,7 +583,7 @@ export default function KenoControls({
                         On Loss
                       </label>
                       <div className="flex gap-1.5">
-                        {(["reset", "increase_percent"] as const).map((action) => (
+                        {(["reset", "increase_percent", "decrease_percent"] as const).map((action) => (
                           <button
                             key={action}
                             type="button"
@@ -595,11 +595,11 @@ export default function KenoControls({
                                 : "bg-pb-bg-tertiary border-pb-border text-pb-text-muted hover:text-pb-text-primary",
                             )}
                           >
-                            {action === "reset" ? "Reset" : "Increase"}
+                            {action === "reset" ? "Reset" : action === "increase_percent" ? "Increase" : "Decrease"}
                           </button>
                         ))}
                       </div>
-                      {onLossAction === "increase_percent" && (
+                      {(onLossAction === "increase_percent" || onLossAction === "decrease_percent") && (
                         <div className="mt-1.5">
                           <div className="flex gap-1">
                             {INCREASE_PRESETS.map((pct) => (
@@ -629,7 +629,7 @@ export default function KenoControls({
                                 setOnLossValue(Math.min(10000, val));
                             }}
                             className="mt-1 w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
-                            aria-label="Increase on loss percentage"
+                            aria-label="On loss percentage"
                           />
                         </div>
                       )}
