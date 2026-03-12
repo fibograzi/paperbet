@@ -197,6 +197,7 @@ export default function FlipControls({
   // Auto-play local state
   const [autoFlipsPerRound, setAutoFlipsPerRound] = useState(1);
   const [autoCount, setAutoCount] = useState(10);
+  const [autoInfinite, setAutoInfinite] = useState(false);
   const [betStrategy, setBetStrategy] = useState<FlipStrategy>("custom");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [autoOnWin, setAutoOnWin] = useState<WinLossAction>("reset");
@@ -239,7 +240,7 @@ export default function FlipControls({
   const handleAutoPlayStart = useCallback(() => {
     const autoConfig: FlipAutoPlayConfig = {
       flipsPerRound: autoFlipsPerRound,
-      totalCount: autoCount,
+      totalCount: autoInfinite ? null : autoCount,
       onWin: autoOnWin,
       onLoss: autoOnLoss,
       increaseOnWinPercent,
@@ -253,6 +254,7 @@ export default function FlipControls({
   }, [
     autoFlipsPerRound,
     autoCount,
+    autoInfinite,
     autoOnWin,
     autoOnLoss,
     increaseOnWinPercent,
@@ -575,53 +577,52 @@ export default function FlipControls({
           </div>
 
           {/* Number of Bets */}
-          <div>
-            <label
-              className="font-body text-xs block mb-1.5"
-              style={{ color: "#6B7280" }}
-            >
-              Number of Bets
-            </label>
-            <div className="flex items-center gap-1.5">
-              <div className="relative flex-1">
-                <input suppressHydrationWarning
+          <div className="rounded-lg p-2.5" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
+            <span className="font-body text-[10px] uppercase tracking-wider block mb-1" style={{ color: "#9CA3AF" }}>Number of Bets</span>
+            <div className="flex items-center gap-2">
+              <div
+                className="flex-1 rounded-md py-1.5 px-2.5"
+                style={{ backgroundColor: "#1F2937", border: "1px solid #374151" }}
+              >
+                <input
+                  suppressHydrationWarning
                   type="number"
-                  min={1}
-                  max={MAX_AUTO_ROUNDS}
-                  value={autoCount}
+                  inputMode="numeric"
+                  value={autoInfinite ? "" : autoCount}
+                  placeholder={autoInfinite ? "∞" : undefined}
+                  disabled={autoPlay.active || autoInfinite}
                   onChange={(e) => {
                     const val = parseInt(e.target.value, 10);
-                    if (!isNaN(val) && val >= 1)
-                      setAutoCount(Math.min(MAX_AUTO_ROUNDS, val));
+                    if (!isNaN(val)) setAutoCount(Math.min(MAX_AUTO_ROUNDS, Math.max(1, val)));
                   }}
-                  disabled={autoPlay.active}
-                  className="w-full rounded-md py-1.5 px-2.5 text-right font-mono-stats text-xs text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: "#1F2937",
-                    border: "1px solid #374151",
-                  }}
+                  className="w-full bg-transparent font-mono-stats text-xs outline-none"
+                  style={{ color: autoInfinite ? "#6B7280" : "#F9FAFB" }}
+                  max={MAX_AUTO_ROUNDS}
+                  min={1}
                   aria-label="Number of bets"
                 />
               </div>
               <button
                 type="button"
                 disabled={autoPlay.active}
-                onClick={() => setAutoCount(MAX_AUTO_ROUNDS)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor:
-                    autoCount === MAX_AUTO_ROUNDS
-                      ? "rgba(0, 229, 160, 0.15)"
-                      : "#1F2937",
-                  border:
-                    autoCount === MAX_AUTO_ROUNDS
-                      ? "1px solid rgba(0, 229, 160, 0.3)"
-                      : "1px solid #374151",
-                  color: autoCount === MAX_AUTO_ROUNDS ? "#00E5A0" : "#9CA3AF",
+                onClick={() => {
+                  if (autoInfinite) {
+                    setAutoInfinite(false);
+                    setAutoCount(100);
+                  } else {
+                    setAutoInfinite(true);
+                  }
                 }}
-                aria-label="Set maximum rounds"
+                className="w-8 h-8 rounded-md flex items-center justify-center font-mono-stats text-lg font-bold transition-colors"
+                style={{
+                  backgroundColor: autoInfinite ? "rgba(0,229,160,0.15)" : "#1F2937",
+                  border: autoInfinite ? "1px solid rgba(0,229,160,0.3)" : "1px solid #374151",
+                  color: autoInfinite ? "#00E5A0" : "#9CA3AF",
+                  opacity: autoPlay.active ? 0.5 : 1,
+                }}
+                aria-label="Infinite bets"
               >
-                <Infinity size={16} />
+                &infin;
               </button>
             </div>
           </div>
@@ -1030,7 +1031,7 @@ export default function FlipControls({
                 <div className="flex justify-between text-xs">
                   <span className="text-pb-text-muted">Rounds</span>
                   <span className="text-pb-text-primary font-mono-stats">
-                    {autoPlay.progress.totalRounds
+                    {autoPlay.progress.totalRounds !== null
                       ? `${autoPlay.progress.currentRound + 1}/${autoPlay.progress.totalRounds}`
                       : `${autoPlay.progress.currentRound + 1}`}
                   </span>
