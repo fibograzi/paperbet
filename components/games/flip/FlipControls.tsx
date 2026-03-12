@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Crown, Diamond, Shuffle, Infinity } from "lucide-react";
+import { Crown, Diamond, Shuffle, Infinity, Zap } from "lucide-react";
 import { useBetInput } from "@/lib/useBetInput";
 import type {
   FlipGameState,
@@ -127,7 +126,7 @@ export default function FlipControls({
   onCashOut,
   onFlipAgain,
 }: FlipControlsProps) {
-  const { phase, config, balance, streak, autoPlay } = state;
+  const { phase, config, balance, streak, autoPlay, speedMode } = state;
 
   const [activeTab, setActiveTab] = useState<Tab>("manual");
 
@@ -142,7 +141,7 @@ export default function FlipControls({
   const [stopOnLossEnabled, setStopOnLossEnabled] = useState(false);
   const [stopOnProfitAmount, setStopOnProfitAmount] = useState(100);
   const [stopOnLossAmount, setStopOnLossAmount] = useState(50);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+
 
   const isIdle = phase === "idle";
   const isFlipping = phase === "flipping";
@@ -302,40 +301,6 @@ export default function FlipControls({
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Instant Bet Toggle */}
-      <div className="flex items-center justify-between px-1">
-        <span className="font-body text-xs" style={{ color: "#6B7280" }}>
-          Instant Bet
-        </span>
-        <button
-          type="button"
-          onClick={() =>
-            dispatch({
-              type: "SET_INSTANT_BET",
-              enabled: !config.instantBet,
-            })
-          }
-          className="relative rounded-full transition-colors duration-200"
-          style={{
-            width: 36,
-            height: 20,
-            backgroundColor: config.instantBet ? "#00E5A0" : "#374151",
-          }}
-          aria-label="Toggle instant bet"
-        >
-          <span
-            className="absolute top-0.5 rounded-full bg-white transition-transform duration-200"
-            style={{
-              width: 16,
-              height: 16,
-              transform: config.instantBet
-                ? "translateX(18px)"
-                : "translateX(2px)",
-            }}
-          />
-        </button>
       </div>
 
       {/* === MANUAL TAB CONTENT === */}
@@ -595,34 +560,57 @@ export default function FlipControls({
             </div>
           </div>
 
-          {/* Advanced (collapsible) */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 w-full text-left py-1"
-          >
-            <ChevronDown
-              size={14}
-              className={cn(
-                "transition-transform",
-                showAdvanced && "rotate-180"
-              )}
-              style={{ color: "#6B7280" }}
-            />
-            <span className="font-body text-xs" style={{ color: "#6B7280" }}>
-              Advanced
-            </span>
-          </button>
+          {/* Speed mode selector */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
+            </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "Faster rounds — reduced delays" : "Maximum speed — instant results"}
+              </p>
+            )}
+          </div>
 
-          <AnimatePresence>
-            {showAdvanced && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-2 overflow-hidden"
-              >
+          {/* Advanced settings */}
                 {/* On Win */}
                 <div>
                   <label
@@ -876,10 +864,6 @@ export default function FlipControls({
                     </div>
                   )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Start / Stop Auto-Play button */}
           <div className="hidden lg:block">
             {autoPlay.active ? (
