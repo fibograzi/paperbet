@@ -14,6 +14,7 @@ interface FlipCoinProps {
   lastResult: CoinSide | null;
   pendingResult: CoinSide | null;
   instantBet: boolean;
+  speedMode: "normal" | "quick" | "instant";
 }
 
 // ---------------------------------------------------------------------------
@@ -25,6 +26,7 @@ export default function FlipCoin({
   lastResult,
   pendingResult,
   instantBet,
+  speedMode,
 }: FlipCoinProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const coinRef = useRef<HTMLDivElement>(null);
@@ -48,9 +50,11 @@ export default function FlipCoin({
   // After flipping: use lastResult
   const displayResult = isFlipping ? pendingResult : lastResult;
 
+  const skipAnimation = instantBet || speedMode === "instant";
+
   // Determine the CSS animation class
   const getAnimationClass = () => {
-    if (isFlipping && !instantBet && !prefersReducedMotion) {
+    if (isFlipping && !skipAnimation && !prefersReducedMotion) {
       // Use tails animation if result is tails (ends at 180deg offset)
       return pendingResult === "tails"
         ? "flip-coin-spinning-tails"
@@ -65,7 +69,7 @@ export default function FlipCoin({
   // Determine the final rotation for non-animating states
   const getFinalRotation = () => {
     if (isFlipping) {
-      if (instantBet || prefersReducedMotion) {
+      if (skipAnimation || prefersReducedMotion) {
         return pendingResult === "tails" ? 180 : 0;
       }
       return undefined; // CSS animation handles it

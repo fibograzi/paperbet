@@ -138,6 +138,7 @@ export default function FlipArena({
         lastResult={lastResult}
         pendingResult={state.pendingResult}
         instantBet={config.instantBet}
+        speedMode={state.speedMode}
       />
 
       {/* Multiplier display (below coin on mobile) */}

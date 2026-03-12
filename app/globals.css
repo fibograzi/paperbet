@@ -439,10 +439,10 @@ html {
   transform-style: preserve-3d;
 }
 
-/* Float animation after win */
+/* Float animation after win — uses `translate` so it doesn't override rotateY in `transform` */
 @keyframes flip-coin-float-kf {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
 }
 
 .flip-coin-float {
