@@ -13,6 +13,7 @@ export type LimboBetAdjustment =
   | "same"
   | "increase_percent"
   | "increase_flat"
+  | "decrease_percent"
   | "decrease_flat"
   | "reset";
 

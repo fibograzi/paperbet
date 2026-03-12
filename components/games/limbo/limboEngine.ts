@@ -125,6 +125,9 @@ export function applyAutoBetAdjustments(
     case "increase_flat":
       newBet = Math.min(MAX_BET, betAmount + betValue);
       break;
+    case "decrease_percent":
+      newBet = Math.max(MIN_BET, betAmount * (1 - betValue / 100));
+      break;
     case "decrease_flat":
       newBet = Math.max(MIN_BET, betAmount - betValue);
       break;

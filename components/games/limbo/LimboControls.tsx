@@ -19,7 +19,7 @@ import {
   clampBet,
   calculateProfitOnWin,
 } from "./limboEngine";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import BalanceBar from "@/components/shared/BalanceBar";
 
 // ---------------------------------------------------------------------------
@@ -94,10 +94,10 @@ const BET_STRATEGY_DEFS: BetStrategyDef[] = [
   },
 ];
 
-const RISK_COLORS: Record<"low" | "medium" | "high", string> = {
-  low: "#00E5A0",
-  medium: "#F59E0B",
-  high: "#EF4444",
+const RISK_COLORS: Record<"low" | "medium" | "high", { bg: string; text: string; label: string }> = {
+  low:    { bg: "rgba(0, 229, 160, 0.12)",  text: "#00E5A0", label: "Low Risk" },
+  medium: { bg: "rgba(245, 158, 11, 0.12)", text: "#F59E0B", label: "Medium Risk" },
+  high:   { bg: "rgba(239, 68, 68, 0.12)",  text: "#EF4444", label: "High Risk" },
 };
 
 // ---------------------------------------------------------------------------
@@ -123,10 +123,6 @@ export default function LimboControls({
 
   const [autoNumberOfBets, setAutoNumberOfBets] = useState(100);
   const [autoInfinite, setAutoInfinite] = useState(false);
-  const [onWinBetAction, setOnWinBetAction] = useState<LimboBetAdjustment>("same");
-  const [onWinBetValue, setOnWinBetValue] = useState(100);
-  const [onLossBetAction, setOnLossBetAction] = useState<LimboBetAdjustment>("same");
-  const [onLossBetValue, setOnLossBetValue] = useState(100);
   const [onWinTargetAction, setOnWinTargetAction] = useState<LimboTargetAdjustment>("same");
   const [onWinTargetValue, setOnWinTargetValue] = useState(0.10);
   const [onLossTargetAction, setOnLossTargetAction] = useState<LimboTargetAdjustment>("same");
@@ -139,6 +135,10 @@ export default function LimboControls({
   const [stopOnWinMultValue, setStopOnWinMultValue] = useState(100);
   const [betStrategy, setBetStrategy] = useState<LimboStrategy>("custom");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [autoOnWin, setAutoOnWin] = useState<"same" | "reset" | "increase" | "decrease">("same");
+  const [autoOnLoss, setAutoOnLoss] = useState<"same" | "reset" | "increase" | "decrease">("same");
+  const [increaseOnWinPercent, setIncreaseOnWinPercent] = useState(100);
+  const [increaseOnLossPercent, setIncreaseOnLossPercent] = useState(100);
 
   // -------------------------------------------------------------------------
   // Build auto-play config
@@ -146,10 +146,10 @@ export default function LimboControls({
 
   const buildAutoConfig = useCallback((): LimboAutoPlayConfig => ({
     numberOfBets: autoInfinite ? Infinity : Math.min(500, autoNumberOfBets),
-    onWinBetAction,
-    onWinBetValue,
-    onLossBetAction,
-    onLossBetValue,
+    onWinBetAction: autoOnWin === "increase" ? "increase_percent" : autoOnWin === "decrease" ? "decrease_percent" : (autoOnWin as LimboBetAdjustment),
+    onWinBetValue: (autoOnWin === "increase" || autoOnWin === "decrease") ? increaseOnWinPercent : 0,
+    onLossBetAction: autoOnLoss === "increase" ? "increase_percent" : autoOnLoss === "decrease" ? "decrease_percent" : (autoOnLoss as LimboBetAdjustment),
+    onLossBetValue: (autoOnLoss === "increase" || autoOnLoss === "decrease") ? increaseOnLossPercent : 0,
     onWinTargetAction,
     onWinTargetValue,
     onLossTargetAction,
@@ -161,8 +161,7 @@ export default function LimboControls({
     baseBet: betAmount,
   }), [
     autoNumberOfBets, autoInfinite,
-    onWinBetAction, onWinBetValue,
-    onLossBetAction, onLossBetValue,
+    autoOnWin, autoOnLoss, increaseOnWinPercent, increaseOnLossPercent,
     onWinTargetAction, onWinTargetValue,
     onLossTargetAction, onLossTargetValue,
     stopOnProfitEnabled, stopOnProfitAmount,
@@ -428,169 +427,405 @@ export default function LimboControls({
             )}
           </div>
 
-          {/* Advanced — strategy grid */}
-          <div className="rounded-lg" style={{ border: "1px solid #374151" }}>
+          {/* Advanced toggle */}
+          {!isAutoRunning && (
+            <div className="bg-pb-bg-secondary border border-pb-border rounded-lg">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 w-full text-left px-2.5 py-2"
+              >
+                <span className="text-xs font-heading font-semibold text-pb-text-secondary">
+                  Advanced
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    "ml-auto text-pb-text-muted transition-transform",
+                    showAdvanced && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {showAdvanced && (
+                <div className="px-2.5 pb-2.5 space-y-3">
+
+                  {/* Strategy selector */}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-pb-text-muted mb-1.5">
+                      Strategy
+                    </p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {BET_STRATEGY_DEFS.map((s) => {
+                        const active = betStrategy === s.id;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setBetStrategy(s.id)}
+                            className="py-1.5 px-1 rounded-md text-[11px] font-heading font-semibold transition-all duration-150"
+                            style={{
+                              backgroundColor: active ? "rgba(0, 229, 160, 0.15)" : "#1F2937",
+                              color: active ? "#00E5A0" : "#9CA3AF",
+                              border: active
+                                ? "1px solid rgba(0, 229, 160, 0.3)"
+                                : "1px solid #374151",
+                            }}
+                          >
+                            {s.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Strategy description card (non-custom only) */}
+                  {betStrategy !== "custom" && (() => {
+                    const def = BET_STRATEGY_DEFS.find((s) => s.id === betStrategy)!;
+                    const risk = RISK_COLORS[def.risk];
+                    return (
+                      <div
+                        className="rounded-lg p-2.5 space-y-1.5"
+                        style={{ backgroundColor: "#111827", border: "1px solid #374151" }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-heading font-semibold text-pb-text-primary">
+                            {def.label}
+                          </span>
+                          <span
+                            className="text-[10px] font-body px-1.5 py-0.5 rounded"
+                            style={{ backgroundColor: risk.bg, color: risk.text }}
+                          >
+                            {risk.label}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-body leading-relaxed" style={{ color: "#9CA3AF" }}>
+                          {def.description}
+                        </p>
+                        <p className="text-[10px] font-mono-stats" style={{ color: "#6B7280" }}>
+                          {def.behavior}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Custom: On Win / On Loss controls */}
+                  {betStrategy === "custom" && (
+                    <div className="space-y-2">
+                      {/* On Win */}
+                      <div>
+                        <label className="font-body text-xs block mb-1.5" style={{ color: "#6B7280" }}>
+                          On Win
+                        </label>
+                        <div className="flex gap-1.5 mb-1.5">
+                          {(
+                            [
+                              { value: "same", label: "Same" },
+                              { value: "reset", label: "Reset" },
+                              { value: "increase", label: "Increase" },
+                              { value: "decrease", label: "Decrease" },
+                            ] as const
+                          ).map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setAutoOnWin(opt.value)}
+                              className="flex-1 py-1.5 rounded-md text-xs font-body transition-colors"
+                              style={{
+                                backgroundColor: autoOnWin === opt.value ? "rgba(0, 229, 160, 0.15)" : "#1F2937",
+                                color: autoOnWin === opt.value ? "#00E5A0" : "#9CA3AF",
+                                border: autoOnWin === opt.value
+                                  ? "1px solid rgba(0, 229, 160, 0.3)"
+                                  : "1px solid #374151",
+                              }}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                        {(autoOnWin === "increase" || autoOnWin === "decrease") && (
+                          <div className="mt-1.5">
+                            <div className="flex gap-1 mb-1">
+                              {(autoOnWin === "decrease" ? DECREASE_PRESETS : INCREASE_PRESETS).map((pct) => (
+                                <button
+                                  key={pct}
+                                  type="button"
+                                  onClick={() => setIncreaseOnWinPercent(pct)}
+                                  className="flex-1 py-1 text-[10px] font-mono-stats rounded transition-colors"
+                                  style={{
+                                    backgroundColor: increaseOnWinPercent === pct ? "rgba(0, 229, 160, 0.15)" : "#1F2937",
+                                    color: increaseOnWinPercent === pct ? "#00E5A0" : "#9CA3AF",
+                                    border: increaseOnWinPercent === pct
+                                      ? "1px solid rgba(0, 229, 160, 0.3)"
+                                      : "1px solid #374151",
+                                  }}
+                                >
+                                  {pct}%
+                                </button>
+                              ))}
+                            </div>
+                            <div className="relative">
+                              <input suppressHydrationWarning
+                                type="number"
+                                min={1}
+                                max={autoOnWin === "decrease" ? 95 : 10000}
+                                step={1}
+                                value={increaseOnWinPercent}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  const max = autoOnWin === "decrease" ? 95 : 10000;
+                                  if (!isNaN(val) && val >= 1) setIncreaseOnWinPercent(Math.min(max, val));
+                                }}
+                                className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
+                                aria-label="On win percentage"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">%</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* On Loss */}
+                      <div>
+                        <label className="font-body text-xs block mb-1.5" style={{ color: "#6B7280" }}>
+                          On Loss
+                        </label>
+                        <div className="flex gap-1.5 mb-1.5">
+                          {(
+                            [
+                              { value: "same", label: "Same" },
+                              { value: "reset", label: "Reset" },
+                              { value: "increase", label: "Increase" },
+                              { value: "decrease", label: "Decrease" },
+                            ] as const
+                          ).map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setAutoOnLoss(opt.value)}
+                              className="flex-1 py-1.5 rounded-md text-xs font-body transition-colors"
+                              style={{
+                                backgroundColor: autoOnLoss === opt.value ? "rgba(239, 68, 68, 0.15)" : "#1F2937",
+                                color: autoOnLoss === opt.value ? "#EF4444" : "#9CA3AF",
+                                border: autoOnLoss === opt.value
+                                  ? "1px solid rgba(239, 68, 68, 0.3)"
+                                  : "1px solid #374151",
+                              }}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                        {(autoOnLoss === "increase" || autoOnLoss === "decrease") && (
+                          <div className="mt-1.5">
+                            <div className="flex gap-1 mb-1">
+                              {(autoOnLoss === "decrease" ? DECREASE_PRESETS : INCREASE_PRESETS).map((pct) => (
+                                <button
+                                  key={pct}
+                                  type="button"
+                                  onClick={() => setIncreaseOnLossPercent(pct)}
+                                  className="flex-1 py-1 text-[10px] font-mono-stats rounded transition-colors"
+                                  style={{
+                                    backgroundColor: increaseOnLossPercent === pct ? "rgba(239, 68, 68, 0.15)" : "#1F2937",
+                                    color: increaseOnLossPercent === pct ? "#EF4444" : "#9CA3AF",
+                                    border: increaseOnLossPercent === pct
+                                      ? "1px solid rgba(239, 68, 68, 0.3)"
+                                      : "1px solid #374151",
+                                  }}
+                                >
+                                  {pct}%
+                                </button>
+                              ))}
+                            </div>
+                            <div className="relative">
+                              <input suppressHydrationWarning
+                                type="number"
+                                min={1}
+                                max={autoOnLoss === "decrease" ? 95 : 10000}
+                                step={1}
+                                value={increaseOnLossPercent}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  const max = autoOnLoss === "decrease" ? 95 : 10000;
+                                  if (!isNaN(val) && val >= 1) setIncreaseOnLossPercent(Math.min(max, val));
+                                }}
+                                className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-8 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
+                                aria-label="On loss percentage"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">%</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Stop on Profit */}
+                  <div>
+                    <label className="flex items-center gap-2 mb-1.5 cursor-pointer">
+                      <input suppressHydrationWarning
+                        type="checkbox"
+                        checked={stopOnProfitEnabled}
+                        onChange={(e) => setStopOnProfitEnabled(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-pb-border accent-pb-accent"
+                      />
+                      <span className="text-xs text-pb-text-muted">Stop on Profit</span>
+                    </label>
+                    {stopOnProfitEnabled && (
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">$</span>
+                        <input suppressHydrationWarning
+                          type="number" min={1} max={100000} step={1}
+                          value={stopOnProfitAmount}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val > 0) setStopOnProfitAmount(Math.round(val * 100) / 100);
+                          }}
+                          className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-7 pr-3 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
+                          aria-label="Stop on profit amount"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Stop on Loss */}
+                  <div>
+                    <label className="flex items-center gap-2 mb-1.5 cursor-pointer">
+                      <input suppressHydrationWarning
+                        type="checkbox"
+                        checked={stopOnLossEnabled}
+                        onChange={(e) => setStopOnLossEnabled(e.target.checked)}
+                        className="w-3.5 h-3.5 rounded border-pb-border accent-pb-accent"
+                      />
+                      <span className="text-xs text-pb-text-muted">Stop on Loss</span>
+                    </label>
+                    {stopOnLossEnabled && (
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">$</span>
+                        <input suppressHydrationWarning
+                          type="number" min={1} max={100000} step={1}
+                          value={stopOnLossAmount}
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val > 0) setStopOnLossAmount(Math.round(val * 100) / 100);
+                          }}
+                          className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-7 pr-3 text-right font-mono-stats text-sm text-pb-text-primary focus:outline-none focus:ring-2 focus:ring-pb-accent/50"
+                          aria-label="Stop on loss amount"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Start Autobet */}
+          {!isAutoRunning && (
             <button
               type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between px-3 py-2"
-              disabled={isAutoRunning}
+              onClick={() => onStartAutoPlay(buildAutoConfig())}
+              disabled={balance < betAmount}
+              className="w-full py-2.5 rounded-lg bg-pb-accent/15 text-pb-accent font-heading font-semibold text-sm border border-pb-accent/30 hover:bg-pb-accent/25 transition-colors disabled:opacity-40"
             >
-              <span className="font-body text-xs font-semibold" style={{ color: "#9CA3AF" }}>
-                Advanced
-                {betStrategy !== "custom" && (
-                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "rgba(0,229,160,0.15)", color: "#00E5A0" }}>
-                    {BET_STRATEGY_DEFS.find((s) => s.id === betStrategy)?.label}
-                  </span>
-                )}
-              </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" style={{ transform: showAdvanced ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 150ms" }}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
+              Start Autobet
             </button>
+          )}
 
-            {showAdvanced && (
-              <div className="px-3 pb-3 space-y-3">
-                {/* 3-col strategy grid */}
-                <div className="grid grid-cols-3 gap-1.5">
-                  {BET_STRATEGY_DEFS.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      disabled={isAutoRunning}
-                      onClick={() => setBetStrategy(s.id)}
-                      className="rounded-lg p-2 text-center transition-all duration-150 disabled:opacity-50"
-                      style={{
-                        backgroundColor: betStrategy === s.id ? "rgba(0,229,160,0.1)" : "#111827",
-                        border: betStrategy === s.id ? "2px solid #00E5A0" : "1px solid #374151",
-                      }}
-                    >
-                      <span className="font-body text-xs font-semibold block" style={{ color: betStrategy === s.id ? "#00E5A0" : "#F9FAFB" }}>
-                        {s.label}
-                      </span>
-                    </button>
-                  ))}
+          {/* Active summary */}
+          {isAutoRunning && (
+            <>
+              <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5 space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-pb-text-muted">Target</span>
+                  <span className="text-pb-text-primary font-mono-stats">
+                    {targetMultiplier.toFixed(2)}x
+                  </span>
                 </div>
-
-                {/* Description card */}
-                {(() => {
-                  const def = BET_STRATEGY_DEFS.find((s) => s.id === betStrategy);
-                  if (!def) return null;
-                  return (
-                    <div className="rounded-lg p-3" style={{ backgroundColor: "#111827", border: "1px solid #374151" }}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-body text-xs font-semibold" style={{ color: "#F9FAFB" }}>{def.label}</span>
-                        <span
-                          className="text-[10px] px-1.5 py-0.5 rounded-full font-body font-semibold"
-                          style={{ backgroundColor: `${RISK_COLORS[def.risk]}20`, color: RISK_COLORS[def.risk] }}
-                        >
-                          {def.risk} risk
+                <div className="flex justify-between text-xs">
+                  <span className="text-pb-text-muted">Strategy</span>
+                  <span className="text-pb-text-primary font-mono-stats capitalize">
+                    {BET_STRATEGY_DEFS.find((s) => s.id === autoPlay.config?.strategy)?.label ?? "Custom"}
+                  </span>
+                </div>
+                {autoPlay.config?.strategy === "custom" && (
+                  <>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-pb-text-muted">On Win</span>
+                      <span className="text-pb-text-primary font-mono-stats">
+                        {autoPlay.config.onWinBetAction === "reset"
+                          ? "Reset"
+                          : autoPlay.config.onWinBetAction === "increase_percent"
+                            ? `+${autoPlay.config.onWinBetValue}%`
+                            : autoPlay.config.onWinBetAction === "decrease_percent"
+                              ? `-${autoPlay.config.onWinBetValue}%`
+                              : "Same"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-pb-text-muted">On Loss</span>
+                      <span className="text-pb-text-primary font-mono-stats">
+                        {autoPlay.config.onLossBetAction === "reset"
+                          ? "Reset"
+                          : autoPlay.config.onLossBetAction === "increase_percent"
+                            ? `+${autoPlay.config.onLossBetValue}%`
+                            : autoPlay.config.onLossBetAction === "decrease_percent"
+                              ? `-${autoPlay.config.onLossBetValue}%`
+                              : "Same"}
+                      </span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between text-xs">
+                  <span className="text-pb-text-muted">Current Bet</span>
+                  <span className="text-pb-text-primary font-mono-stats">
+                    {formatCurrency(betAmount)}
+                  </span>
+                </div>
+                {autoPlay.progress && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-pb-text-muted">Rounds</span>
+                    <span className="text-pb-text-primary font-mono-stats">
+                      {isFinite(autoPlay.progress.totalBets)
+                        ? `${autoPlay.progress.currentBet}/${autoPlay.progress.totalBets}`
+                        : `${autoPlay.progress.currentBet}`}
+                    </span>
+                  </div>
+                )}
+                {(autoPlay.config?.stopOnProfit !== null || autoPlay.config?.stopOnLoss !== null) && autoPlay.config && (
+                  <div className="border-t border-pb-border/50 pt-1.5 mt-1.5">
+                    {autoPlay.config.stopOnProfit !== null && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-pb-text-muted">Stop Profit</span>
+                        <span className="text-pb-accent font-mono-stats">
+                          {formatCurrency(autoPlay.config.stopOnProfit)}
                         </span>
                       </div>
-                      <p className="font-body text-[11px] mb-2" style={{ color: "#9CA3AF" }}>{def.description}</p>
-                      <p className="font-mono-stats text-[10px]" style={{ color: "#6B7280" }}>{def.behavior}</p>
-                    </div>
-                  );
-                })()}
-
-                {/* Custom: show On Win / On Loss + stop conditions */}
-                {betStrategy === "custom" && (
-                  <div className="space-y-2">
-                    <BetAdjustmentSelector
-                      label="On Win"
-                      action={onWinBetAction}
-                      value={onWinBetValue}
-                      disabled={isAutoRunning}
-                      onActionChange={setOnWinBetAction}
-                      onValueChange={setOnWinBetValue}
-                    />
-                    <BetAdjustmentSelector
-                      label="On Loss"
-                      action={onLossBetAction}
-                      value={onLossBetValue}
-                      disabled={isAutoRunning}
-                      onActionChange={setOnLossBetAction}
-                      onValueChange={setOnLossBetValue}
-                    />
-                    <StopCondition
-                      label="Stop on profit"
-                      prefix="$"
-                      enabled={stopOnProfitEnabled}
-                      value={stopOnProfitAmount}
-                      disabled={isAutoRunning}
-                      onToggle={setStopOnProfitEnabled}
-                      onValueChange={setStopOnProfitAmount}
-                    />
-                    <StopCondition
-                      label="Stop on loss"
-                      prefix="$"
-                      enabled={stopOnLossEnabled}
-                      value={stopOnLossAmount}
-                      disabled={isAutoRunning}
-                      onToggle={setStopOnLossEnabled}
-                      onValueChange={setStopOnLossAmount}
-                    />
+                    )}
+                    {autoPlay.config.stopOnLoss !== null && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-pb-text-muted">Stop Loss</span>
+                        <span className="text-pb-danger font-mono-stats">
+                          {formatCurrency(autoPlay.config.stopOnLoss)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {autoPlay.progress && (
+                  <div className="border-t border-pb-border/50 pt-1.5 mt-1.5 flex justify-between text-xs font-bold">
+                    <span className="text-pb-text-muted">Session P&amp;L</span>
+                    <span
+                      className="font-mono-stats"
+                      style={{ color: autoPlay.progress.sessionProfit >= 0 ? "#00E5A0" : "#EF4444" }}
+                    >
+                      {autoPlay.progress.sessionProfit >= 0 ? "+" : ""}
+                      {formatCurrency(autoPlay.progress.sessionProfit)}
+                    </span>
                   </div>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* Start/Stop Autobet button — desktop only */}
-          <div className="hidden lg:block">
-            <motion.button
-              type="button"
-              disabled={!isAutoRunning && (balance < betAmount)}
-              onClick={() => {
-                if (isAutoRunning) {
-                  onStopAutoPlay();
-                } else {
-                  onStartAutoPlay(buildAutoConfig());
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 h-9 rounded-lg font-body text-sm font-bold transition-colors"
-              style={{
-                backgroundColor: isAutoRunning ? "#EF4444" : "#00E5A0",
-                color: isAutoRunning ? "#F9FAFB" : "#0B0F1A",
-                cursor: !isAutoRunning && balance < betAmount ? "not-allowed" : "pointer",
-                opacity: !isAutoRunning && balance < betAmount ? 0.5 : 1,
-              }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isAutoRunning ? (
-                <>
-                  <span className="inline-block w-2 h-2 rounded-full bg-white animate-pulse" />
-                  Stop Autobet
-                </>
-              ) : (
-                "Start Autobet"
-              )}
-            </motion.button>
-          </div>
-
-          {/* Auto progress counter */}
-          {isAutoRunning && autoPlay.progress && (
-            <div className="text-center font-mono-stats text-sm" style={{ color: "#9CA3AF" }}>
-              <p>
-                Bet {autoPlay.progress.currentBet}
-                {isFinite(autoPlay.progress.totalBets)
-                  ? ` / ${autoPlay.progress.totalBets}`
-                  : ""}
-                {" \u2014 "}
-                <span style={{ color: "#00E5A0" }}>W: {autoPlay.progress.wins}</span>
-                {" | "}
-                <span style={{ color: "#EF4444" }}>L: {autoPlay.progress.losses}</span>
-              </p>
-              <p
-                className="mt-1 font-bold"
-                style={{
-                  color: autoPlay.progress.sessionProfit >= 0 ? "#00E5A0" : "#EF4444",
-                }}
-              >
-                {autoPlay.progress.sessionProfit >= 0 ? "+" : ""}
-                {formatCurrency(autoPlay.progress.sessionProfit)}
-              </p>
-            </div>
+            </>
           )}
         </>
       )}
