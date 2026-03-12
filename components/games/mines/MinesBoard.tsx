@@ -10,6 +10,7 @@ interface MinesBoardProps {
   minePositions: number[];
   onTileClick: (index: number) => void;
   shaking?: boolean;
+  speedMode: "normal" | "quick" | "instant";
 }
 
 export default function MinesBoard({
@@ -19,6 +20,7 @@ export default function MinesBoard({
   minePositions,
   onTileClick,
   shaking = false,
+  speedMode,
 }: MinesBoardProps) {
   // Subtle red tint for 24 mines "pick one and pray" mode
   const extremeRiskTint = phase === "PLAYING" && mineCount >= 24;
@@ -47,6 +49,7 @@ export default function MinesBoard({
             phase={phase}
             isMine={minePositions.includes(index)}
             onClick={onTileClick}
+            speedMode={speedMode}
           />
         ))}
       </div>

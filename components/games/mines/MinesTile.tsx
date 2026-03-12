@@ -10,6 +10,7 @@ interface MinesTileProps {
   phase: MinesPhase;
   isMine: boolean;
   onClick: (index: number) => void;
+  speedMode: "normal" | "quick" | "instant";
 }
 
 function MinesTileInner({
@@ -18,6 +19,7 @@ function MinesTileInner({
   phase,
   isMine,
   onClick,
+  speedMode,
 }: MinesTileProps) {
   const row = Math.floor(index / 5);
   const col = index % 5;
@@ -112,6 +114,9 @@ function MinesTileInner({
       style={{
         transformStyle: "preserve-3d",
         perspective: "600px",
+        animationDuration: speedMode === "instant" ? "50ms"
+          : speedMode === "quick" ? "150ms"
+          : undefined,
       }}
     >
       {/* Content */}
@@ -123,7 +128,14 @@ function MinesTileInner({
           />
         )}
         {isRevealing && (
-          <span className="mines-flip-content">
+          <span
+            className="mines-flip-content"
+            style={{
+              animationDuration: speedMode === "instant" ? "50ms"
+                : speedMode === "quick" ? "150ms"
+                : undefined,
+            }}
+          >
             {isMine ? (
               <Bomb
                 className="text-[#EF4444] w-5 h-5 md:w-7 md:h-7"

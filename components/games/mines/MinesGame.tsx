@@ -127,6 +127,7 @@ export default function MinesGame() {
               minePositions={state.minePositions}
               onTileClick={revealTile}
               shaking={shaking}
+              speedMode={state.speedMode}
             />
           </div>
 

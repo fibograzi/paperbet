@@ -29,7 +29,7 @@ const MAX_BET = 1000;
 const SESSION_REMINDER_THRESHOLD = 30;
 const POST_SESSION_NUDGE_GAMES = 10;
 const POST_SESSION_NUDGE_IDLE_MS = 60_000;
-const MAX_HISTORY = 200;
+const MAX_HISTORY = 100;
 const MAX_AUTO_PLAY_GAMES = 500;
 
 // ---------------------------------------------------------------------------
@@ -57,6 +57,7 @@ function initialState(): MinesGameState {
   return {
     phase: "IDLE",
     gameOverReason: null,
+    speedMode: "normal",
     balance: INITIAL_BALANCE,
     betAmount: DEFAULT_BET,
     mineCount: DEFAULT_MINES,
@@ -512,6 +513,9 @@ function minesReducer(
       return { ...state, betAmount: safeBet > 0 ? safeBet : MIN_BET };
     }
 
+    case "SET_SPEED_MODE":
+      return { ...state, speedMode: action.mode };
+
     // --- Session reminders ---
     case "DISMISS_SESSION_REMINDER":
       return { ...state, showSessionReminder: false };
@@ -528,7 +532,17 @@ function minesReducer(
       };
 
     case "RESET_BALANCE":
-      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: INITIAL_BALANCE,
+        speedMode: "normal",
+        stats: initialStats(),
+        history: [],
+        sessionGameCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+      };
 
     default:
       return state;
@@ -603,19 +617,23 @@ export function useMinesGame() {
     dispatch({ type: "REVEAL_TILE", index: randomIdx });
   }, [state.phase, state.revealingTile, state.tileStates, state.autoPlay.active]);
 
-  // --- Handle tile reveal animation completion (300ms) ---
+  // --- Handle tile reveal animation completion ---
   useEffect(() => {
     if (state.revealingTile === null) return;
+
+    const duration = state.speedMode === "instant" ? 50
+      : state.speedMode === "quick" ? 150
+      : 300;
 
     const timer = setTimeout(() => {
       dispatch({
         type: "TILE_REVEAL_COMPLETE",
         index: state.revealingTile!,
       });
-    }, 300);
+    }, duration);
 
     return () => clearTimeout(timer);
-  }, [state.revealingTile]);
+  }, [state.revealingTile, state.speedMode]);
 
   // --- Post-game reveal (staggered tile flips) ---
   // Uses a ref guard to ensure one-time execution per game-over.
@@ -633,8 +651,14 @@ export function useMinesGame() {
     // Capture tile states and mine positions at the moment we enter GAME_OVER
     const currentTileStates = state.tileStates;
     const currentMinePositions = state.minePositions;
+    const speed = stateRef.current.speedMode;
 
-    // Wait 400ms before starting post-reveal
+    // Speed-dependent post-reveal timings
+    const initialDelay = speed === "instant" ? 50 : speed === "quick" ? 200 : 400;
+    const mineStagger = speed === "instant" ? 10 : speed === "quick" ? 25 : 50;
+    const gemStagger = speed === "instant" ? 8 : speed === "quick" ? 20 : 40;
+    const endPadding = speed === "instant" ? 50 : speed === "quick" ? 100 : 200;
+
     const startTimer = setTimeout(() => {
       dispatch({ type: "POST_REVEAL_START" });
 
@@ -659,7 +683,9 @@ export function useMinesGame() {
 
       const handles: ReturnType<typeof setTimeout>[] = [];
       ordered.forEach((tile, i) => {
-        const delay = i < mines.length ? i * 50 : mines.length * 50 + (i - mines.length) * 40;
+        const delay = i < mines.length
+          ? i * mineStagger
+          : mines.length * mineStagger + (i - mines.length) * gemStagger;
         handles.push(
           setTimeout(() => {
             dispatch({
@@ -673,14 +699,14 @@ export function useMinesGame() {
 
       // Mark post-reveal complete
       const totalDelay =
-        mines.length * 50 + gems.length * 40 + 200;
+        mines.length * mineStagger + gems.length * gemStagger + endPadding;
       handles.push(
         setTimeout(() => {
           dispatch({ type: "POST_REVEAL_COMPLETE" });
         }, totalDelay),
       );
       postRevealTimersRef.current = handles;
-    }, 400);
+    }, initialDelay);
 
     return () => {
       clearTimeout(startTimer);
@@ -708,9 +734,13 @@ export function useMinesGame() {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
+      const idleDelay = s.autoPlay.currentCount === 0 ? 0
+        : s.speedMode === "instant" ? 50
+        : s.speedMode === "quick" ? 300
+        : 1000;
       autoPlayTimerRef.current = setTimeout(() => {
         dispatch({ type: "START_GAME" });
-      }, s.autoPlay.currentCount === 0 ? 0 : 1000);
+      }, idleDelay);
       return;
     }
 
@@ -720,9 +750,12 @@ export function useMinesGame() {
 
       // Reached target → cash out
       if (s.gemsRevealed >= s.autoPlay.autoRevealTarget) {
+        const cashoutDelay = s.speedMode === "instant" ? 20
+          : s.speedMode === "quick" ? 80
+          : 200;
         autoRevealTimerRef.current = setTimeout(() => {
           dispatch({ type: "CASH_OUT" });
-        }, 200);
+        }, cashoutDelay);
         return;
       }
 
@@ -736,15 +769,21 @@ export function useMinesGame() {
         crypto.getRandomValues(buffer);
         const randomIdx = hiddenIndices[buffer[0] % hiddenIndices.length];
 
+        const revealDelay = s.speedMode === "instant" ? 50
+          : s.speedMode === "quick" ? 150
+          : 300;
         autoRevealTimerRef.current = setTimeout(() => {
           dispatch({ type: "REVEAL_TILE", index: randomIdx });
-        }, 300);
+        }, revealDelay);
       }
       return;
     }
 
     // GAME_OVER + post-reveal complete → next round
     if (state.phase === "GAME_OVER" && !state.postRevealPhase) {
+      const gameOverDelay = stateRef.current.speedMode === "instant" ? 50
+        : stateRef.current.speedMode === "quick" ? 300
+        : 1500;
       autoPlayTimerRef.current = setTimeout(() => {
         const s = stateRef.current;
 
@@ -769,7 +808,7 @@ export function useMinesGame() {
 
         dispatch({ type: "AUTO_PLAY_TICK" });
         dispatch({ type: "NEW_GAME" });
-      }, 1500);
+      }, gameOverDelay);
     }
 
     return () => {
