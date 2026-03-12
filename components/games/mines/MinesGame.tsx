@@ -12,7 +12,7 @@ import { formatMinesMultiplier } from "./minesCalculator";
 import { formatCurrency } from "@/lib/utils";
 
 export default function MinesGame() {
-  const { state, dispatch, startGame, revealTile, cashOut, newGame, pickRandom } =
+  const { state, dispatch, startGame, revealTile, cashOut, newGame, pickRandom, startAutoPlay } =
     useMinesGame();
 
   // Board shaking state (triggered on mine hit)
@@ -36,10 +36,10 @@ export default function MinesGame() {
   // Auto-play handlers
   const handleStartAutoPlay = useCallback(
     (config: Omit<MinesAutoPlayState, "active" | "currentCount" | "startingNetProfit">) => {
-      dispatch({ type: "AUTO_PLAY_START", config });
+      startAutoPlay(config);
       // The auto-play effect in useMinesGame handles START_GAME automatically.
     },
-    [dispatch],
+    [startAutoPlay],
   );
 
   const handleStopAutoPlay = useCallback(() => {

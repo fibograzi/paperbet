@@ -46,6 +46,18 @@ export interface MinesSessionStats {
 }
 
 // ---------------------------------------------------------------------------
+// Auto-play strategy
+// ---------------------------------------------------------------------------
+
+export type MinesStrategy =
+  | "martingale"
+  | "anti_martingale"
+  | "dalembert"
+  | "fibonacci"
+  | "paroli"
+  | "custom";
+
+// ---------------------------------------------------------------------------
 // Auto-play state
 // ---------------------------------------------------------------------------
 
@@ -54,6 +66,7 @@ export interface MinesAutoPlayState {
   totalCount: number | null; // null = infinite
   currentCount: number;
   autoRevealTarget: number; // gems to reveal before auto-cashout
+  strategy: MinesStrategy;
   onWin: "same" | "increase" | "decrease" | "reset";
   onLoss: "same" | "increase" | "decrease" | "reset";
   increaseOnWinPercent: number;

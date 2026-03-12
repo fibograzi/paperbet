@@ -4,6 +4,7 @@ import { useReducer, useCallback, useRef, useEffect } from "react";
 import type {
   MinesGameState,
   MinesAction,
+  MinesAutoPlayState,
   MinesRound,
   MinesSessionStats,
   TileState,
@@ -31,6 +32,9 @@ const POST_SESSION_NUDGE_GAMES = 10;
 const POST_SESSION_NUDGE_IDLE_MS = 60_000;
 const MAX_HISTORY = 100;
 const MAX_AUTO_PLAY_GAMES = 500;
+
+// Fibonacci multipliers (capped at step 10 = 89× base)
+const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89] as const;
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -77,6 +81,7 @@ function initialState(): MinesGameState {
       totalCount: null,
       currentCount: 0,
       autoRevealTarget: 5,
+      strategy: "custom",
       onWin: "reset",
       onLoss: "reset",
       increaseOnWinPercent: 100,
@@ -564,6 +569,9 @@ export function useMinesGame() {
   const postRevealInitiatedRef = useRef(false);
   const stateRef = useRef(state);
   stateRef.current = state;
+  // Strategy-specific progression trackers (reset on every AUTO_PLAY_START)
+  const fibStepRef = useRef(0);
+  const consecutiveWinsRef = useRef(0);
 
   // --- Actions ---
 
@@ -790,20 +798,75 @@ export function useMinesGame() {
         // Apply bet adjustment based on last round
         const lastRound = s.history[0];
         if (lastRound) {
-          const isWin = lastRound.isWin;
-          const strategy = isWin ? s.autoPlay.onWin : s.autoPlay.onLoss;
-          const percent = isWin
-            ? s.autoPlay.increaseOnWinPercent
-            : s.autoPlay.increaseOnLossPercent;
-
+          const won = lastRound.isWin;
+          const ap = s.autoPlay;
           let newBet = s.betAmount;
-          if (strategy === "reset") {
-            newBet = s.autoPlay.baseBet;
-          } else if (strategy === "increase") {
-            newBet = s.betAmount * (1 + percent / 100);
-          } else if (strategy === "decrease") {
-            newBet = Math.max(MIN_BET, s.betAmount * (1 - percent / 100));
+
+          switch (ap.strategy) {
+            case "martingale":
+              newBet = won ? ap.baseBet : newBet * 2;
+              break;
+
+            case "anti_martingale":
+              newBet = won ? newBet * 2 : ap.baseBet;
+              break;
+
+            case "dalembert":
+              newBet = won
+                ? Math.max(ap.baseBet, newBet - ap.baseBet)
+                : newBet + ap.baseBet;
+              break;
+
+            case "fibonacci": {
+              if (won) {
+                fibStepRef.current = Math.max(0, fibStepRef.current - 2);
+              } else {
+                fibStepRef.current = Math.min(FIB.length - 1, fibStepRef.current + 1);
+              }
+              newBet = ap.baseBet * FIB[fibStepRef.current];
+              break;
+            }
+
+            case "paroli": {
+              if (won) {
+                consecutiveWinsRef.current += 1;
+                if (consecutiveWinsRef.current >= 3) {
+                  consecutiveWinsRef.current = 0;
+                  newBet = ap.baseBet;
+                } else {
+                  newBet = newBet * 2;
+                }
+              } else {
+                consecutiveWinsRef.current = 0;
+                newBet = ap.baseBet;
+              }
+              break;
+            }
+
+            case "custom":
+            default: {
+              const action = won ? ap.onWin : ap.onLoss;
+              const pct = won ? ap.increaseOnWinPercent : ap.increaseOnLossPercent;
+              switch (action) {
+                case "reset":
+                  newBet = ap.baseBet;
+                  break;
+                case "increase":
+                  newBet = newBet * (1 + pct / 100);
+                  break;
+                case "decrease":
+                  newBet = Math.max(ap.baseBet, newBet * (1 - pct / 100));
+                  break;
+                case "same":
+                default:
+                  break;
+              }
+            }
           }
+
+          // Round to 2 decimals, enforce min/max
+          newBet = Math.round(newBet * 100) / 100;
+          newBet = Math.max(MIN_BET, Math.min(MAX_BET, newBet));
 
           dispatch({ type: "AUTO_PLAY_ADJUST_BET", amount: newBet });
         }
@@ -849,6 +912,16 @@ export function useMinesGame() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [state.phase]);
 
+  const startAutoPlay = useCallback(
+    (config: Omit<MinesAutoPlayState, "active" | "currentCount" | "startingNetProfit">) => {
+      // Reset strategy-specific progression trackers
+      fibStepRef.current = 0;
+      consecutiveWinsRef.current = 0;
+      dispatch({ type: "AUTO_PLAY_START", config });
+    },
+    [dispatch],
+  );
+
   return {
     state,
     dispatch,
@@ -857,5 +930,6 @@ export function useMinesGame() {
     cashOut,
     newGame,
     pickRandom,
+    startAutoPlay,
   };
 }
