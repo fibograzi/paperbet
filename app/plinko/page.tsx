@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import PlinkoGame from "@/components/games/plinko/PlinkoGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function PlinkoPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Plinko Simulator"
-        subtitle="Drop balls through a pegged board and watch them bounce into multiplier slots. Test low, medium, and high risk strategies with $1,000 in paper money."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "1,000x", label: "Max Multiplier" },
-          { value: "3", label: "Risk Levels" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Plinko">
           <PlinkoGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Plinko Works">
+      <GameSEOContent h1="Free Plinko Simulator" title="How Plinko Works">
         <p>
           A Plinko simulator lets you drop a ball from the top of a pegged board
           and watch it bounce randomly through rows of pins before landing in a

@@ -41,6 +41,9 @@ export interface CrashSessionStats {
   winRate: number;
   totalWins: number;
   cashoutCount: number;
+  currentStreak: number;   // positive = win streak, negative = loss streak
+  bestWinStreak: number;
+  bestLossStreak: number;
 }
 
 // ---------------------------------------------------------------------------

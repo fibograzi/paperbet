@@ -8,6 +8,7 @@ import BetHistory from "@/components/shared/BetHistory";
 
 import GameProviders from "@/components/shared/GameProviders";
 import { CASINOS, SITE } from "@/lib/constants";
+import { formatCurrency } from "@/lib/utils";
 
 interface PlinkoSidebarProps {
   state: PlinkoGameState;
@@ -19,6 +20,7 @@ const SESSION_TIME_REMINDER_MS = 30 * 60 * 1000; // 30 minutes
 export default function PlinkoSidebar({ state, onDismissNudge }: PlinkoSidebarProps) {
   const { stats, history, sessionBetCount, showPostSessionNudge } = state;
   const [showTimeReminder, setShowTimeReminder] = useState(false);
+  const [showMoreStats, setShowMoreStats] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTimeReminder(true), SESSION_TIME_REMINDER_MS);
@@ -60,6 +62,72 @@ export default function PlinkoSidebar({ state, onDismissNudge }: PlinkoSidebarPr
         netProfit={stats.netProfit}
         biggestWin={biggestWin}
       />
+
+      {/* More Stats (expandable) */}
+      <div className="rounded-xl" style={{ border: "1px solid #374151" }}>
+        <button
+          type="button"
+          onClick={() => setShowMoreStats(!showMoreStats)}
+          className="w-full px-4 py-2 flex items-center justify-between"
+        >
+          <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>More Stats</span>
+          <span className="text-xs" style={{ color: "#6B7280" }}>{showMoreStats ? "▲" : "▼"}</span>
+        </button>
+        {showMoreStats && (
+          <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+            <StatMini
+              label="Win Rate"
+              value={stats.totalBets > 0 ? stats.winRate.toFixed(1) + "%" : "—"}
+            />
+            <StatMini
+              label="Avg Multiplier"
+              value={stats.totalBets > 0 ? stats.averageMultiplier.toFixed(2) + "x" : "—"}
+            />
+            <StatMini
+              label="Highest Multi"
+              value={stats.highestMultiplier > 0 ? stats.highestMultiplier + "x" : "—"}
+              color="#00E5A0"
+            />
+            <StatMini
+              label="Lowest Multi"
+              value={stats.lowestMultiplier < Infinity ? stats.lowestMultiplier + "x" : "—"}
+              color="#EF4444"
+            />
+            <StatMini
+              label="Current Streak"
+              value={
+                stats.currentStreak === 0
+                  ? "—"
+                  : stats.currentStreak > 0
+                  ? stats.currentStreak + "W"
+                  : Math.abs(stats.currentStreak) + "L"
+              }
+              color={
+                stats.currentStreak > 0
+                  ? "#00E5A0"
+                  : stats.currentStreak < 0
+                  ? "#EF4444"
+                  : undefined
+              }
+            />
+            <StatMini
+              label="Best Win Streak"
+              value={stats.bestStreak > 0 ? String(stats.bestStreak) : "—"}
+              color="#00E5A0"
+            />
+            <StatMini
+              label="Worst Loss Streak"
+              value={stats.worstLossStreak < 0 ? String(Math.abs(stats.worstLossStreak)) : "—"}
+              color="#EF4444"
+            />
+            <StatMini
+              label="Biggest Win"
+              value={stats.biggestWin > 0 ? formatCurrency(stats.biggestWin) : "—"}
+              color="#00E5A0"
+            />
+          </div>
+        )}
+      </div>
 
       {/* Casinos that offer this game */}
       <GameProviders gameId="plinko" gameName="Plinko" />
@@ -150,6 +218,17 @@ export default function PlinkoSidebar({ state, onDismissNudge }: PlinkoSidebarPr
       <p className="text-[10px] text-pb-text-muted leading-relaxed">
         {SITE.disclaimer}
       </p>
+    </div>
+  );
+}
+
+function StatMini({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="rounded-lg p-2" style={{ backgroundColor: "#111827" }}>
+      <span className="font-body text-xs block" style={{ color: "#6B7280" }}>{label}</span>
+      <span className="font-mono-stats text-sm font-bold block" style={{ color: color ?? "#F9FAFB" }}>
+        {value}
+      </span>
     </div>
   );
 }

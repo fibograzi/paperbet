@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { BetType } from "@/lib/roulette/rouletteTypes";
 import { formatCurrency } from "@/lib/utils";
@@ -19,19 +19,21 @@ function ResultOverlay({
   totalProfit,
   winningNumber,
   winningColor,
+  onDismiss,
 }: {
   isVisible: boolean;
   totalProfit: number;
   winningNumber: string;
   winningColor: string;
+  onDismiss: () => void;
 }) {
   const isWin = totalProfit > 0;
   const isLoss = totalProfit < 0;
   const accentColor = isWin ? "#00E5A0" : isLoss ? "#EF4444" : "#9CA3AF";
   const colorMap: Record<string, string> = {
-    red: "#DC2626",
+    red: "#C62828",
     black: "#374151",
-    green: "#059669",
+    green: "#1B5E20",
   };
 
   return (
@@ -42,10 +44,15 @@ function ResultOverlay({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: -5 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+          className="absolute inset-0 flex items-end justify-center z-20 cursor-pointer pb-3"
+          onClick={onDismiss}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onDismiss(); }}
+          aria-label="Dismiss result"
         >
           <div
-            className="rounded-2xl px-6 py-4 text-center shadow-2xl"
+            className="rounded-2xl px-6 py-3 text-center shadow-2xl"
             style={{
               backgroundColor: "rgba(17,24,39,0.95)",
               border: `2px solid ${accentColor}`,
@@ -53,9 +60,9 @@ function ResultOverlay({
               backdropFilter: "blur(8px)",
             }}
           >
-            <div className="flex items-center justify-center mb-2">
+            <div className="flex items-center gap-3">
               <span
-                className="inline-flex items-center justify-center rounded-full font-mono-stats font-bold text-xl w-12 h-12 shadow"
+                className="inline-flex items-center justify-center rounded-full font-mono-stats font-bold text-lg w-10 h-10 shadow"
                 style={{
                   backgroundColor: colorMap[winningColor] ?? "#374151",
                   color: "#FFFFFF",
@@ -64,17 +71,23 @@ function ResultOverlay({
               >
                 {winningNumber}
               </span>
+              <div className="text-left">
+                <p
+                  className="font-heading font-bold text-lg leading-none"
+                  style={{ color: accentColor }}
+                >
+                  {isWin ? "Winner!" : isLoss ? "No Luck" : "Push"}
+                </p>
+                <p
+                  className="font-mono-stats text-sm font-semibold"
+                  style={{ color: accentColor }}
+                >
+                  {isWin ? "+" : ""}
+                  {formatCurrency(totalProfit)}
+                </p>
+              </div>
             </div>
-            <p className="font-heading font-bold text-2xl leading-none mb-1" style={{ color: accentColor }}>
-              {isWin ? "Winner!" : isLoss ? "No Luck" : "Push"}
-            </p>
-            <p className="font-mono-stats text-sm font-semibold" style={{ color: accentColor }}>
-              {isWin ? "+" : ""}
-              {formatCurrency(totalProfit)}
-            </p>
-            {!isWin && !isLoss && (
-              <p className="text-xs text-pb-text-muted mt-0.5">Bet returned</p>
-            )}
+            <p className="text-[10px] text-pb-text-muted mt-1">Click or press Space</p>
           </div>
         </motion.div>
       )}
@@ -87,7 +100,7 @@ function ResultOverlay({
 // ---------------------------------------------------------------------------
 
 export default function RouletteGame() {
-  const { state, dispatch, spin } = useRouletteGame();
+  const { state, dispatch, spin, settleRound } = useRouletteGame();
   const [wheelSpinning, setWheelSpinning] = useState(false);
 
   const isSpinning = state.phase === "spinning";
@@ -127,12 +140,45 @@ export default function RouletteGame() {
   }, [state.phase, state.currentBets.length, spin]);
 
   // ---------------------------------------------------------------------------
-  // Wheel animation complete callback
+  // Wheel animation complete → settle bets
   // ---------------------------------------------------------------------------
 
   const handleWheelSpinComplete = useCallback(() => {
     setWheelSpinning(false);
-  }, []);
+    settleRound();
+  }, [settleRound]);
+
+  // ---------------------------------------------------------------------------
+  // Dismiss result
+  // ---------------------------------------------------------------------------
+
+  const handleDismissResult = useCallback(() => {
+    if (state.phase === "result") {
+      dispatch({ type: "RESULT_DISMISS" });
+    }
+  }, [state.phase, dispatch]);
+
+  // ---------------------------------------------------------------------------
+  // Keyboard: Space to spin or dismiss
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== " " && e.code !== "Space") return;
+      // Don't capture if user is typing in an input
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+
+      if (state.phase === "result") {
+        dispatch({ type: "RESULT_DISMISS" });
+      } else if (state.phase === "idle" && state.currentBets.length > 0) {
+        handleSpin();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [state.phase, state.currentBets.length, handleSpin, dispatch]);
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-4 py-6">
@@ -165,7 +211,7 @@ export default function RouletteGame() {
 
           {/* Wheel area */}
           <div
-            className="rounded-xl p-4 relative"
+            className="rounded-xl p-6 relative"
             style={{ backgroundColor: "#111827", border: "1px solid #374151" }}
           >
             <div className="flex justify-center">
@@ -182,6 +228,7 @@ export default function RouletteGame() {
               totalProfit={lastRound?.totalProfit ?? 0}
               winningNumber={lastRound?.spinResult.pocket.label ?? ""}
               winningColor={lastRound?.spinResult.pocket.color ?? "black"}
+              onDismiss={handleDismissResult}
             />
           </div>
 

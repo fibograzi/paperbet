@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import CrashGame from "@/components/games/crash/CrashGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function CrashPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Crash Game Simulator"
-        subtitle="Watch the multiplier rise and cash out before it crashes. The longer you wait, the bigger the win — or you lose everything."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "Unlimited", label: "Max Multiplier" },
-          { value: "Active", label: "Cashout Timing" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Crash">
           <CrashGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Crash Works">
+      <GameSEOContent h1="Free Crash Game Simulator" title="How Crash Works">
         <p>
           In a Crash game simulator, a multiplier starts at 1.00x and rises
           continuously until it randomly crashes. You place a bet and watch the

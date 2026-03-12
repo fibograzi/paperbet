@@ -51,6 +51,9 @@ const initialStats: CrashSessionStats = {
   winRate: 0,
   totalWins: 0,
   cashoutCount: 0,
+  currentStreak: 0,
+  bestWinStreak: 0,
+  bestLossStreak: 0,
 };
 
 const initialAutoPlay: CrashAutoPlayState = {
@@ -295,6 +298,16 @@ function crashReducer(
       const totalWins = state.stats.totalWins + (isWin ? 1 : 0);
       const winRate = totalBets > 0 ? (totalWins / totalBets) * 100 : 0;
 
+      const currentStreak = isWin
+        ? (state.stats.currentStreak > 0 ? state.stats.currentStreak + 1 : 1)
+        : (state.stats.currentStreak < 0 ? state.stats.currentStreak - 1 : -1);
+      const bestWinStreak = currentStreak > 0
+        ? Math.max(state.stats.bestWinStreak, currentStreak)
+        : state.stats.bestWinStreak;
+      const bestLossStreak = currentStreak < 0
+        ? Math.max(state.stats.bestLossStreak, Math.abs(currentStreak))
+        : state.stats.bestLossStreak;
+
       const showSessionReminder =
         !state.showSessionReminder &&
         newSessionRoundCount >= SESSION_REMINDER_THRESHOLD;
@@ -325,6 +338,9 @@ function crashReducer(
           winRate,
           totalWins,
           cashoutCount,
+          currentStreak,
+          bestWinStreak,
+          bestLossStreak,
         },
       };
     }

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import KenoGame from "@/components/games/keno/KenoGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function KenoPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Keno Game Simulator"
-        subtitle="Pick your numbers, choose a difficulty, and see how many match the draw. Instant results — no waiting for a live draw."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "1,000x", label: "Max Multiplier" },
-          { value: "4", label: "Difficulty Levels" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Keno">
           <KenoGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Casino Keno Works">
+      <GameSEOContent h1="Free Keno Game Simulator" title="How Casino Keno Works">
         <p>
           Casino Keno is a number-matching game. Pick 1 to 10 numbers from a
           40-number grid, choose one of four difficulty levels (Easy, Medium,

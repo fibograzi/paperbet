@@ -6,16 +6,19 @@ import type {
   PlinkoAction,
   PlinkoBetResult,
   AutoPlayState,
-  AutoPlaySpeed,
 } from "./plinkoTypes";
 
-const SPEED_DELAYS: Record<AutoPlaySpeed, number> = {
-  normal: 2000,
-  fast: 500,
-  turbo: 300,
+const SPEED_DELAYS: Record<string, number> = {
+  normal: 1500,
+  quick: 250,
+  instant: 50,
 };
 
-const MAX_CONCURRENT_BALLS = 3;
+const MAX_BALLS_FOR_SPEED: Record<string, number> = {
+  normal: 1,
+  quick: 15,
+  instant: 50,
+};
 
 export function usePlinkoAutoPlay(
   state: PlinkoGameState,
@@ -134,8 +137,8 @@ export function usePlinkoAutoPlay(
     const config = configRef.current;
     if (!config) return;
 
-    const delay = SPEED_DELAYS[config.speed];
-    const isNormalSpeed = config.speed === "normal";
+    const delay = SPEED_DELAYS[stateRef.current.speedMode] ?? 1500;
+    const maxBalls = MAX_BALLS_FOR_SPEED[stateRef.current.speedMode] ?? 1;
 
     clearTimer();
 
@@ -144,14 +147,8 @@ export function usePlinkoAutoPlay(
 
       const s = stateRef.current;
 
-      // For normal speed, wait until no active balls
-      if (isNormalSpeed && s.activeBalls > 0) {
-        scheduleNextDrop();
-        return;
-      }
-
-      // For fast/turbo, respect max concurrent balls
-      if (!isNormalSpeed && s.activeBalls >= MAX_CONCURRENT_BALLS) {
+      // Respect speed-dependent concurrent ball limit
+      if (s.activeBalls >= maxBalls) {
         scheduleNextDrop();
         return;
       }

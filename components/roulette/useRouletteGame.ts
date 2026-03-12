@@ -13,13 +13,18 @@ import {
   MIN_BET,
   MAX_BET,
   CHIP_VALUES,
-  SPIN_DURATION,
   MAX_HISTORY,
   POST_SESSION_NUDGE_THRESHOLD,
   generateSpin,
   evaluateAllBets,
 } from "@/lib/roulette/rouletteEngine";
 import { generateId } from "@/lib/utils";
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const RESULT_DISPLAY_MS = 2500;
 
 // ---------------------------------------------------------------------------
 // Initial state
@@ -108,7 +113,6 @@ function updateStats(
 // ---------------------------------------------------------------------------
 
 function mergeBet(existing: PlacedBet[], incoming: Omit<PlacedBet, "id">): PlacedBet[] {
-  // Two bets are on the same position if they have same type AND same numbers array
   const sameNumbers = (a: number[], b: number[]) =>
     a.length === b.length && [...a].sort().join(",") === [...b].sort().join(",");
 
@@ -163,7 +167,6 @@ function rouletteReducer(
 
       const newBets = mergeBet(state.currentBets, { ...action.bet, amount });
       const totalNewBetAmount = newBets.reduce((s, b) => s + b.amount, 0);
-      // Recalculate balance from scratch: deduct only the delta
       const prevTotal = state.currentBets.reduce((s, b) => s + b.amount, 0);
       const delta = totalNewBetAmount - prevTotal;
 
@@ -244,7 +247,7 @@ function rouletteReducer(
       if (state.currentBets.length === 0) return state;
 
       const currentTotal = state.currentBets.reduce((s, b) => s + b.amount, 0);
-      if (state.balance < currentTotal) return state; // need same amount again
+      if (state.balance < currentTotal) return state;
 
       const doubled = state.currentBets.map((b) => ({
         ...b,
@@ -262,16 +265,16 @@ function rouletteReducer(
     }
 
     // -----------------------------------------------------------------------
-    // Spin — lock in bets, transition to spinning
+    // Start spin — lock bets, store result immediately (wheel animates it)
     // -----------------------------------------------------------------------
-    case "SPIN": {
+    case "START_SPIN": {
       if (state.phase !== "idle") return state;
       if (state.currentBets.length === 0) return state;
 
       return {
         ...state,
         phase: "spinning",
-        spinResult: null,
+        spinResult: action.spinResult,
         betOutcomes: [],
       };
     }
@@ -350,12 +353,9 @@ function rouletteReducer(
         ...createInitialState(),
         wheelType: state.wheelType,
         selectedChipValue: state.selectedChipValue,
-        // keep history and stats — just reset balance to $1,000
         history: state.history,
         stats: state.stats,
         sessionSpinCount: state.sessionSpinCount,
-        // Bets are cleared (createInitialState sets currentBets: []),
-        // balance resets to the standard starting amount
         balance: INITIAL_BALANCE,
       };
     }
@@ -374,12 +374,11 @@ export function useRouletteGame() {
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; });
 
-  const spinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resultDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---------------------------------------------------------------------------
-  // Spin convenience function
+  // Spin — generate result immediately, let wheel animation handle timing
   // ---------------------------------------------------------------------------
 
   const spin = useCallback(() => {
@@ -387,26 +386,32 @@ export function useRouletteGame() {
     if (s.phase !== "idle") return;
     if (s.currentBets.length === 0) return;
 
-    dispatch({ type: "SPIN" });
-
     const spinResult = generateSpin(s.wheelType);
-
-    spinTimerRef.current = setTimeout(() => {
-      const currentState = stateRef.current;
-      const outcomes = evaluateAllBets(currentState.currentBets, spinResult);
-      dispatch({ type: "SPIN_COMPLETE", spinResult, outcomes });
-    }, SPIN_DURATION);
+    dispatch({ type: "START_SPIN", spinResult });
   }, []);
 
   // ---------------------------------------------------------------------------
-  // Auto-dismiss result after 3 seconds
+  // Settle round — called by wheel when animation finishes
+  // ---------------------------------------------------------------------------
+
+  const settleRound = useCallback(() => {
+    const s = stateRef.current;
+    if (s.phase !== "spinning") return;
+    if (!s.spinResult) return;
+
+    const outcomes = evaluateAllBets(s.currentBets, s.spinResult);
+    dispatch({ type: "SPIN_COMPLETE", spinResult: s.spinResult, outcomes });
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Auto-dismiss result after delay
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
     if (state.phase === "result") {
       resultDismissTimerRef.current = setTimeout(() => {
         dispatch({ type: "RESULT_DISMISS" });
-      }, 3000);
+      }, RESULT_DISPLAY_MS);
     }
 
     return () => {
@@ -453,11 +458,10 @@ export function useRouletteGame() {
 
   useEffect(() => {
     return () => {
-      if (spinTimerRef.current) clearTimeout(spinTimerRef.current);
       if (resultDismissTimerRef.current) clearTimeout(resultDismissTimerRef.current);
       if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current);
     };
   }, []);
 
-  return { state, dispatch, spin };
+  return { state, dispatch, spin, settleRound };
 }

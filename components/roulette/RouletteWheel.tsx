@@ -17,50 +17,54 @@ interface RouletteWheelProps {
 }
 
 // ---------------------------------------------------------------------------
-// Colors
+// Pocket colors — rich casino colors
 // ---------------------------------------------------------------------------
 
-const COLORS = {
-  red: "#DC2626",
-  black: "#1C1C1E",
-  green: "#059669",
-  redHighlight: "#FF4444",
-  blackHighlight: "#3A3A3C",
-  greenHighlight: "#00E5A0",
+const COLORS: Record<string, { fill: string; highlight: string }> = {
+  red: { fill: "#B71C1C", highlight: "#EF5350" },
+  black: { fill: "#1A1A1A", highlight: "#555555" },
+  green: { fill: "#1B5E20", highlight: "#4CAF50" },
 };
 
 // ---------------------------------------------------------------------------
-// SVG arc helper
+// SVG geometry
 // ---------------------------------------------------------------------------
 
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return {
-    x: cx + r * Math.cos(rad),
-    y: cy + r * Math.sin(rad),
-  };
+const CX = 200;
+const CY = 200;
+const RIM_R = 195; // outermost decorative rim
+const POCKET_OUTER = 184; // outer edge of colored pockets
+const POCKET_INNER = 108; // inner edge of colored pockets
+const NUMBER_R = 150; // center of number labels
+const BALL_R = 176; // ball orbit radius (between rim and pocket outer)
+const HUB_R = 103; // inner hub
+const BALL_SIZE = 6.5;
+const SPIN_MS = 4200;
+
+// ---------------------------------------------------------------------------
+// SVG helpers
+// ---------------------------------------------------------------------------
+
+function polar(cx: number, cy: number, r: number, deg: number) {
+  const rad = ((deg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-function arcPath(
-  cx: number,
-  cy: number,
-  outerR: number,
-  innerR: number,
-  startAngle: number,
-  endAngle: number,
+function sectorPath(
+  cx: number, cy: number,
+  rOuter: number, rInner: number,
+  a0: number, a1: number,
 ): string {
-  const outerStart = polarToCartesian(cx, cy, outerR, startAngle);
-  const outerEnd = polarToCartesian(cx, cy, outerR, endAngle);
-  const innerStart = polarToCartesian(cx, cy, innerR, endAngle);
-  const innerEnd = polarToCartesian(cx, cy, innerR, startAngle);
-
-  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-
+  const os = polar(cx, cy, rOuter, a0);
+  const oe = polar(cx, cy, rOuter, a1);
+  const is_ = polar(cx, cy, rInner, a1);
+  const ie = polar(cx, cy, rInner, a0);
+  const lg = a1 - a0 > 180 ? 1 : 0;
   return [
-    `M ${outerStart.x} ${outerStart.y}`,
-    `A ${outerR} ${outerR} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
-    `L ${innerStart.x} ${innerStart.y}`,
-    `A ${innerR} ${innerR} 0 ${largeArc} 0 ${innerEnd.x} ${innerEnd.y}`,
+    `M ${os.x} ${os.y}`,
+    `A ${rOuter} ${rOuter} 0 ${lg} 1 ${oe.x} ${oe.y}`,
+    `L ${is_.x} ${is_.y}`,
+    `A ${rInner} ${rInner} 0 ${lg} 0 ${ie.x} ${ie.y}`,
     "Z",
   ].join(" ");
 }
@@ -77,145 +81,162 @@ export default function RouletteWheel({
 }: RouletteWheelProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const wheelRef = useRef<SVGGElement>(null);
-  const animationRef = useRef<Animation | null>(null);
-  const [currentRotation, setCurrentRotation] = useState(0);
-  const [winningPocketIdx, setWinningPocketIdx] = useState<number | null>(null);
+  const ballRef = useRef<SVGGElement>(null);
+  const wheelAnimRef = useRef<Animation | null>(null);
+  const ballAnimRef = useRef<Animation | null>(null);
+  const rotationRef = useRef(0); // current wheel rotation (avoids stale closure)
+  const [displayRotation, setDisplayRotation] = useState(0);
+  const [winningIdx, setWinningIdx] = useState<number | null>(null);
   const completedRef = useRef(false);
 
-  const wheelOrder = getWheelOrder(wheelType);
-  const pocketCount = wheelOrder.length;
-  const degreesPerPocket = 360 / pocketCount;
+  const order = getWheelOrder(wheelType);
+  const count = order.length;
+  const degPer = 360 / count;
 
-  // Center and radii (viewBox 400x400)
-  const cx = 200;
-  const cy = 200;
-  const outerR = 190;
-  const innerR = 80;
-  const labelR = 150;
-  const ballR = 175;
-
-  // ---------------------------------------------------------------------------
-  // Spin animation
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Spin animation — starts wheel rotation + counter-rotating ball
+  // -------------------------------------------------------------------------
 
   const runSpin = useCallback(() => {
-    if (!wheelRef.current || !spinResult) return;
+    if (!wheelRef.current || !ballRef.current || !spinResult) return;
 
     completedRef.current = false;
+    setWinningIdx(null);
 
-    // Find the pocket index in wheel order
-    const targetIdx = wheelOrder.indexOf(spinResult.winningNumber);
+    const targetIdx = order.indexOf(spinResult.winningNumber);
     if (targetIdx < 0) return;
 
-    // The angle where this pocket is centered
-    const pocketCenterAngle = targetIdx * degreesPerPocket + degreesPerPocket / 2;
+    // Pocket center angle on the un-rotated wheel
+    const pocketAngle = targetIdx * degPer + degPer / 2;
 
-    // We want the pocket to land at the top (0°). The wheel needs to rotate so
-    // that pocketCenterAngle ends up at 0. Additional full rotations for drama.
+    // We want the pocket to land at the top (0°).
+    // After rotation: (pocketAngle + finalAngle) % 360 ≡ 0
+    // So finalAngle % 360 must equal (360 - pocketAngle) % 360.
+    const desiredRemainder = (360 - pocketAngle + 360) % 360;
+    const cur = rotationRef.current;
     const extraSpins = 5 * 360;
-    const targetAngle = extraSpins + (360 - pocketCenterAngle + currentRotation % 360);
-    const finalAngle = currentRotation + targetAngle;
+    const base = cur + extraSpins;
+    const baseRemainder = ((base % 360) + 360) % 360;
+    const delta = ((desiredRemainder - baseRemainder) % 360 + 360) % 360;
+    const finalAngle = base + delta;
 
     if (prefersReducedMotion) {
-      // Instant result
-      setCurrentRotation(finalAngle % 360);
-      setWinningPocketIdx(targetIdx);
+      const r = finalAngle % 360;
+      rotationRef.current = r;
+      setDisplayRotation(r);
+      setWinningIdx(targetIdx);
       completedRef.current = true;
       onSpinComplete();
       return;
     }
 
-    const el = wheelRef.current;
+    // Cancel any running animations
+    wheelAnimRef.current?.cancel();
+    ballAnimRef.current?.cancel();
 
-    // Cancel any existing animation
-    if (animationRef.current) {
-      animationRef.current.cancel();
-    }
+    const easing = "cubic-bezier(0.12, 0.60, 0.08, 1.0)";
 
-    const startAngle = currentRotation;
-    const duration = 4000; // ms
-
-    const anim = el.animate(
+    // Wheel spins forward
+    const wAnim = wheelRef.current.animate(
       [
-        { transform: `rotate(${startAngle}deg)`, offset: 0 },
-        { transform: `rotate(${finalAngle}deg)`, offset: 1 },
+        { transform: `rotate(${cur}deg)` },
+        { transform: `rotate(${finalAngle}deg)` },
       ],
-      {
-        duration,
-        easing: "cubic-bezier(0.17, 0.67, 0.12, 1.0)",
-        fill: "forwards",
-      },
+      { duration: SPIN_MS, easing, fill: "forwards" },
     );
+    wheelAnimRef.current = wAnim;
 
-    animationRef.current = anim;
+    // Ball orbits opposite direction (4 full counter-clockwise turns → ends at 0°)
+    const bAnim = ballRef.current.animate(
+      [
+        { transform: "rotate(0deg)" },
+        { transform: "rotate(-1440deg)" },
+      ],
+      { duration: SPIN_MS, easing, fill: "forwards" },
+    );
+    ballAnimRef.current = bAnim;
 
-    anim.onfinish = () => {
-      if (!completedRef.current) {
-        completedRef.current = true;
-        setCurrentRotation(finalAngle % 360);
-        setWinningPocketIdx(targetIdx);
-        onSpinComplete();
-      }
+    wAnim.onfinish = () => {
+      if (completedRef.current) return;
+      completedRef.current = true;
+
+      const r = finalAngle % 360;
+      rotationRef.current = r;
+      setDisplayRotation(r);
+      setWinningIdx(targetIdx);
+
+      // Clean up ball animation (ball ends at 0° = top, matching pocket)
+      ballAnimRef.current?.cancel();
+
+      onSpinComplete();
     };
-  }, [spinResult, wheelOrder, degreesPerPocket, currentRotation, prefersReducedMotion, onSpinComplete]);
+  }, [spinResult, order, degPer, prefersReducedMotion, onSpinComplete]);
 
+  // Trigger spin when props indicate spinning with a result
   useEffect(() => {
     if (isSpinning && spinResult) {
-      setWinningPocketIdx(null); // eslint-disable-line react-hooks/set-state-in-effect
-      runSpin();
+      runSpin(); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [isSpinning, spinResult]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset winning highlight when not spinning
+  // Clear winning highlight when idle and no result
   useEffect(() => {
     if (!isSpinning && !spinResult) {
-      setWinningPocketIdx(null); // eslint-disable-line react-hooks/set-state-in-effect
+      setWinningIdx(null); // eslint-disable-line react-hooks/set-state-in-effect
     }
   }, [isSpinning, spinResult]);
 
-  // ---------------------------------------------------------------------------
-  // Render pockets
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Render pocket sectors
+  // -------------------------------------------------------------------------
 
-  const pockets = wheelOrder.map((num, idx) => {
-    const startAngle = idx * degreesPerPocket;
-    const endAngle = startAngle + degreesPerPocket;
+  const pocketElements = order.map((num, idx) => {
+    const a0 = idx * degPer;
+    const a1 = a0 + degPer;
     const color = getPocketColor(num);
-    const isWinning = winningPocketIdx === idx;
+    const isWin = winningIdx === idx;
+    const { fill, highlight } = COLORS[color];
+    const fillColor = isWin ? highlight : fill;
 
-    const fillColor = isWinning
-      ? COLORS[`${color}Highlight` as keyof typeof COLORS] ?? COLORS[color]
-      : COLORS[color];
-
-    const midAngle = startAngle + degreesPerPocket / 2;
-    const labelPos = polarToCartesian(cx, cy, labelR, midAngle);
-
-    // Rotate label text so it's radially aligned
-    const labelRotation = midAngle - 90;
-
+    // Number label
+    const mid = a0 + degPer / 2;
+    const lp = polar(CX, CY, NUMBER_R, mid);
+    const bottomHalf = mid > 90 && mid < 270;
+    const rot = bottomHalf ? mid + 90 : mid - 90;
     const label = num === -1 ? "00" : String(num);
 
     return (
-      <g key={`pocket-${idx}`}>
+      <g key={idx}>
         <path
-          d={arcPath(cx, cy, outerR, innerR, startAngle, endAngle)}
+          d={sectorPath(CX, CY, POCKET_OUTER, POCKET_INNER, a0, a1)}
           fill={fillColor}
-          stroke="#0B0F1A"
-          strokeWidth="1"
-          style={{
-            transition: isWinning ? "fill 0.3s ease" : "none",
-            filter: isWinning ? `drop-shadow(0 0 6px ${fillColor})` : "none",
-          }}
+          stroke="#8B7D5B"
+          strokeWidth="0.6"
         />
+        {/* Pocket divider highlight */}
+        {idx > 0 && (
+          <line
+            x1={polar(CX, CY, POCKET_OUTER, a0).x}
+            y1={polar(CX, CY, POCKET_OUTER, a0).y}
+            x2={polar(CX, CY, POCKET_INNER, a0).x}
+            y2={polar(CX, CY, POCKET_INNER, a0).y}
+            stroke="#A08E6C"
+            strokeWidth="0.4"
+            opacity="0.5"
+          />
+        )}
         <text
-          x={labelPos.x}
-          y={labelPos.y}
-          transform={`rotate(${labelRotation}, ${labelPos.x}, ${labelPos.y})`}
+          x={lp.x}
+          y={lp.y}
+          transform={`rotate(${rot}, ${lp.x}, ${lp.y})`}
           textAnchor="middle"
           dominantBaseline="central"
-          fontSize={pocketCount <= 37 ? "8" : "7"}
-          fontWeight={isWinning ? "700" : "600"}
-          fill={color === "black" ? "#F9FAFB" : "#FFFFFF"}
+          fontSize={count <= 37 ? "10.5" : "9.5"}
+          fontWeight="700"
+          fill="#FFFFFF"
+          stroke="#000000"
+          strokeWidth="2.5"
+          paintOrder="stroke"
           style={{ userSelect: "none", pointerEvents: "none" }}
         >
           {label}
@@ -224,53 +245,129 @@ export default function RouletteWheel({
     );
   });
 
-  // ---------------------------------------------------------------------------
-  // Ball position — orbits around wheel
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Ball deflector diamonds on the rim
+  // -------------------------------------------------------------------------
 
-  // Ball sits at the top of the track when not spinning; moves to winning pocket when done
-  const ballAngle = winningPocketIdx !== null
-    ? winningPocketIdx * degreesPerPocket + degreesPerPocket / 2
-    : 0;
+  const deflectors = Array.from({ length: 8 }, (_, i) => {
+    const a = i * 45;
+    const p = polar(CX, CY, POCKET_OUTER + 4.5, a);
+    return (
+      <g key={`d${i}`}>
+        <polygon
+          points={`${p.x},${p.y - 4} ${p.x + 3},${p.y} ${p.x},${p.y + 4} ${p.x - 3},${p.y}`}
+          transform={`rotate(${a}, ${p.x}, ${p.y})`}
+          fill="#9E8E6C"
+          stroke="#C4B48A"
+          strokeWidth="0.4"
+        />
+      </g>
+    );
+  });
 
-  const ballPos = polarToCartesian(cx, cy, ballR, ballAngle);
+  // -------------------------------------------------------------------------
+  // Winning number center badge (visible after spin settles)
+  // -------------------------------------------------------------------------
+
+  const winBadge =
+    winningIdx !== null && spinResult ? (
+      <g>
+        <circle
+          cx={CX}
+          cy={CY}
+          r="26"
+          fill={COLORS[spinResult.pocket.color].fill}
+          stroke={COLORS[spinResult.pocket.color].highlight}
+          strokeWidth="2"
+          filter="url(#rw-glow)"
+        />
+        <text
+          x={CX}
+          y={CY}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize="18"
+          fontWeight="800"
+          fill="#FFFFFF"
+          style={{ userSelect: "none", fontFamily: "var(--font-outfit, sans-serif)" }}
+        >
+          {spinResult.pocket.label}
+        </text>
+      </g>
+    ) : (
+      <g>
+        <text
+          x={CX}
+          y={CY - 10}
+          textAnchor="middle"
+          fontSize="12"
+          fontWeight="700"
+          fill="#00E5A0"
+          style={{ userSelect: "none", fontFamily: "var(--font-outfit, sans-serif)" }}
+        >
+          PAPER
+        </text>
+        <text
+          x={CX}
+          y={CY + 10}
+          textAnchor="middle"
+          fontSize="12"
+          fontWeight="700"
+          fill="#9CA3AF"
+          style={{ userSelect: "none", fontFamily: "var(--font-outfit, sans-serif)" }}
+        >
+          BET
+        </text>
+      </g>
+    );
+
+  // -------------------------------------------------------------------------
+  // SVG
+  // -------------------------------------------------------------------------
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Responsive wrapper */}
       <div
-        className="relative"
-        style={{ width: "min(280px, 100%)", maxWidth: "400px" }}
+        className="relative w-full"
+        style={{ maxWidth: "380px" }}
       >
         <svg
           viewBox="0 0 400 400"
           className="w-full h-auto"
-          aria-label={`Roulette wheel, ${wheelType} style`}
           role="img"
+          aria-label={`Roulette wheel, ${wheelType} layout`}
         >
           <defs>
-            {/* Outer rim gradient */}
-            <radialGradient id="rimGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="88%" stopColor="#1F2937" />
-              <stop offset="95%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#4B5563" />
+            {/* Outer rim gradient — dark wood */}
+            <radialGradient id="rw-rim" cx="50%" cy="50%" r="50%">
+              <stop offset="82%" stopColor="#1E1A14" />
+              <stop offset="90%" stopColor="#2D261C" />
+              <stop offset="96%" stopColor="#3D3426" />
+              <stop offset="100%" stopColor="#2D261C" />
             </radialGradient>
-            {/* Center hub gradient */}
-            <radialGradient id="hubGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#111827" />
+            {/* Inner hub gradient */}
+            <radialGradient id="rw-hub" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3A3226" />
+              <stop offset="60%" stopColor="#251F16" />
+              <stop offset="100%" stopColor="#1A160F" />
             </radialGradient>
-            {/* Ball glow filter */}
-            <filter id="ballGlow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
+            {/* Ball — 3D white sphere */}
+            <radialGradient id="rw-ball" cx="35%" cy="30%" r="55%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="40%" stopColor="#E8E8E8" />
+              <stop offset="100%" stopColor="#A0A0A0" />
+            </radialGradient>
+            {/* Glow filter */}
+            <filter id="rw-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            {/* Winning glow */}
-            <filter id="winGlow">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+            {/* Subtle ball glow */}
+            <filter id="rw-ball-glow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
@@ -278,140 +375,129 @@ export default function RouletteWheel({
             </filter>
           </defs>
 
-          {/* Outer rim */}
-          <circle cx={cx} cy={cy} r={outerR + 8} fill="url(#rimGradient)" />
-          {/* Decorative border ring */}
+          {/* ===== Outer rim ===== */}
+          <circle cx={CX} cy={CY} r={RIM_R} fill="url(#rw-rim)" />
+          {/* Rim edge ring */}
           <circle
-            cx={cx}
-            cy={cy}
-            r={outerR + 4}
+            cx={CX}
+            cy={CY}
+            r={RIM_R}
             fill="none"
-            stroke="#4B5563"
+            stroke="#4A3E2E"
             strokeWidth="1.5"
           />
-
-          {/* Spinning wheel group */}
-          <g
-            ref={wheelRef}
-            style={{
-              transformOrigin: `${cx}px ${cy}px`,
-              transform: `rotate(${currentRotation}deg)`,
-            }}
-          >
-            {pockets}
-          </g>
-
-          {/* Inner hub (static) */}
-          <circle cx={cx} cy={cy} r={innerR - 4} fill="url(#hubGradient)" />
+          {/* Inner rim ring (pocket boundary) */}
           <circle
-            cx={cx}
-            cy={cy}
-            r={innerR - 4}
+            cx={CX}
+            cy={CY}
+            r={POCKET_OUTER + 1}
             fill="none"
-            stroke="#374151"
-            strokeWidth="1.5"
+            stroke="#8B7D5B"
+            strokeWidth="1"
           />
 
-          {/* PaperBet logo text in center */}
-          <text
-            x={cx}
-            y={cy - 8}
-            textAnchor="middle"
-            fontSize="10"
-            fontWeight="700"
-            fill="#00E5A0"
-            style={{ userSelect: "none" }}
-          >
-            PAPER
-          </text>
-          <text
-            x={cx}
-            y={cy + 8}
-            textAnchor="middle"
-            fontSize="10"
-            fontWeight="700"
-            fill="#9CA3AF"
-            style={{ userSelect: "none" }}
-          >
-            BET
-          </text>
-
-          {/* Ball track ring */}
+          {/* Ball track groove */}
           <circle
-            cx={cx}
-            cy={cy}
-            r={ballR}
+            cx={CX}
+            cy={CY}
+            r={BALL_R}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="rgba(160,142,108,0.12)"
             strokeWidth="4"
           />
 
-          {/* Ball */}
-          {isSpinning && winningPocketIdx === null && (
-            <circle
-              cx={cx}
-              cy={cy - ballR}
-              r="7"
-              fill="#F9FAFB"
-              filter="url(#ballGlow)"
-              style={{
-                transformOrigin: `${cx}px ${cy}px`,
-                animation: "roulette-ball-spin 0.4s linear infinite",
-              }}
-            />
-          )}
+          {/* Ball deflectors */}
+          {deflectors}
 
-          {winningPocketIdx !== null && (
-            <circle
-              cx={ballPos.x}
-              cy={ballPos.y}
-              r="7"
-              fill="#F9FAFB"
-              filter="url(#ballGlow)"
-            />
-          )}
+          {/* ===== Spinning wheel group ===== */}
+          <g
+            ref={wheelRef}
+            style={{
+              transformOrigin: `${CX}px ${CY}px`,
+              transform: `rotate(${displayRotation}deg)`,
+            }}
+          >
+            {pocketElements}
+          </g>
 
-          {/* Top pointer */}
+          {/* ===== Inner hub (static) ===== */}
+          <circle cx={CX} cy={CY} r={HUB_R} fill="url(#rw-hub)" />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={HUB_R}
+            fill="none"
+            stroke="#8B7D5B"
+            strokeWidth="0.8"
+          />
+          {/* Decorative inner rings */}
+          <circle
+            cx={CX}
+            cy={CY}
+            r={HUB_R - 10}
+            fill="none"
+            stroke="rgba(160,142,108,0.2)"
+            strokeWidth="0.5"
+          />
+          <circle
+            cx={CX}
+            cy={CY}
+            r={HUB_R - 20}
+            fill="none"
+            stroke="rgba(160,142,108,0.15)"
+            strokeWidth="0.5"
+          />
+
+          {/* Hub center / winning badge */}
+          {winBadge}
+
+          {/* ===== Ball ===== */}
+          <g
+            ref={ballRef}
+            style={{ transformOrigin: `${CX}px ${CY}px` }}
+          >
+            {/* Shadow */}
+            <ellipse
+              cx={CX + 1.5}
+              cy={CY - BALL_R + 2}
+              rx={BALL_SIZE}
+              ry={BALL_SIZE * 0.5}
+              fill="rgba(0,0,0,0.35)"
+            />
+            {/* Ball body */}
+            <circle
+              cx={CX}
+              cy={CY - BALL_R}
+              r={BALL_SIZE}
+              fill="url(#rw-ball)"
+              filter="url(#rw-ball-glow)"
+            />
+            {/* Specular highlight */}
+            <circle
+              cx={CX - 1.5}
+              cy={CY - BALL_R - 2}
+              r={BALL_SIZE * 0.25}
+              fill="rgba(255,255,255,0.7)"
+            />
+          </g>
+
+          {/* ===== Pointer at top ===== */}
           <polygon
-            points={`${cx - 8},${cy - outerR - 8} ${cx + 8},${cy - outerR - 8} ${cx},${cy - outerR + 4}`}
+            points={`${CX - 10},${CY - RIM_R - 8} ${CX + 10},${CY - RIM_R - 8} ${CX},${CY - RIM_R + 5}`}
             fill="#00E5A0"
+            stroke="#0B0F1A"
+            strokeWidth="1.5"
+            filter="url(#rw-glow)"
           />
         </svg>
-
-        {/* Winning number display overlay */}
-        {winningPocketIdx !== null && spinResult && (
-          <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            style={{ paddingBottom: "20%" }}
-          >
-            <div
-              className="rounded-full w-12 h-12 flex items-center justify-center font-heading font-bold text-lg shadow-lg"
-              style={{
-                backgroundColor: COLORS[spinResult.pocket.color],
-                color: "#FFFFFF",
-                border: `2px solid ${COLORS[`${spinResult.pocket.color}Highlight` as keyof typeof COLORS] ?? "#F9FAFB"}`,
-                boxShadow: `0 0 20px ${COLORS[`${spinResult.pocket.color}Highlight` as keyof typeof COLORS] ?? COLORS[spinResult.pocket.color]}66`,
-              }}
-            >
-              {spinResult.pocket.label}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Spinning indicator */}
-      {isSpinning && winningPocketIdx === null && (
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs font-mono-stats text-pb-text-muted animate-pulse">
+      {/* Spinning text indicator */}
+      {isSpinning && winningIdx === null && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs font-mono-stats text-pb-text-muted animate-pulse">
           Spinning...
         </div>
       )}
-
-      <style>{`
-        @keyframes roulette-ball-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

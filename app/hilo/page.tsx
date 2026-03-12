@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import HiLoGame from "@/components/games/hilo/HiLoGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function HiLoPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free HiLo Card Game Simulator"
-        subtitle="A card is revealed — predict whether the next card will be higher or lower. Each correct guess multiplies your bet. Cash out anytime or keep the chain going."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "Card-Based", label: "Chains" },
-          { value: "Streaks", label: "Multiplier" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="HiLo">
           <HiLoGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How HiLo Works">
+      <GameSEOContent h1="Free HiLo Card Game Simulator" title="How HiLo Works">
         <p>
           HiLo is a card-based casino game built around sequential predictions.
           A card from a standard 52-card deck is shown face-up. You predict

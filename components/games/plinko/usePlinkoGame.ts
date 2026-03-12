@@ -19,7 +19,10 @@ const initialStats: PlinkoSessionStats = {
   biggestLoss: 0,
   currentStreak: 0,
   bestStreak: 0,
+  worstLossStreak: 0,
   averageMultiplier: 0,
+  highestMultiplier: 0,
+  lowestMultiplier: Infinity,
   winRate: 0,
   totalWins: 0,
 };
@@ -37,7 +40,6 @@ const initialState: PlinkoGameState = {
   activeBalls: 0,
   autoPlay: {
     active: false,
-    speed: "normal",
     totalCount: null,
     currentCount: 0,
     stopOnWinMultiplier: null,
@@ -50,6 +52,7 @@ const initialState: PlinkoGameState = {
     baseBet: 1.0,
     startBalance: 1000,
   },
+  speedMode: "normal",
   sessionBetCount: 0,
   showSessionReminder: false,
   showPostSessionNudge: false,
@@ -90,7 +93,7 @@ function plinkoReducer(
 
     case "DROP_COMPLETE": {
       const { result } = action;
-      const newHistory = [result, ...state.history].slice(0, 50);
+      const newHistory = [result, ...state.history].slice(0, 100);
       const newSessionBetCount = state.sessionBetCount + 1;
 
       const totalBets = state.stats.totalBets + 1;
@@ -112,10 +115,14 @@ function plinkoReducer(
         ? (state.stats.currentStreak > 0 ? state.stats.currentStreak + 1 : 1)
         : (state.stats.currentStreak < 0 ? state.stats.currentStreak - 1 : -1);
       const bestStreak = Math.max(state.stats.bestStreak, currentStreak);
+      const worstLossStreak = Math.min(state.stats.worstLossStreak, currentStreak);
 
       const totalMultipliers =
         state.stats.averageMultiplier * state.stats.totalBets + result.multiplier;
       const averageMultiplier = totalMultipliers / totalBets;
+
+      const highestMultiplier = Math.max(state.stats.highestMultiplier, result.multiplier);
+      const lowestMultiplier = Math.min(state.stats.lowestMultiplier, result.multiplier);
 
       const totalWins = state.stats.totalWins + (isWin ? 1 : 0);
       const winRate = (totalWins / totalBets) * 100;
@@ -143,7 +150,10 @@ function plinkoReducer(
           biggestLoss,
           currentStreak,
           bestStreak,
+          worstLossStreak,
           averageMultiplier,
+          highestMultiplier,
+          lowestMultiplier,
           winRate,
           totalWins,
         },
@@ -215,8 +225,21 @@ function plinkoReducer(
         postSessionNudgeDismissed: true,
       };
 
+    case "SET_SPEED_MODE":
+      return { ...state, speedMode: action.mode };
+
     case "RESET_BALANCE":
-      return { ...state, balance: 1000, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: 1000,
+        stats: { ...initialStats },
+        history: [],
+        speedMode: "normal",
+        sessionBetCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+      };
 
     default:
       return state;
@@ -238,12 +261,8 @@ export function usePlinkoGame() {
     const effectiveBalance = state.balance - pendingDeductionRef.current;
     if (effectiveBalance < state.config.betAmount) return false;
 
-    if (state.autoPlay.active) {
-      return state.activeBalls < 3;
-    }
-
-    // Manual mode: allow up to 10 simultaneous balls (like Stake.com)
-    return state.activeBalls < 10;
+    // Allow up to 50 simultaneous balls in both manual and auto mode
+    return state.activeBalls < 50;
   }, [
     state.balance,
     state.config.betAmount,

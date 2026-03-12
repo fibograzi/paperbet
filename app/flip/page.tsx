@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import FlipGame from "@/components/games/flip/FlipGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function FlipPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Coin Flip Simulator"
-        subtitle="Pick heads or tails. Win and your bet doubles. Chain multiple wins for massive multipliers — or cash out after any correct guess."
-        stats={[
-          { value: "98%", label: "RTP" },
-          { value: "1,027,604x", label: "Max Chain" },
-          { value: "50/50", label: "Odds" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Flip">
           <FlipGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Coin Flip Works">
+      <GameSEOContent h1="Free Coin Flip Simulator" title="How Coin Flip Works">
         <p>
           Coin Flip is the simplest casino game. Pick Heads or Tails, and the
           coin is flipped. If you guess correctly, your bet is multiplied. The

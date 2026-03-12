@@ -27,6 +27,7 @@ export interface PlinkoGameState {
   isDropping: boolean;
   activeBalls: number;
   autoPlay: AutoPlayState;
+  speedMode: "normal" | "quick" | "instant";
   sessionBetCount: number;
   showSessionReminder: boolean;
   showPostSessionNudge: boolean;
@@ -42,14 +43,16 @@ export interface PlinkoSessionStats {
   biggestLoss: number;
   currentStreak: number;
   bestStreak: number;
+  worstLossStreak: number;
   averageMultiplier: number;
+  highestMultiplier: number;
+  lowestMultiplier: number;
   winRate: number;
   totalWins: number;
 }
 
 export interface AutoPlayState {
   active: boolean;
-  speed: AutoPlaySpeed;
   totalCount: number | null; // null = infinite
   currentCount: number;
   stopOnWinMultiplier: number | null;
@@ -62,8 +65,6 @@ export interface AutoPlayState {
   baseBet: number;
   startBalance: number;
 }
-
-export type AutoPlaySpeed = "normal" | "fast" | "turbo";
 
 export type PlinkoAction =
   | { type: "SET_BET_AMOUNT"; amount: number }
@@ -80,6 +81,7 @@ export type PlinkoAction =
   | { type: "DISMISS_SESSION_REMINDER" }
   | { type: "SHOW_POST_SESSION_NUDGE" }
   | { type: "DISMISS_POST_SESSION_NUDGE" }
+  | { type: "SET_SPEED_MODE"; mode: "normal" | "quick" | "instant" }
   | { type: "RESET_BALANCE" };
 
 export interface PegPosition {

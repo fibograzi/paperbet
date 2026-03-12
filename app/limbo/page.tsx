@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import LimboGame from "@/components/games/limbo/LimboGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function LimboPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Limbo Game Simulator"
-        subtitle="Set your target multiplier and bet. The game generates a random result — if it beats your target, you win. No waiting, no animation, pure probability."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "1,000,000x", label: "Max Multiplier" },
-          { value: "Instant", label: "Rounds" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Limbo">
           <LimboGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Limbo Works">
+      <GameSEOContent h1="Free Limbo Game Simulator" title="How Limbo Works">
         <p>
           Limbo is the fastest game in crypto casinos. You set a target
           multiplier — anywhere from 1.01x to over 1,000,000x — place your bet,

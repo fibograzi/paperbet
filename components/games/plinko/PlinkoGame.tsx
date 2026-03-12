@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, useEffect } from "react";
-import type { PlinkoBetResult, AutoPlaySpeed } from "./plinkoTypes";
+import type { PlinkoBetResult } from "./plinkoTypes";
 import { usePlinkoGame } from "./usePlinkoGame";
 import { usePlinkoAutoPlay } from "./usePlinkoAutoPlay";
 import PlinkoBoard, { type PlinkoBoardRef } from "./PlinkoBoard";
@@ -120,7 +120,6 @@ export default function PlinkoGame() {
 
   const handleStartAutoPlay = useCallback(
     (config: {
-      speed: AutoPlaySpeed;
       totalCount: number | null;
       stopOnWinMultiplier: number | null;
       stopOnProfit: number | null;
@@ -131,7 +130,6 @@ export default function PlinkoGame() {
       increaseOnLossPercent: number;
     }) => {
       startAutoPlay({
-        speed: config.speed,
         totalCount: config.totalCount,
         stopOnWinMultiplier: config.stopOnWinMultiplier,
         stopOnProfit: config.stopOnProfit,

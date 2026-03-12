@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import MinesGame from "@/components/games/mines/MinesGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function MinesPage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Mines Simulator"
-        subtitle="Reveal gems to increase your multiplier. Each safe tile raises the stakes — but hit a mine and you lose it all. Cash out anytime."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "1-24", label: "Mines" },
-          { value: "5x5", label: "Grid" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Mines">
           <MinesGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Mines Works">
+      <GameSEOContent h1="Free Mines Simulator" title="How Mines Works">
         <p>
           Casino Mines is played on a 5x5 grid of 25 hidden tiles. Before each
           round, you choose how many mines to place (1-24). The remaining tiles

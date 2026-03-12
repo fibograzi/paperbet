@@ -149,6 +149,7 @@ export default function FibonacciSimulator() {
           <div className="flex items-center gap-3">
             <label className="text-sm text-pb-text-secondary">Base Bet: $</label>
             <input
+              suppressHydrationWarning
               type="number"
               min={1}
               max={100}

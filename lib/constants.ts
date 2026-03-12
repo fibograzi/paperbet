@@ -192,7 +192,7 @@ export const GAMES: Game[] = [
     description:
       "Explore 7 free roulette tools: play free, test strategies with Monte Carlo simulation, calculate odds, and understand risk of ruin.",
     shortDesc: "Spin. Analyze. Learn.",
-    icon: "Circle",
+    icon: "CircleDot",
     color: "#10B981",
     available: true,
     rtp: 97.3,

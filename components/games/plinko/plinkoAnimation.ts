@@ -75,7 +75,7 @@ const SLOT_BOUNCE_DURATION = 300; // ms for landing bounces
 const PEG_PULSE_SCALE = 1.2;
 const PEG_PULSE_DURATION = 100; // ms
 
-const MAX_CONCURRENT_BALLS = 10;
+const MAX_CONCURRENT_BALLS = 50;
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -137,7 +137,7 @@ export type RouletteAction =
   | { type: "CLEAR_BETS" }
   | { type: "REPEAT_BETS" }
   | { type: "DOUBLE_BETS" }
-  | { type: "SPIN" }
+  | { type: "START_SPIN"; spinResult: SpinResult }
   | { type: "SPIN_COMPLETE"; spinResult: SpinResult; outcomes: BetOutcome[] }
   | { type: "RESULT_DISMISS" }
   | { type: "SHOW_POST_SESSION_NUDGE" }

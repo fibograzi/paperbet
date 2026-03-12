@@ -88,7 +88,7 @@ export default function FlipSidebar({ state, onDismissNudge }: FlipSidebarProps)
           <div className="px-4 pb-3 grid grid-cols-2 gap-2">
             <StatMini
               label="Win Rate"
-              value={stats.winRate > 0 ? stats.winRate.toFixed(1) + "%" : "—"}
+              value={stats.totalBets > 0 ? stats.winRate.toFixed(1) + "%" : "—"}
             />
             <StatMini
               label="Best Multiplier"

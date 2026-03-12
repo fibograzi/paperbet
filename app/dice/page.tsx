@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import DiceGame from "@/components/games/dice/DiceGame";
 import GameErrorBoundary from "@/components/shared/GameErrorBoundary";
-import GameHero from "@/components/shared/GameHero";
 import GameSEOContent from "@/components/shared/GameSEOContent";
 import GameFAQ from "@/components/shared/GameFAQ";
 import CrossGameLinks from "@/components/shared/CrossGameLinks";
@@ -95,23 +94,13 @@ export default function DicePage() {
         dangerouslySetInnerHTML={{ __html: safeJsonLd(structuredData) }}
       />
 
-      <GameHero
-        h1="Free Dice Game Simulator"
-        subtitle="Set your target number and pick Roll Over or Roll Under. You control the win probability — higher risk means higher multipliers."
-        stats={[
-          { value: "99%", label: "RTP" },
-          { value: "~9,900x", label: "Max Multiplier" },
-          { value: "You Set", label: "The Odds" },
-        ]}
-      />
-
       <section>
         <GameErrorBoundary gameName="Dice">
           <DiceGame />
         </GameErrorBoundary>
       </section>
 
-      <GameSEOContent title="How Casino Dice Works">
+      <GameSEOContent h1="Free Dice Game Simulator" title="How Casino Dice Works">
         <p>
           Casino Dice is one of the most transparent crypto casino games. You set
           a target number between 0 and 99.99, then choose Roll Over or Roll

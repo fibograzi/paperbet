@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Zap } from "lucide-react";
 import type { RiskLevel, PlinkoRows } from "@/lib/types";
-import type { PlinkoGameState, PlinkoAction, AutoPlaySpeed } from "./plinkoTypes";
+import type { PlinkoGameState, PlinkoAction } from "./plinkoTypes";
 import { formatCurrency } from "@/lib/utils";
 import { useBetInput } from "@/lib/useBetInput";
 import BalanceBar from "@/components/shared/BalanceBar";
@@ -14,7 +14,6 @@ interface PlinkoControlsProps {
   onDrop: () => void;
   canDrop: boolean;
   onStartAutoPlay: (config: {
-    speed: AutoPlaySpeed;
     totalCount: number | null;
     stopOnWinMultiplier: number | null;
     stopOnProfit: number | null;
@@ -47,24 +46,17 @@ export default function PlinkoControls({
   onStartAutoPlay,
   onStopAutoPlay,
 }: PlinkoControlsProps) {
-  const { config, balance, autoPlay, activeBalls } = state;
+  const { config, balance, autoPlay, activeBalls, speedMode } = state;
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const [autoCountInput, setAutoCountInput] = useState("10");
   const [isInfinite, setIsInfinite] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [autoSpeed, setAutoSpeed] = useState<AutoPlaySpeed>("normal");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const betInput = useBetInput(
     config.betAmount,
     (amount) => dispatch({ type: "SET_BET_AMOUNT", amount })
   );
-
-  // On Win / On Loss strategy state
-  const [autoOnWin, setAutoOnWin] = useState<"reset" | "increase">("reset");
-  const [autoOnLoss, setAutoOnLoss] = useState<"reset" | "increase">("reset");
-  const [increaseOnWinPercent, setIncreaseOnWinPercent] = useState("0");
-  const [increaseOnLossPercent, setIncreaseOnLossPercent] = useState("0");
 
   // Stop conditions
   const [stopOnProfit, setStopOnProfit] = useState("");
@@ -74,23 +66,65 @@ export default function PlinkoControls({
   // Config locked while balls in flight
   const configLocked = activeBalls > 0 || autoPlay.active;
 
-  // Spacebar shortcut — allows rapid-fire in manual mode
+  // Refs to avoid stale closures in the hold-interval
+  const canDropRef = useRef(canDrop);
+  const onDropRef = useRef(onDrop);
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        const tag = (e.target as HTMLElement)?.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-        e.preventDefault();
-        if (autoPlay.active) {
-          if (!e.repeat) onStopAutoPlay();
-        } else if (canDrop) {
-          onDrop();
-        }
+    canDropRef.current = canDrop;
+    onDropRef.current = onDrop;
+  }, [canDrop, onDrop]);
+
+  // Spacebar shortcut — smart cascade: evenly spaces 25 balls across animation duration
+  useEffect(() => {
+    const clearHold = () => {
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current);
+        holdIntervalRef.current = null;
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [canDrop, onDrop, autoPlay.active, onStopAutoPlay]);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      e.preventDefault();
+
+      if (autoPlay.active) {
+        if (!e.repeat) onStopAutoPlay();
+        return;
+      }
+
+      // Ignore OS key-repeat — the interval handles continuous drops
+      if (e.repeat) return;
+
+      // First press: drop immediately + start timed interval
+      if (canDropRef.current) onDropRef.current();
+
+      // Very small delay between drops for rapid-fire cascade
+      const interval = 150;
+
+      clearHold();
+      holdIntervalRef.current = setInterval(() => {
+        if (canDropRef.current) onDropRef.current();
+      }, interval);
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") clearHold();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", clearHold);
+
+    return () => {
+      clearHold();
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", clearHold);
+    };
+  }, [autoPlay.active, onStopAutoPlay, config.rows]);
 
   const setBetQuick = useCallback(
     (action: "half" | "double") => {
@@ -116,7 +150,6 @@ export default function PlinkoControls({
     }
 
     onStartAutoPlay({
-      speed: autoSpeed,
       totalCount: resolvedCount,
       stopOnWinMultiplier:
         stopOnWinMultiplier.trim() !== ""
@@ -126,24 +159,17 @@ export default function PlinkoControls({
         stopOnProfit.trim() !== "" ? parseFloat(stopOnProfit) : null,
       stopOnLoss:
         stopOnLoss.trim() !== "" ? parseFloat(stopOnLoss) : null,
-      onWin: autoOnWin,
-      onLoss: autoOnLoss,
-      increaseOnWinPercent:
-        autoOnWin === "increase" ? parseFloat(increaseOnWinPercent) || 0 : 0,
-      increaseOnLossPercent:
-        autoOnLoss === "increase" ? parseFloat(increaseOnLossPercent) || 0 : 0,
+      onWin: "reset",
+      onLoss: "reset",
+      increaseOnWinPercent: 0,
+      increaseOnLossPercent: 0,
     });
   }, [
-    autoSpeed,
     isInfinite,
     autoCountInput,
     stopOnWinMultiplier,
     stopOnProfit,
     stopOnLoss,
-    autoOnWin,
-    autoOnLoss,
-    increaseOnWinPercent,
-    increaseOnLossPercent,
     onStartAutoPlay,
   ]);
 
@@ -370,82 +396,6 @@ export default function PlinkoControls({
 
                 {showAdvanced && (
                   <div className="px-2.5 pb-2.5 space-y-2">
-                    {/* On Win */}
-                    <div>
-                      <div className="text-xs text-pb-text-muted mb-1.5">On Win</div>
-                      <div className="flex gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setAutoOnWin("reset")}
-                          className="flex-1 py-1.5 rounded-md text-xs font-heading transition-colors"
-                          style={toggleBtnStyle(autoOnWin === "reset")}
-                        >
-                          Reset
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAutoOnWin("increase")}
-                          className="flex-1 py-1.5 rounded-md text-xs font-heading transition-colors"
-                          style={toggleBtnStyle(autoOnWin === "increase")}
-                        >
-                          Increase by
-                        </button>
-                      </div>
-                      {autoOnWin === "increase" && (
-                        <div className="mt-1.5 relative">
-                          <input suppressHydrationWarning
-                            type="number"
-                            min={0}
-                            step={1}
-                            value={increaseOnWinPercent}
-                            onChange={(e) => setIncreaseOnWinPercent(e.target.value)}
-                            className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-7 text-xs font-mono-stats text-pb-text-primary focus:outline-none focus:ring-1 focus:ring-pb-accent/50"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">
-                            %
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* On Loss */}
-                    <div>
-                      <div className="text-xs text-pb-text-muted mb-1.5">On Loss</div>
-                      <div className="flex gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setAutoOnLoss("reset")}
-                          className="flex-1 py-1.5 rounded-md text-xs font-heading transition-colors"
-                          style={toggleBtnStyle(autoOnLoss === "reset")}
-                        >
-                          Reset
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAutoOnLoss("increase")}
-                          className="flex-1 py-1.5 rounded-md text-xs font-heading transition-colors"
-                          style={toggleBtnStyle(autoOnLoss === "increase")}
-                        >
-                          Increase by
-                        </button>
-                      </div>
-                      {autoOnLoss === "increase" && (
-                        <div className="mt-1.5 relative">
-                          <input suppressHydrationWarning
-                            type="number"
-                            min={0}
-                            step={1}
-                            value={increaseOnLossPercent}
-                            onChange={(e) => setIncreaseOnLossPercent(e.target.value)}
-                            className="w-full bg-pb-bg-tertiary border border-pb-border rounded-lg py-1.5 pl-3 pr-7 text-xs font-mono-stats text-pb-text-primary focus:outline-none focus:ring-1 focus:ring-pb-accent/50"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-pb-text-muted text-xs">
-                            %
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
                     {/* Stop on Profit */}
                     <div>
                       <div className="text-xs text-pb-text-muted mb-1.5">Stop on Profit</div>
@@ -502,29 +452,61 @@ export default function PlinkoControls({
                         </span>
                       </div>
                     </div>
-
-                    {/* Speed */}
-                    <div>
-                      <div className="text-xs text-pb-text-muted mb-1.5">Speed</div>
-                      <div className="flex gap-1.5">
-                        {(["normal", "fast", "turbo"] as AutoPlaySpeed[]).map((speed) => (
-                          <button
-                            key={speed}
-                            type="button"
-                            onClick={() => setAutoSpeed(speed)}
-                            className="flex-1 py-1.5 rounded-md text-xs capitalize font-heading transition-colors"
-                            style={toggleBtnStyle(autoSpeed === speed)}
-                          >
-                            {speed === "normal" ? "1x" : speed === "fast" ? "2x" : "3x"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
             </div>
           )}
+
+          {/* Speed mode selector — always visible in Auto tab */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
+            </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "Faster drops — reduced delays" : "Maximum speed — instant drops"}
+              </p>
+            )}
+          </div>
 
           {/* Start / Stop autobet button — desktop only */}
           <div className="hidden lg:block">

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Triangle, TrendingUp, Grid3x3, Coins, ArrowUpDown, Dices, Zap } from "lucide-react";
+import { X, Triangle, TrendingUp, Grid3x3, Coins, ArrowUpDown, Dices, Zap, CircleDot } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GAMES } from "@/lib/constants";
 import { Game } from "@/lib/types";
@@ -18,6 +18,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ArrowUpDown,
   Dices,
   Zap,
+  CircleDot,
 };
 
 interface MobileNavProps {
