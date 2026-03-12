@@ -498,8 +498,8 @@ export function useKenoGame() {
 
     const draw = state.currentDraw;
 
-    // Quick/Instant speed or instantBet → reveal all at once
-    if (state.speedMode !== "normal" || state.instantBet) {
+    // Instant speed or instantBet → reveal all at once
+    if (state.speedMode === "instant" || state.instantBet) {
       for (let i = 0; i < draw.drawnNumbers.length; i++) {
         dispatch({ type: "REVEAL_NUMBER", index: i });
       }
@@ -510,8 +510,8 @@ export function useKenoGame() {
       return () => clearTimeout(timer);
     }
 
-    // Animated — stagger each reveal
-    const stagger = TILE_REVEAL_STAGGER;
+    // Animated — stagger each reveal (quick = faster stagger)
+    const stagger = state.speedMode === "quick" ? 40 : TILE_REVEAL_STAGGER;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     for (let i = 0; i < draw.drawnNumbers.length; i++) {
@@ -540,9 +540,11 @@ export function useKenoGame() {
 
   useEffect(() => {
     if (state.phase === "result") {
-      const delay = (state.speedMode !== "normal" || state.instantBet)
+      const delay = (state.speedMode === "instant" || state.instantBet)
         ? BOARD_RESET_DURATION
-        : RESULT_DISPLAY_DURATION;
+        : state.speedMode === "quick"
+          ? 500
+          : RESULT_DISPLAY_DURATION;
 
       settleTimerRef.current = setTimeout(() => {
         dispatch({ type: "RESULT_SETTLE" });

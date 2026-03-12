@@ -596,7 +596,9 @@ export function useFlipGame() {
   useEffect(() => {
     if (state.phase !== "flipping") return;
 
-    const duration = state.speedMode !== "normal" ? 0 : FLIP_ANIMATION_DURATION;
+    const duration = state.speedMode === "instant" ? 0
+      : state.speedMode === "quick" ? 400
+      : FLIP_ANIMATION_DURATION;
 
     const timer = setTimeout(() => {
       dispatch({ type: "FLIP_RESULT" });
@@ -610,7 +612,9 @@ export function useFlipGame() {
   useEffect(() => {
     if (state.phase !== "cashing_out") return;
 
-    const duration = state.speedMode !== "normal" ? 0 : CASHOUT_ANIMATION_DURATION;
+    const duration = state.speedMode === "instant" ? 0
+      : state.speedMode === "quick" ? 300
+      : CASHOUT_ANIMATION_DURATION;
 
     const timer = setTimeout(() => {
       dispatch({ type: "CASHOUT_COMPLETE" });
@@ -624,7 +628,9 @@ export function useFlipGame() {
   useEffect(() => {
     if (state.phase !== "lost") return;
 
-    const duration = state.speedMode !== "normal" ? 100 : LOSS_ANIMATION_DURATION;
+    const duration = state.speedMode === "instant" ? 100
+      : state.speedMode === "quick" ? 400
+      : LOSS_ANIMATION_DURATION;
 
     const timer = setTimeout(() => {
       dispatch({ type: "LOSS_COMPLETE" });
