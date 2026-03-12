@@ -98,7 +98,7 @@ export default function HiLoSidebar({ state, onDismissNudge }: HiLoSidebarProps)
             />
             <StatMini
               label="Longest Chain"
-              value={stats.longestChain > 0 ? stats.longestChain + " cards" : "—"}
+              value={stats.longestChain > 0 ? stats.longestChain + " preds" : "—"}
             />
             <StatMini
               label="Best Win Streak"
@@ -109,6 +109,10 @@ export default function HiLoSidebar({ state, onDismissNudge }: HiLoSidebarProps)
               label="Cur Win Streak"
               value={stats.currentWinStreak > 0 ? String(stats.currentWinStreak) : "—"}
               color="#00E5A0"
+            />
+            <StatMini
+              label="Higher Picks"
+              value={stats.totalPredictions > 0 ? ((stats.higherPicks / stats.totalPredictions) * 100).toFixed(0) + "%" : "—"}
             />
             <StatMini
               label="Biggest Win"

@@ -133,8 +133,8 @@ function updateStats(
     if (absStreak > stats.bestLossStreak) {
       stats.bestLossStreak = absStreak;
     }
-    if (round.betAmount > stats.biggestLoss) {
-      stats.biggestLoss = round.betAmount;
+    if (Math.abs(round.profit) > stats.biggestLoss) {
+      stats.biggestLoss = Math.abs(round.profit);
     }
   }
 

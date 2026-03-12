@@ -257,21 +257,6 @@ export default function MinesSidebar({
         )}
       </AnimatePresence>
 
-      {/* Session Reminder */}
-      {state.showSessionReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-border rounded-lg px-3 py-1.5">
-          <p className="text-[10px] text-pb-text-secondary">
-            {sessionGameCount} rounds played — practice mode, take a break if needed.
-          </p>
-          <button
-            type="button"
-            onClick={onDismissReminder}
-            className="text-[10px] text-pb-text-muted mt-1 hover:text-pb-text-secondary"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* Disclaimer */}
       <p className="text-[10px] text-pb-text-muted leading-relaxed">

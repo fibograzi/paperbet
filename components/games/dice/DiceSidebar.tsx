@@ -130,28 +130,6 @@ export default function DiceSidebar({ state, onDismissNudge, onDismissReminder }
       </a>
 
 
-      {/* Session reminder */}
-      <AnimatePresence>
-        {showSessionReminder && (
-          <motion.div
-            initial={{ y: -10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -10, opacity: 0 }}
-            className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-3 py-1.5"
-          >
-            <p className="text-[10px] text-pb-text-secondary">
-              {sessionRollCount} rounds played — practice mode.
-            </p>
-            <button
-              type="button"
-              onClick={onDismissReminder}
-              className="text-xs text-pb-text-muted hover:text-pb-text-secondary mt-2"
-            >
-              Dismiss
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Bet History */}
       {history.length > 0 && (

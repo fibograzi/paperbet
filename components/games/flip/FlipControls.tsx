@@ -1121,29 +1121,6 @@ export default function FlipControls({
         )}
       </div>
 
-      {/* Session Reminder */}
-      {state.showSessionReminder && (
-        <div
-          className="rounded-lg px-2.5 py-1.5 text-[10px]"
-          style={{
-            backgroundColor: "#111827",
-            border: "1px solid rgba(245, 158, 11, 0.3)",
-            color: "#9CA3AF",
-          }}
-        >
-          <p>
-            {state.sessionBetCount} rounds played — practice mode.
-          </p>
-          <button
-            type="button"
-            onClick={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-            className="text-xs mt-1 hover:underline"
-            style={{ color: "#F59E0B" }}
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* Keyboard hints */}
       <div className="hidden lg:block text-center text-xs" style={{ color: "#6B7280" }}>

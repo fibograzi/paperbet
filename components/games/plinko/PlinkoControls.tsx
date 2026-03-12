@@ -576,21 +576,6 @@ export default function PlinkoControls({
         )}
       </div>
 
-      {/* Session Reminder */}
-      {state.showSessionReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-2.5 py-1.5 text-[10px] text-pb-text-secondary">
-          <p>
-            {state.sessionBetCount} rounds played — practice mode.
-          </p>
-          <button
-            type="button"
-            onClick={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-            className="text-pb-warning text-[10px] mt-0.5 hover:underline"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
     </div>
   );
 }

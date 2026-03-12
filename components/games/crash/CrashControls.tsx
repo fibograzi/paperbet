@@ -959,21 +959,6 @@ export default function CrashControls({
         {renderActionButton()}
       </div>
 
-      {/* Session Reminder */}
-      {state.showSessionReminder && (
-        <div className="bg-pb-bg-secondary border border-pb-warning/30 rounded-lg px-2.5 py-1.5 text-[10px] text-pb-text-secondary">
-          <p>
-            {state.sessionRoundCount} rounds — practice mode.
-          </p>
-          <button
-            type="button"
-            onClick={() => dispatch({ type: "DISMISS_SESSION_REMINDER" })}
-            className="text-pb-warning text-[10px] mt-1 hover:underline"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
 
       {/* Keyboard hint (desktop only) */}
       <div className="hidden lg:block text-center text-xs text-pb-text-muted">
