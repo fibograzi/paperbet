@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Infinity as InfinityIcon } from "lucide-react";
+import { ChevronDown, Infinity as InfinityIcon, Zap } from "lucide-react";
 import { useBetInput } from "@/lib/useBetInput";
 import type {
   HiLoGameState,
@@ -35,7 +34,7 @@ interface HiLoControlsProps {
 const MAX_AUTO_ROUNDS = 500;
 const INCREASE_PRESETS = [25, 50, 100, 200];
 
-type WinLossAction = "reset" | "increase";
+type WinLossAction = "same" | "reset" | "increase";
 type AutoStrategy = "always_higher" | "always_lower" | "smart";
 type Tab = "manual" | "auto";
 
@@ -51,7 +50,7 @@ export default function HiLoControls({
   onSkip,
   onCashOut,
 }: HiLoControlsProps) {
-  const { phase, config, balance, round, autoPlay } = state;
+  const { phase, config, balance, round, autoPlay, speedMode } = state;
 
   const [activeTab, setActiveTab] = useState<Tab>("manual");
 
@@ -59,8 +58,8 @@ export default function HiLoControls({
   const [autoStrategy, setAutoStrategy] = useState<AutoStrategy>("smart");
   const [autoCashOutAt, setAutoCashOutAt] = useState(2.0);
   const [autoCount, setAutoCount] = useState<number>(10);
-  const [autoOnWin, setAutoOnWin] = useState<WinLossAction>("reset");
-  const [autoOnLoss, setAutoOnLoss] = useState<WinLossAction>("reset");
+  const [autoOnWin, setAutoOnWin] = useState<WinLossAction>("same");
+  const [autoOnLoss, setAutoOnLoss] = useState<WinLossAction>("same");
   const [increaseOnWinPercent, setIncreaseOnWinPercent] = useState(50);
   const [increaseOnLossPercent, setIncreaseOnLossPercent] = useState(100);
   const [stopOnProfitEnabled, setStopOnProfitEnabled] = useState(false);
@@ -231,40 +230,6 @@ export default function HiLoControls({
         </div>
       </div>
 
-      {/* Instant Bet Toggle */}
-      <div className="flex items-center justify-between px-1">
-        <span
-          className="font-body text-xs"
-          style={{ color: "#6B7280" }}
-        >
-          Instant Bet
-        </span>
-        <button
-          type="button"
-          onClick={() =>
-            dispatch({ type: "SET_INSTANT_BET", enabled: !config.instantBet })
-          }
-          className="relative rounded-full transition-colors duration-200"
-          style={{
-            width: 36,
-            height: 20,
-            backgroundColor: config.instantBet ? "#6366F1" : "#374151",
-          }}
-          aria-label="Toggle instant bet"
-        >
-          <span
-            className="absolute left-0 top-0.5 rounded-full bg-white transition-transform duration-200"
-            style={{
-              width: 16,
-              height: 16,
-              transform: config.instantBet
-                ? "translateX(18px)"
-                : "translateX(2px)",
-            }}
-          />
-        </button>
-      </div>
-
       {/* === MANUAL TAB CONTENT === */}
       {activeTab === "manual" && (
         <>
@@ -375,6 +340,16 @@ export default function HiLoControls({
                 </button>
               ))}
             </div>
+            <p
+              className="font-body text-[10px] leading-relaxed mt-1"
+              style={{ color: "#6B7280" }}
+            >
+              {autoStrategy === "always_higher"
+                ? "Always predicts the next card will be higher or equal. Automatically skips on King (no higher card possible)."
+                : autoStrategy === "always_lower"
+                  ? "Always predicts the next card will be lower or equal. Automatically skips on Ace (no lower card possible)."
+                  : "Picks the statistically more likely outcome each round. Predicts higher on low cards (A\u20136) and lower on high cards (8\u2013K). On 7, defaults to higher."}
+            </p>
           </div>
 
           {/* Cash Out At */}
@@ -469,37 +444,74 @@ export default function HiLoControls({
             </div>
           </div>
 
-          {/* Advanced (collapsible) */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 w-full text-left py-1"
-          >
-            <ChevronDown
-              size={14}
-              className={cn(
-                "transition-transform",
-                showAdvanced && "rotate-180"
-              )}
-              style={{ color: "#6B7280" }}
-            />
-            <span
-              className="font-body text-xs"
-              style={{ color: "#6B7280" }}
-            >
-              Advanced
-            </span>
-          </button>
+          {/* Speed mode selector */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
+            </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "Faster rounds — reduced delays" : "Maximum speed — instant results"}
+              </p>
+            )}
+          </div>
 
-          <AnimatePresence>
+          {/* Advanced (collapsible) */}
+          <div className="rounded-lg border border-pb-border">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between px-2.5 py-2"
+            >
+              <span className="font-body text-xs text-pb-text-secondary">Advanced</span>
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "text-pb-text-muted transition-transform",
+                  showAdvanced && "rotate-180"
+                )}
+              />
+            </button>
             {showAdvanced && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-2 overflow-hidden"
-              >
+              <div className="px-2.5 pb-2.5 space-y-2">
                 {/* On Win */}
                 <div>
                   <label
@@ -511,6 +523,7 @@ export default function HiLoControls({
                   <div className="flex gap-1.5 mb-1.5">
                     {(
                       [
+                        { value: "same", label: "Same" },
                         { value: "reset", label: "Reset" },
                         { value: "increase", label: "Increase" },
                       ] as const
@@ -608,6 +621,7 @@ export default function HiLoControls({
                   <div className="flex gap-1.5 mb-1.5">
                     {(
                       [
+                        { value: "same", label: "Same" },
                         { value: "reset", label: "Reset" },
                         { value: "increase", label: "Increase" },
                       ] as const
@@ -795,9 +809,9 @@ export default function HiLoControls({
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
 
           {/* Start / Stop Auto-Play button */}
           <div className="hidden lg:block">

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Infinity as InfinityIcon, Dices, ChevronDown } from "lucide-react";
+import { motion } from "framer-motion";
+import { Infinity as InfinityIcon, Dices, ChevronDown, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBetInput } from "@/lib/useBetInput";
 import type {
@@ -11,7 +11,6 @@ import type {
   DiceAutoPlayConfig,
   DiceBetAdjustment,
   DiceTargetAdjustment,
-  DiceAutoBetSpeed,
   DiceStrategy,
   DiceAnimationSpeed,
 } from "./diceTypes";
@@ -71,7 +70,7 @@ export default function DiceControls({
   onStartAutoPlay,
   onStopAutoPlay,
 }: DiceControlsProps) {
-  const { phase, betAmount, balance, animationSpeed, autoPlay } = state;
+  const { phase, betAmount, balance, animationSpeed, autoPlay, speedMode } = state;
   const [activeTab, setActiveTab] = useState<"manual" | "auto">("manual");
   const isIdle = phase === "idle";
   const isRolling = phase === "rolling";
@@ -83,7 +82,6 @@ export default function DiceControls({
 
   const [autoNumberOfRolls, setAutoNumberOfRolls] = useState(100);
   const [isInfinite, setIsInfinite] = useState(false);
-  const [autoSpeed, setAutoSpeed] = useState<DiceAutoBetSpeed>("normal");
   const [onWinBetAction, setOnWinBetAction] = useState<DiceBetAdjustment>("same");
   const [onWinBetValue, setOnWinBetValue] = useState(100);
   const [onLossBetAction, setOnLossBetAction] = useState<DiceBetAdjustment>("same");
@@ -132,7 +130,6 @@ export default function DiceControls({
 
   const buildAutoConfig = useCallback((): DiceAutoPlayConfig => ({
     numberOfRolls: isInfinite ? Infinity : autoNumberOfRolls,
-    speed: autoSpeed,
     onWinBetAction,
     onWinBetValue,
     onLossBetAction,
@@ -149,7 +146,7 @@ export default function DiceControls({
     stopOnLossStreak: null,
     strategy: selectedStrategy,
   }), [
-    autoNumberOfRolls, isInfinite, autoSpeed,
+    autoNumberOfRolls, isInfinite,
     onWinBetAction, onWinBetValue,
     onLossBetAction, onLossBetValue,
     onWinTargetAction, onWinTargetValue,
@@ -371,32 +368,74 @@ export default function DiceControls({
             </div>
           </div>
 
-          {/* Advanced (collapsible) */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 w-full text-left py-1"
-          >
-            <ChevronDown
-              size={14}
-              className={cn(
-                "transition-transform",
-                showAdvanced && "rotate-180"
-              )}
-              style={{ color: "#6B7280" }}
-            />
-            <span className="font-body text-xs" style={{ color: "#9CA3AF" }}>Advanced</span>
-          </button>
+          {/* Speed mode selector */}
+          <div className="bg-pb-bg-secondary border border-pb-border rounded-lg p-2.5">
+            <div className="flex items-center gap-2 mb-1.5">
+              <Zap size={12} className="text-pb-text-muted" />
+              <span className="text-[10px] uppercase tracking-wider text-pb-text-muted">
+                Speed
+              </span>
+            </div>
+            <div className="flex gap-1 bg-pb-bg-tertiary rounded-lg p-1">
+              {([
+                { value: "normal", label: "Normal" },
+                { value: "quick", label: "Quick" },
+                { value: "instant", label: "Instant" },
+              ] as const).map((opt) => {
+                const active = speedMode === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_SPEED_MODE", mode: opt.value })}
+                    className="flex-1 py-1.5 rounded-md text-xs font-heading font-semibold transition-all duration-150"
+                    style={{
+                      backgroundColor: active
+                        ? opt.value === "instant"
+                          ? "rgba(245, 158, 11, 0.15)"
+                          : opt.value === "quick"
+                            ? "rgba(0, 180, 216, 0.15)"
+                            : "rgba(0, 229, 160, 0.15)"
+                        : "transparent",
+                      color: active
+                        ? opt.value === "instant"
+                          ? "#F59E0B"
+                          : opt.value === "quick"
+                            ? "#00B4D8"
+                            : "#00E5A0"
+                        : "#9CA3AF",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            {speedMode !== "normal" && (
+              <p className="text-[10px] text-pb-text-muted mt-1.5">
+                {speedMode === "quick" ? "Faster rounds — reduced delays" : "Maximum speed — instant results"}
+              </p>
+            )}
+          </div>
 
-          <AnimatePresence initial={false}>
+          {/* Advanced (collapsible) */}
+          <div className="rounded-lg border border-pb-border">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between px-2.5 py-2"
+            >
+              <span className="font-body text-xs text-pb-text-secondary">Advanced</span>
+              <ChevronDown
+                size={14}
+                className={cn(
+                  "text-pb-text-muted transition-transform",
+                  showAdvanced && "rotate-180"
+                )}
+              />
+            </button>
             {showAdvanced && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.15 }}
-                className="overflow-hidden space-y-2"
-              >
+              <div className="px-2.5 pb-2.5 space-y-2">
                 {/* On Win (nested collapsible) */}
                 <CollapsibleSection title="On Win" open={showOnWin} onToggle={() => setShowOnWin(!showOnWin)}>
                   <BetAdjustmentSelector
@@ -468,30 +507,8 @@ export default function DiceControls({
                     onValueChange={setStopOnLossAmount}
                   />
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
-
-          {/* Speed */}
-          <div>
-            <span className="font-body text-xs block mb-1.5" style={{ color: "#6B7280" }}>Speed</span>
-            <div className="flex rounded-lg p-1" style={{ backgroundColor: "#1F2937" }}>
-              {(["normal", "fast", "turbo"] as DiceAutoBetSpeed[]).map((speed) => (
-                <button
-                  key={speed}
-                  type="button"
-                  disabled={isAutoRunning}
-                  onClick={() => setAutoSpeed(speed)}
-                  className="flex-1 py-1.5 rounded-md text-center font-body text-xs font-semibold transition-colors capitalize"
-                  style={{
-                    backgroundColor: autoSpeed === speed ? "rgba(20,184,166,0.15)" : "transparent",
-                    color: autoSpeed === speed ? "#14B8A6" : "#9CA3AF",
-                  }}
-                >
-                  {speed}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Strategy presets (collapsible) */}
