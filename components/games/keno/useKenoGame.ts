@@ -47,6 +47,7 @@ function createInitialState(): KenoGameState {
     betAmount: DEFAULT_BET,
     difficulty: "classic",
     instantBet: false,
+    speedMode: "normal",
     selectedNumbers: [],
     currentDraw: null,
     revealIndex: -1,
@@ -414,6 +415,10 @@ function kenoReducer(state: KenoGameState, action: KenoAction): KenoGameState {
     // -----------------------------------------------------------------------
     // Session UI
     // -----------------------------------------------------------------------
+    case "SET_SPEED_MODE": {
+      return { ...state, speedMode: action.mode };
+    }
+
     case "DISMISS_SESSION_REMINDER": {
       return { ...state, showSessionReminder: false };
     }
@@ -440,7 +445,18 @@ function kenoReducer(state: KenoGameState, action: KenoAction): KenoGameState {
     }
 
     case "RESET_BALANCE":
-      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: INITIAL_BALANCE,
+        stats: createInitialStats(),
+        history: [],
+        previousResults: [],
+        sessionBetCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+        speedMode: "normal",
+      };
 
     default:
       return state;
@@ -482,12 +498,11 @@ export function useKenoGame() {
 
     const draw = state.currentDraw;
 
-    if (state.instantBet) {
-      // Instant — reveal all at once
+    // Instant speed or instantBet → reveal all at once
+    if (state.speedMode === "instant" || state.instantBet) {
       for (let i = 0; i < draw.drawnNumbers.length; i++) {
         dispatch({ type: "REVEAL_NUMBER", index: i });
       }
-      // Small delay then complete
       const timer = setTimeout(() => {
         dispatch({ type: "DRAW_COMPLETE" });
       }, RESULT_DISPLAY_DELAY);
@@ -495,20 +510,21 @@ export function useKenoGame() {
       return () => clearTimeout(timer);
     }
 
-    // Animated — stagger each reveal
+    // Animated — stagger each reveal (quick = faster stagger)
+    const stagger = state.speedMode === "quick" ? 40 : TILE_REVEAL_STAGGER;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     for (let i = 0; i < draw.drawnNumbers.length; i++) {
       const timer = setTimeout(() => {
         dispatch({ type: "REVEAL_NUMBER", index: i });
-      }, (i + 1) * TILE_REVEAL_STAGGER);
+      }, (i + 1) * stagger);
       timers.push(timer);
     }
 
     // After all revealed, wait then complete
     const completeTimer = setTimeout(() => {
       dispatch({ type: "DRAW_COMPLETE" });
-    }, draw.drawnNumbers.length * TILE_REVEAL_STAGGER + RESULT_DISPLAY_DELAY);
+    }, draw.drawnNumbers.length * stagger + RESULT_DISPLAY_DELAY);
     timers.push(completeTimer);
 
     return () => {
@@ -524,9 +540,11 @@ export function useKenoGame() {
 
   useEffect(() => {
     if (state.phase === "result") {
-      const delay = state.autoPlay.active && state.instantBet
+      const delay = (state.speedMode === "instant" || state.instantBet)
         ? BOARD_RESET_DURATION
-        : RESULT_DISPLAY_DURATION;
+        : state.speedMode === "quick"
+          ? 500
+          : RESULT_DISPLAY_DURATION;
 
       settleTimerRef.current = setTimeout(() => {
         dispatch({ type: "RESULT_SETTLE" });
@@ -536,7 +554,7 @@ export function useKenoGame() {
     return () => {
       if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
     };
-  }, [state.phase, state.autoPlay.active, state.instantBet]);
+  }, [state.phase, state.autoPlay.active, state.instantBet, state.speedMode]);
 
   // ---------------------------------------------------------------------------
   // Auto-play loop
@@ -590,7 +608,7 @@ export function useKenoGame() {
     }
 
     // Schedule next bet
-    const delay = state.instantBet ? Math.max(200, getAutoPlayDelay(config.speed) / 2) : getAutoPlayDelay(config.speed);
+    const delay = state.instantBet ? Math.max(200, getAutoPlayDelay(state.speedMode) / 2) : getAutoPlayDelay(state.speedMode);
     autoTimerRef.current = setTimeout(() => {
       bet();
     }, delay);

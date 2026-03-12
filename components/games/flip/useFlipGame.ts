@@ -36,7 +36,7 @@ const POST_SESSION_NUDGE_BETS = 10;
 const POST_SESSION_NUDGE_IDLE_MS = 60_000;
 const STREAK_NUDGE_MIN_FLIPS = 5;
 const STREAK_NUDGE_MIN_BETS_BETWEEN = 10;
-const MAX_HISTORY = 500;
+const MAX_HISTORY = 1000;
 
 // ---------------------------------------------------------------------------
 // Initial state helpers
@@ -68,6 +68,7 @@ function initialState(): FlipGameState {
     phase: "idle",
     config: { betAmount: DEFAULT_BET, sidePick: "heads", instantBet: false },
     balance: INITIAL_BALANCE,
+    speedMode: "normal",
     streak: null,
     pendingResult: null,
     pendingPick: null,
@@ -529,8 +530,21 @@ function flipReducer(
     case "DISMISS_STREAK_NUDGE":
       return { ...state, showStreakNudge: false };
 
+    case "SET_SPEED_MODE":
+      return { ...state, speedMode: action.mode };
+
     case "RESET_BALANCE":
-      return { ...state, balance: INITIAL_BALANCE, stats: { ...state.stats, netProfit: 0 } };
+      return {
+        ...state,
+        balance: INITIAL_BALANCE,
+        speedMode: "normal",
+        stats: initialStats(),
+        history: [],
+        sessionBetCount: 0,
+        showSessionReminder: false,
+        showPostSessionNudge: false,
+        postSessionNudgeDismissed: false,
+      };
 
     default:
       return state;
@@ -582,7 +596,9 @@ export function useFlipGame() {
   useEffect(() => {
     if (state.phase !== "flipping") return;
 
-    const duration = state.config.instantBet ? 0 : FLIP_ANIMATION_DURATION;
+    const duration = state.speedMode === "instant" ? 0
+      : state.speedMode === "quick" ? 400
+      : FLIP_ANIMATION_DURATION;
 
     const timer = setTimeout(() => {
       dispatch({ type: "FLIP_RESULT" });
@@ -596,7 +612,9 @@ export function useFlipGame() {
   useEffect(() => {
     if (state.phase !== "cashing_out") return;
 
-    const duration = state.config.instantBet ? 0 : CASHOUT_ANIMATION_DURATION;
+    const duration = state.speedMode === "instant" ? 0
+      : state.speedMode === "quick" ? 300
+      : CASHOUT_ANIMATION_DURATION;
 
     const timer = setTimeout(() => {
       dispatch({ type: "CASHOUT_COMPLETE" });
@@ -610,7 +628,9 @@ export function useFlipGame() {
   useEffect(() => {
     if (state.phase !== "lost") return;
 
-    const duration = state.config.instantBet ? 200 : LOSS_ANIMATION_DURATION;
+    const duration = state.speedMode === "instant" ? 100
+      : state.speedMode === "quick" ? 400
+      : LOSS_ANIMATION_DURATION;
 
     const timer = setTimeout(() => {
       dispatch({ type: "LOSS_COMPLETE" });
@@ -654,9 +674,13 @@ export function useFlipGame() {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
+      const idleDelay = s.autoPlay.progress?.currentRound === 0 ? 0
+        : s.speedMode === "instant" ? 50
+        : s.speedMode === "quick" ? 200
+        : 400;
       autoPlayTimerRef.current = setTimeout(() => {
         dispatchFlip();
-      }, s.autoPlay.progress?.currentRound === 0 ? 0 : 400);
+      }, idleDelay);
       return;
     }
 
@@ -664,20 +688,27 @@ export function useFlipGame() {
     if (state.phase === "won" && state.streak) {
       const currentFlips = state.streak.flips;
       const targetFlips = config.flipsPerRound;
+      const s = stateRef.current;
 
       if (currentFlips >= targetFlips) {
         // Cash out
+        const cashoutDelay = s.speedMode === "instant" ? 20
+          : s.speedMode === "quick" ? 75
+          : 150;
         autoFlipTimerRef.current = setTimeout(() => {
           dispatch({ type: "CASH_OUT" });
-        }, 150);
+        }, cashoutDelay);
       } else {
         // Flip again
+        const flipDelay = s.speedMode === "instant" ? 50
+          : s.speedMode === "quick" ? 100
+          : 200;
         autoFlipTimerRef.current = setTimeout(() => {
-          const s = stateRef.current;
+          const s2 = stateRef.current;
           const coinResult = flipCoin();
-          const resolvedPick = resolvePick(s.config.sidePick);
+          const resolvedPick = resolvePick(s2.config.sidePick);
           dispatch({ type: "FLIP_START", coinResult, resolvedPick });
-        }, 200);
+        }, flipDelay);
       }
       return;
     }
