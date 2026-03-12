@@ -493,7 +493,6 @@ function hiloReducer(
     }
 
     case "AUTO_PLAY_ADJUST_BET": {
-      if (state.phase !== "idle") return state;
       const clamped = clampBet(action.amount);
       const safeBet = Math.min(clamped, state.balance);
       return {
@@ -693,15 +692,22 @@ export function useHiLoGame() {
     if (state.phase === "idle") {
       const s = stateRef.current;
       // Track the sessionBetCount when auto-play starts so the bet
-      // adjustment effect can skip stale manual results
-      if (s.autoPlay.progress?.currentRound === 0) {
+      // adjustment effect can skip stale manual results.
+      // Use sessionBetCount (not currentRound) to detect "no rounds completed yet"
+      // because AUTO_PLAY_TICK (which increments currentRound) fires AFTER this
+      // effect runs — reading currentRound here would always see 0 after round 1.
+      const noRoundsCompleted = s.sessionBetCount <= autoPlayStartBetCountRef.current;
+      if (noRoundsCompleted) {
         autoPlayStartBetCountRef.current = s.sessionBetCount;
       }
       if (s.balance < s.config.betAmount) {
         dispatch({ type: "AUTO_PLAY_STOP" });
         return;
       }
-      const idleDelay = s.autoPlay.progress?.currentRound === 0 ? 0
+      // Use 0ms delay only for the first ever bet (no rounds completed yet).
+      // All subsequent bets use a real delay so AUTO_PLAY_ADJUST_BET is always
+      // processed before PLACE_BET fires.
+      const idleDelay = noRoundsCompleted ? 0
         : s.speedMode === "instant" ? 50
         : s.speedMode === "quick" ? 200
         : 800;
