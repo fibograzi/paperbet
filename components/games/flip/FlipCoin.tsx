@@ -50,7 +50,7 @@ export default function FlipCoin({
   // After flipping: use lastResult
   const displayResult = isFlipping ? pendingResult : lastResult;
 
-  const skipAnimation = instantBet || speedMode === "instant";
+  const skipAnimation = instantBet || speedMode !== "normal";
 
   // Determine the CSS animation class
   const getAnimationClass = () => {
@@ -94,9 +94,11 @@ export default function FlipCoin({
               ? `rotateY(${rotation}deg)`
               : undefined,
             transition:
-              !isFlipping && !isIdle
-                ? "transform 0.3s ease-out"
-                : undefined,
+              (isFlipping && skipAnimation)
+                ? "transform 0.2s ease-out"
+                : (!isFlipping && !isIdle)
+                  ? "transform 0.3s ease-out"
+                  : undefined,
           }}
           role="img"
           aria-label={
